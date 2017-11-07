@@ -1,0 +1,27 @@
+name: shotcut
+version: '17.09'
+summary: Free, cross-platform, open source video editor
+description: >
+  Shotcut is a free, open source, cross-platform video editor for Windows,
+  Mac and Linux. Major features include support for a wide range of formats;
+  no import required meaning native timeline editing; Blackmagic Design
+  support for input and preview monitoring; and resolution support to 4k.
+
+grade: stable
+confinement: classic
+
+apps:
+  shotcut:
+    command: bin/desktop-launch $SNAP/Shotcut.app/shotcut
+
+parts:
+  shotcut:
+    after: [desktop-qt5]
+    plugin: dump
+    source: 'https://github.com/mltframework/shotcut/releases/download/v17.09/shotcut-linux-x86_64-170904.tar.bz2'
+    organize:
+      'Shotcut': './'
+    stage-packages:
+      - libsdl2-2.0-0
+      - swh-plugins
+

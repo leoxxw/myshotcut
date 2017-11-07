@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
+<plist version="0.9">
+<dict>
+	<key>CFBundleIconFile</key>
+	<string>shotcut.icns</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2011-2016 Meltytech, LLC</string>
+	<key>CFBundleSignature</key>
+	<string>scut</string>
+	<key>CFBundleExecutable</key>
+	<string>Shotcut</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.Meltytech.Shotcut</string>
+	<key>CFBundleVersion</key>
+	<string>@FULL_VERSION@</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@SHORT_VERSION@</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>mlt</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>shotcut.icns</string>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>text/mlt+xml</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>MLT XML File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSIsAppleDefaultForType</key>
+			<true/>
+		</dict>
+	</array>
+</dict>
+</plist>
