@@ -22,6 +22,8 @@ private slots:
 
     void on_pushButton_close_clicked();
 
+    void on_pushButton_exit_clicked();
+
 private:
     Ui::LoginWidget *ui;
 };

@@ -217,7 +217,7 @@ QPushButton#pushButton_login:pressed{border-image: url(:/Resource/PNG/icon_user0
             <item>
              <widget class="QPushButton" name="pushButton_exit">
               <property name="enabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="maximumSize">
                <size>
@@ -352,6 +352,9 @@ color:#FFFFFF</string>
               <layout class="QHBoxLayout" name="horizontalLayout_5">
                <item>
                 <widget class="QPushButton" name="pushButton_open">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="maximumSize">
                   <size>
                    <width>32</width>
@@ -370,6 +373,9 @@ QPushButton#pushButton_open:pressed{border-image: url(:/Resource/PNG/icon_open02
                </item>
                <item>
                 <widget class="QPushButton" name="pushButton_send">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="maximumSize">
                   <size>
                    <width>32</width>
@@ -401,7 +407,7 @@ QPushButton#pushButton_send:pressed{border-image: url(:/Resource/PNG/icon_sendp0
                <item>
                 <widget class="QPushButton" name="pushButton_save">
                  <property name="enabled">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                  <property name="maximumSize">
                   <size>
@@ -422,6 +428,9 @@ QPushButton#pushButton_save:pressed{border-image: url(:/Resource/PNG/icon_save02
                </item>
                <item>
                 <widget class="QPushButton" name="pushButton_save0">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="maximumSize">
                   <size>
                    <width>32</width>
@@ -461,7 +470,6 @@ QPushButton#pushButton_save0:pressed{border-image: url(:/Resource/PNG/icon_saveo
           <height>130</height>
          </size>
         </property>
-        <zorder>widget_3</zorder>
        </widget>
       </item>
      </layout>

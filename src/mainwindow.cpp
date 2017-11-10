@@ -492,8 +492,6 @@ MainWindow::MainWindow()
     if(ret == 5)
     {
         LOG_DEBUG() << "自动登录成功";
-        //调用注销接口
-        CallUnifyLoginSrv::instance()->Logout();
     }
     //展示登录窗口
     m_loginwidget = new LoginWidget(this);
