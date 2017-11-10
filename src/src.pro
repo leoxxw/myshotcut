@@ -113,7 +113,10 @@ SOURCES += main.cpp\
     widgets/timelinepropertieswidget.cpp \
     jobs/ffprobejob.cpp \
     jobs/ffmpegjob.cpp \
-    dialogs/unlinkedfilesdialog.cpp
+    dialogs/unlinkedfilesdialog.cpp \
+    CallDLL/callunifyloginsrv.cpp \
+    MyWidgets/loginwidget.cpp \
+    MyWidgets/basemainwidget.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -222,7 +225,10 @@ HEADERS  += mainwindow.h \
     widgets/timelinepropertieswidget.h \
     jobs/ffprobejob.h \
     jobs/ffmpegjob.h \
-    dialogs/unlinkedfilesdialog.h
+    dialogs/unlinkedfilesdialog.h \
+    CallDLL/callunifyloginsrv.h \
+    MyWidgets/loginwidget.h \
+    MyWidgets/basemainwidget.h
 
 FORMS    += mainwindow.ui \
     openotherdialog.ui \
@@ -264,7 +270,8 @@ FORMS    += mainwindow.ui \
     widgets/gdigrabwidget.ui \
     widgets/trackpropertieswidget.ui \
     widgets/timelinepropertieswidget.ui \
-    dialogs/unlinkedfilesdialog.ui
+    dialogs/unlinkedfilesdialog.ui \
+    MyWidgets/loginwidget.ui
 
 RESOURCES += \
     ../icons/resources.qrc \
@@ -380,3 +387,5 @@ INSTALLS += target
 qmlfiles.files = $$PWD/qml
 qmlfiles.path = $$PREFIX/share/shotcut
 INSTALLS += qmlfiles
+
+DISTFILES +=

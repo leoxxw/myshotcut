@@ -232,4 +232,41 @@
         <file>dark/32x32/audio-volume-high.png</file>
         <file>light/32x32/audio-volume-high.png</file>
     </qresource>
+    <qresource prefix="/">
+        <file>../Resource/PNG/btn_Close.png</file>
+        <file>../Resource/PNG/btn_Close02.png</file>
+        <file>../Resource/PNG/icon_exit01.png</file>
+        <file>../Resource/PNG/icon_exit02.png</file>
+        <file>../Resource/PNG/icon_exit04.png</file>
+        <file>../Resource/PNG/icon_fabo01.png</file>
+        <file>../Resource/PNG/icon_fabo02.png</file>
+        <file>../Resource/PNG/icon_fabo04.png</file>
+        <file>../Resource/PNG/icon_ins01.png</file>
+        <file>../Resource/PNG/icon_ins02.png</file>
+        <file>../Resource/PNG/icon_ins04.png</file>
+        <file>../Resource/PNG/icon_open01.png</file>
+        <file>../Resource/PNG/icon_open02.png</file>
+        <file>../Resource/PNG/icon_open04.png</file>
+        <file>../Resource/PNG/icon_outs01.png</file>
+        <file>../Resource/PNG/icon_outs02.png</file>
+        <file>../Resource/PNG/icon_outs04.png</file>
+        <file>../Resource/PNG/icon_save01.png</file>
+        <file>../Resource/PNG/icon_save02.png</file>
+        <file>../Resource/PNG/icon_save04.png</file>
+        <file>../Resource/PNG/icon_saveo01.png</file>
+        <file>../Resource/PNG/icon_saveo02.png</file>
+        <file>../Resource/PNG/icon_saveo04.png</file>
+        <file>../Resource/PNG/icon_search01.png</file>
+        <file>../Resource/PNG/icon_search02.png</file>
+        <file>../Resource/PNG/icon_search04.png</file>
+        <file>../Resource/PNG/icon_sendp01.png</file>
+        <file>../Resource/PNG/icon_sendp02.png</file>
+        <file>../Resource/PNG/icon_sendp04.png</file>
+        <file>../Resource/PNG/icon_sends01.png</file>
+        <file>../Resource/PNG/icon_sends02.png</file>
+        <file>../Resource/PNG/icon_sends04.png</file>
+        <file>../Resource/PNG/icon_user01.png</file>
+        <file>../Resource/PNG/icon_user02.png</file>
+        <file>../Resource/PNG/icon_user04.png</file>
+    </qresource>
 </RCC>

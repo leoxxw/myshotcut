@@ -87,6 +87,9 @@
 #include <QJSEngine>
 #include <QDirIterator>
 
+#include <CallDLL/callunifyloginsrv.h>
+#include "MyWidgets/loginwidget.h"
+
 static bool eventDebugCallback(void **data)
 {
     QEvent *event = reinterpret_cast<QEvent*>(data[1]);
@@ -115,6 +118,7 @@ MainWindow::MainWindow()
     , m_exitCode(EXIT_SUCCESS)
     , m_navigationPosition(0)
     , m_upgradeUrl("https://www.shotcut.org/download/")
+    ,m_loginwidget(NULL)
 {
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
     QLibrary libJack("libjack.so.0");
@@ -452,7 +456,50 @@ MainWindow::MainWindow()
     connect(&m_network, SIGNAL(finished(QNetworkReply*)), SLOT(onUpgradeCheckFinished(QNetworkReply*)));
 
     m_timelineDock->setFocusPolicy(Qt::StrongFocus);
-
+    //开始云里系统相关任务
+    //初始化
+    QString strSysID("00000000-0000-0000-0000-000000000003");
+    QString strJoincode("75c6c9bb17432454edf676f233800bb2");
+    QString strUrl("http://192.1.2.202:3000/ConfigCenter/ConfigurationCenterService.asmx");
+    int ret = CallUnifyLoginSrv::instance()->Init(strSysID,strJoincode,strUrl);
+    if(ret == 1)
+    {
+        LOG_DEBUG() << "云里初始化成功";
+    }else {
+        LOG_DEBUG() << "云里初始化失败";
+    }
+    //设置日志类型
+    ret = CallUnifyLoginSrv::instance()->SetLogType(1);
+    if(ret == 1)
+    {
+        LOG_DEBUG() << "设置日志类型成功";
+    }else {
+        LOG_DEBUG() << "设置日志类型失败";
+    }
+    //自动登录
+    QString strMoudle("VideoStudio");
+    wchar_t pszUserToken[256];
+    memset(pszUserToken,0,256 * sizeof(wchar_t));
+    int nSize =256;
+    wchar_t pUserID[256];
+    memset(pUserID,0,256 * sizeof(wchar_t));
+    int nIDSize =256;
+    ret = CallUnifyLoginSrv::instance()->AvoidLoginV2(strMoudle,pszUserToken,&nSize,pUserID,&nIDSize);
+    if(ret == 1)
+    {
+        LOG_DEBUG() << "自动登录成功";
+    }
+    if(ret == 5)
+    {
+        LOG_DEBUG() << "自动登录成功";
+        //调用注销接口
+        CallUnifyLoginSrv::instance()->Logout();
+    }
+    //展示登录窗口
+    m_loginwidget = new LoginWidget(this);
+    QRect rect = this->geometry();
+    m_loginwidget->move(QPoint(rect.width()/2,rect.height()/2));
+    m_loginwidget->show();
     LOG_DEBUG() << "end";
 }
 
@@ -1185,9 +1232,9 @@ void MainWindow::showStatusMessage(QAction* action, int timeoutSeconds)
 {
     // This object takes ownership of the passed action.
     // This version does not currently log its message.
-    m_statusBarAction.reset(action);
-    action->setParent(0);
-    m_player->setStatusLabel(action->text(), timeoutSeconds, action);
+//    m_statusBarAction.reset(action);
+//    action->setParent(0);
+//    m_player->setStatusLabel(action->text(), timeoutSeconds, action);
 }
 
 void MainWindow::showStatusMessage(const QString& message, int timeoutSeconds)

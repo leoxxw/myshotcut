@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2011-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -28,7 +28,7 @@
 #include <QSharedPointer>
 #include "mltcontroller.h"
 #include "mltxmlchecker.h"
-
+#include "MyWidgets/loginwidget.h"
 #define EXIT_RESTART (42)
 
 namespace Ui {
@@ -145,6 +145,8 @@ private:
     QScopedPointer<QAction> m_statusBarAction;
     QNetworkAccessManager m_network;
     QString m_upgradeUrl;
+    //登录窗口
+    LoginWidget *m_loginwidget;
 
 #ifdef WITH_LIBLEAP
     LeapListener m_leapListener;

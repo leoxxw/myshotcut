@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2011-2016 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -27,6 +27,7 @@
 #include <QProcess>
 #include <QCommandLineParser>
 #include <framework/mlt_log.h>
+
 
 #ifdef Q_OS_WIN
 #ifdef QT_DEBUG
@@ -244,6 +245,7 @@ protected:
 
 int main(int argc, char **argv)
 {
+
 #if defined(Q_OS_WIN) && defined(QT_DEBUG)
     ExcHndlInit();
 #endif
@@ -262,6 +264,7 @@ int main(int argc, char **argv)
     MainWindow::changeTheme(Settings.theme());
 
     a.mainWindow = &MAIN;
+
     if (!a.appDirArg.isEmpty())
         a.mainWindow->hideSetDataDirectory();
     a.mainWindow->show();
