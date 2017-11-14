@@ -82,6 +82,15 @@ public:
     void keyPressEvent(QKeyEvent*);
     void keyReleaseEvent(QKeyEvent *);
     void hideSetDataDirectory();
+private slots:
+    void slot_SaveProject(int ntype);
+    void slot_SaveVideo();
+    void slot_OpenProject(QString ProjectPath);
+    void slot_OpenVideo(QString VideoPath);
+    void slot_SendProject();
+    void slot_SendVideo();
+    void slot_GetVideoPath(QString VideoPath);
+
 
 signals:
     void producerOpened();

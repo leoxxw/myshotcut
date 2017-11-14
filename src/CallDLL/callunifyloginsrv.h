@@ -18,6 +18,7 @@ public:
     int LoginExV2(QString strMoudle,QString strUser,QString strPwd,wchar_t *pszUserToken, int *nSize, wchar_t *pUserID, int *nIDSize);
     int AvoidLoginV2(QString strMoudle,wchar_t *pszUserToken, int *nSize, wchar_t *pUserID, int *nIDSize);
     int GetUserInfoEx(QString strNodeName,wchar_t *pValue, int *nSize);
+    int GetTicket(wchar_t *pTicket, int *nSize);    // 返回票据
     int Logout();
     static QSharedPointer<CallUnifyLoginSrv>& instance();
 private:

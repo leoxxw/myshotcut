@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2012-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -53,9 +53,11 @@ public:
 
     void loadPresetFromProperties(Mlt::Properties&);
     bool isExportInProgress() const;
+    void SetEncodeType(int nType);
 
 signals:
     void captureStateChanged(bool);
+    void SendVideoPath(QString);
 
 public slots:
     void onProducerOpened();
@@ -74,6 +76,7 @@ private slots:
     void on_removePresetButton_clicked();
 
     void onFinished(AbstractJob*, bool isSuccess);
+    void slot_Finished();
 
     void on_stopCaptureButton_clicked();
 
@@ -114,6 +117,7 @@ private:
     PresetsProxyModel m_presetsModel;
     QString m_outputFilename;
     bool m_isDefaultSettings;
+    int m_encodeType;
 
     void loadPresets();
     Mlt::Properties* collectProperties(int realtime);

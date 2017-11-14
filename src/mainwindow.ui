@@ -428,11 +428,23 @@
   </action>
   <action name="actionFullscreen">
    <property name="icon">
-    <iconset theme="view-fullscreen" resource="../icons/resources.qrc">
-     <normaloff>:/icons/oxygen/32x32/actions/view-fullscreen.png</normaloff>:/icons/oxygen/32x32/actions/view-fullscreen.png</iconset>
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/Resource/PNG/CloudInDisable.png</normaloff>
+     <disabledoff>:/Resource/PNG/CloudInUp.png</disabledoff>
+     <disabledon>:/Resource/PNG/CloudInUp.png</disabledon>
+     <activeoff>:/Resource/PNG/CloudInDown.png</activeoff>
+     <activeon>:/Resource/PNG/CloudInUp.png</activeon>
+     <selectedoff>:/Resource/PNG/CloudInDown.png</selectedoff>
+     <selectedon>:/Resource/PNG/CloudInDown.png</selectedon>:/Resource/PNG/CloudInDisable.png</iconset>
    </property>
    <property name="text">
-    <string>Full Screen</string>
+    <string>云里</string>
+   </property>
+   <property name="iconText">
+    <string notr="true">云里</string>
+   </property>
+   <property name="toolTip">
+    <string notr="true">打开云里</string>
    </property>
   </action>
   <action name="actionRealtime">

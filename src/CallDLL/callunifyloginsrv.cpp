@@ -95,6 +95,15 @@ int CallUnifyLoginSrv::GetUserInfoEx(QString strNodeName, wchar_t *pValue, int *
     return ret;
 }
 
+int CallUnifyLoginSrv::GetTicket(wchar_t *pTicket, int *nSize)
+{
+    typedef int (*Function)(wchar_t *, int *);
+    Function fpInit = (Function)m_lib->resolve("DoGetTicket");
+
+    int ret = fpInit(pTicket,nSize);
+    return ret;
+}
+
 int CallUnifyLoginSrv::Logout()
 {
     typedef int (*Function)();

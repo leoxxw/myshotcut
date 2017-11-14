@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2012-2016 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -48,6 +48,7 @@ public:
 
 signals:
     void jobAdded();
+    void signal_Finished();
 
 public slots:
     void onProgressUpdated(QModelIndex index, uint percent);

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2012-2016 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -74,7 +74,10 @@ void JobQueue::onFinished(AbstractJob* job, bool isSuccess)
     QStandardItem* item = itemFromIndex(job->modelIndex());
     if (item) {
         if (isSuccess)
+        {
             item->setText(tr("done"));
+            emit signal_Finished();
+        }
         else if (job->stopped())
             item->setText(tr("stopped"));
         else

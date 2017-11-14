@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2012-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -27,6 +27,7 @@
 #include "jobs/encodejob.h"
 #include "shotcut_mlt_properties.h"
 
+#include <QDir>
 #include <Logger.h>
 #include <QtWidgets>
 #include <QtXml>
@@ -47,6 +48,7 @@ EncodeDock::EncodeDock(QWidget *parent) :
     m_presets(Mlt::Repository::presets()),
     m_immediateJob(0),
     m_profiles(Mlt::Profile::list()),
+    m_encodeType(1),
     m_isDefaultSettings(true)
 {
     LOG_DEBUG() << "begin";
@@ -321,6 +323,12 @@ void EncodeDock::loadPresetFromProperties(Mlt::Properties& preset)
 bool EncodeDock::isExportInProgress() const
 {
     return !m_immediateJob.isNull();
+}
+
+void EncodeDock::SetEncodeType(int nType)
+{
+    //1代表默认输出，2代表云里输出
+    m_encodeType = nType;
 }
 
 void EncodeDock::onProducerOpened()
@@ -803,6 +811,8 @@ void EncodeDock::runMelt(const QString& target, int realtime)
 
 void EncodeDock::enqueueMelt(const QString& target, int realtime)
 {
+    //绑定信息
+    connect(&JOBS, SIGNAL(signal_Finished()), this, SLOT(slot_Finished()));
     Mlt::Producer* service = fromProducer();
     int pass = (ui->videoRateControlCombo->currentIndex() != RateControlQuality
             && !ui->videoCodecCombo->currentText().contains("nvenc")
@@ -997,7 +1007,15 @@ void EncodeDock::on_encodeButton_clicked()
         return;
     }
     bool seekable = MLT.isSeekable(fromProducer());
-    QString directory = Settings.encodePath();
+    QString directory;
+    if(m_encodeType == 1)
+    {
+     directory = Settings.encodePath();
+    }
+    if(m_encodeType == 2)
+    {
+     directory = QCoreApplication::applicationDirPath()+"/Temp";
+    }
     if (!m_extension.isEmpty()) {
         if (!MAIN.fileName().isEmpty()) {
             directory += QString("/%1.%2").arg(QFileInfo(MAIN.fileName()).baseName())
@@ -1015,60 +1033,134 @@ void EncodeDock::on_encodeButton_clicked()
         }
 #endif
     }
-    m_outputFilename = QFileDialog::getSaveFileName(this,
-        seekable? tr("Export File") : tr("Capture File"), directory,
-        QString(), 0, QFileDialog::HideNameFilterDetails);
-    if (!m_outputFilename.isEmpty()) {
-        QFileInfo fi(m_outputFilename);
-        MLT.pause();
-        Settings.setEncodePath(fi.path());
-        if (!m_extension.isEmpty()) {
-            if (fi.suffix().isEmpty()) {
-                m_outputFilename += '.';
-                m_outputFilename += m_extension;
-            }
-        }
-        if (seekable) {
-            // Batch encode
-            int threadCount = QThread::idealThreadCount();
-            if (threadCount > 2 && ui->parallelCheckbox->isChecked())
-                threadCount = qMin(threadCount - 1, 4);
-            else
-                threadCount = 1;
-            enqueueMelt(m_outputFilename, Settings.playerGPU()? -1 : -threadCount);
-        }
-        else if (MLT.producer()->get_int(kBackgroundCaptureProperty)) {
-            // Capture in background
-            ui->dualPassCheckbox->setChecked(false);
-            m_immediateJob.reset(createMeltJob(fromProducer(), m_outputFilename, -1));
-            if (m_immediateJob) {
-                // Close the player's producer to prevent resource contention.
-                MAIN.hideProducer();
-
-                m_immediateJob->setIsStreaming(true);
-                connect(m_immediateJob.data(), SIGNAL(finished(AbstractJob*,bool)), this, SLOT(onFinished(AbstractJob*,bool)));
-
-                if (MLT.resource().startsWith("gdigrab:") || MLT.resource().startsWith("x11grab:")) {
-                    ui->stopCaptureButton->show();
-                } else {
-                    ui->encodeButton->setText(tr("Stop Capture"));
-                    ui->fromCombo->setDisabled(true);
+    if(m_encodeType == 1)
+    {
+        m_outputFilename = QFileDialog::getSaveFileName(this,
+            seekable? tr("Export File") : tr("Capture File"), directory,
+            QString(), 0, QFileDialog::HideNameFilterDetails);
+        if (!m_outputFilename.isEmpty()) {
+            QFileInfo fi(m_outputFilename);
+            MLT.pause();
+            Settings.setEncodePath(fi.path());
+            if (!m_extension.isEmpty()) {
+                if (fi.suffix().isEmpty()) {
+                    m_outputFilename += '.';
+                    m_outputFilename += m_extension;
                 }
-                if (MLT.resource().startsWith("gdigrab:"))
-                    MAIN.showMinimized();
+            }
+            if (seekable) {
+                // Batch encode
+                int threadCount = QThread::idealThreadCount();
+                if (threadCount > 2 && ui->parallelCheckbox->isChecked())
+                    threadCount = qMin(threadCount - 1, 4);
+                else
+                    threadCount = 1;
+                enqueueMelt(m_outputFilename, Settings.playerGPU()? -1 : -threadCount);
+            }
+            else if (MLT.producer()->get_int(kBackgroundCaptureProperty)) {
+                // Capture in background
+                ui->dualPassCheckbox->setChecked(false);
+                m_immediateJob.reset(createMeltJob(fromProducer(), m_outputFilename, -1));
+                if (m_immediateJob) {
+                    // Close the player's producer to prevent resource contention.
+                    MAIN.hideProducer();
 
-                int msec = MLT.producer()->get_int(kBackgroundCaptureProperty) * 1000;
-                QTimer::singleShot(msec, m_immediateJob.data(), SLOT(start()));
+                    m_immediateJob->setIsStreaming(true);
+                    connect(m_immediateJob.data(), SIGNAL(finished(AbstractJob*,bool)), this, SLOT(onFinished(AbstractJob*,bool)));
+
+                    if (MLT.resource().startsWith("gdigrab:") || MLT.resource().startsWith("x11grab:")) {
+                        ui->stopCaptureButton->show();
+                    } else {
+                        ui->encodeButton->setText(tr("Stop Capture"));
+                        ui->fromCombo->setDisabled(true);
+                    }
+                    if (MLT.resource().startsWith("gdigrab:"))
+                        MAIN.showMinimized();
+
+                    int msec = MLT.producer()->get_int(kBackgroundCaptureProperty) * 1000;
+                    QTimer::singleShot(msec, m_immediateJob.data(), SLOT(start()));
+                }
+            }
+            else {
+                // Capture to file
+                // use multi consumer to encode and preview simultaneously
+                ui->dualPassCheckbox->setChecked(false);
+                ui->encodeButton->setText(tr("Stop Capture"));
+                encode(m_outputFilename);
+                emit captureStateChanged(true);
+                ui->streamButton->setDisabled(true);
             }
         }
-        else {
-            // Capture to file
-            // use multi consumer to encode and preview simultaneously
-            ui->dualPassCheckbox->setChecked(false);
-            ui->encodeButton->setText(tr("Stop Capture"));
-            encode(m_outputFilename);
-            emit captureStateChanged(true);
-            ui->streamButton->setDisabled(true);
+    }
+    if(m_encodeType == 2)
+    {
+        //修改输出路径
+        QString fileName = ui->lineEdit->text();
+        if(fileName == "")
+        {
+            QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("输出文件名为空！"));
+            return;
+        }
+        QString tempPath =QCoreApplication::applicationDirPath()+"/Temp/";
+        QDir dir(tempPath);
+        if(!dir.exists())
+        {
+           dir.mkpath(tempPath);//创建多级目录
+        }
+        m_outputFilename = tempPath +fileName;
+        if (!m_outputFilename.isEmpty())
+        {
+            QFileInfo fi(m_outputFilename);
+            MLT.pause();
+            Settings.setEncodePath(fi.path());
+            if (!m_extension.isEmpty()) {
+                if (fi.suffix().isEmpty()) {
+                    m_outputFilename += '.';
+                    m_outputFilename += m_extension;
+                }
+            }
+            if (seekable) {
+                // Batch encode
+                int threadCount = QThread::idealThreadCount();
+                if (threadCount > 2 && ui->parallelCheckbox->isChecked())
+                    threadCount = qMin(threadCount - 1, 4);
+                else
+                    threadCount = 1;
+                enqueueMelt(m_outputFilename, Settings.playerGPU()? -1 : -threadCount);
+            }
+            else if (MLT.producer()->get_int(kBackgroundCaptureProperty)) {
+                // Capture in background
+                ui->dualPassCheckbox->setChecked(false);
+                m_immediateJob.reset(createMeltJob(fromProducer(), m_outputFilename, -1));
+                if (m_immediateJob) {
+                    // Close the player's producer to prevent resource contention.
+                    MAIN.hideProducer();
+
+                    m_immediateJob->setIsStreaming(true);
+                    connect(m_immediateJob.data(), SIGNAL(finished(AbstractJob*,bool)), this, SLOT(onFinished(AbstractJob*,bool)));
+
+                    if (MLT.resource().startsWith("gdigrab:") || MLT.resource().startsWith("x11grab:")) {
+                        ui->stopCaptureButton->show();
+                    } else {
+                        ui->encodeButton->setText(tr("Stop Capture"));
+                        ui->fromCombo->setDisabled(true);
+                    }
+                    if (MLT.resource().startsWith("gdigrab:"))
+                        MAIN.showMinimized();
+
+                    int msec = MLT.producer()->get_int(kBackgroundCaptureProperty) * 1000;
+                    QTimer::singleShot(msec, m_immediateJob.data(), SLOT(start()));
+                }
+            }
+            else {
+                // Capture to file
+                // use multi consumer to encode and preview simultaneously
+                ui->dualPassCheckbox->setChecked(false);
+                ui->encodeButton->setText(tr("Stop Capture"));
+                encode(m_outputFilename);
+                emit captureStateChanged(true);
+                ui->streamButton->setDisabled(true);
+            }
         }
     }
 }
@@ -1244,6 +1336,12 @@ void EncodeDock::onFinished(AbstractJob* job, bool isSuccess)
     m_immediateJob.reset();
     emit captureStateChanged(false);
     ui->encodeButton->setDisabled(false);
+
+}
+
+void EncodeDock::slot_Finished()
+{
+    emit SendVideoPath(m_outputFilename);
 }
 
 void EncodeDock::on_stopCaptureButton_clicked()

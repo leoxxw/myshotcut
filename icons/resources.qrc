@@ -268,5 +268,8 @@
         <file>../Resource/PNG/icon_user01.png</file>
         <file>../Resource/PNG/icon_user02.png</file>
         <file>../Resource/PNG/icon_user04.png</file>
+        <file>../Resource/PNG/CloudInDisable.png</file>
+        <file>../Resource/PNG/CloudInDown.png</file>
+        <file>../Resource/PNG/CloudInUp.png</file>
     </qresource>
 </RCC>

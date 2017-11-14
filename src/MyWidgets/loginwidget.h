@@ -4,6 +4,7 @@
 
 #include "basemainwidget.h"
 #include <QWidget>
+#include "CallDLL/clouddiskinterface.h"
 
 namespace Ui {
 class LoginWidget;
@@ -16,6 +17,12 @@ class LoginWidget : public BaseMainWidget
 public:
     explicit LoginWidget(QWidget *parent = 0);
     ~LoginWidget();
+    void Init();
+    void SetLoginSucceed(wchar_t* pUserID,wchar_t* pszUserToken);
+    bool GetListInfo(QString strBuffer);
+    void SaveProject(QString strFilePath);
+    void SaveProjectOther(QString strFilePath);
+    void SaveVideo(QString strFilePath);
 
 private slots:
     void on_pushButton_login_clicked();
@@ -24,8 +31,42 @@ private slots:
 
     void on_pushButton_exit_clicked();
 
+    void on_pushButton_open_clicked();
+
+    void on_pushButton_save_clicked();
+
+    void on_pushButton_saveoth_clicked();
+
+    void on_pushButton_openvideo_clicked();
+
+    void on_pushButton_savevideo_clicked();
+
+    void on_pushButton_sendvideo_clicked();
+
+    void on_pushButton_sendOthvideo_clicked();
+
+signals:
+    void signal_SaveProject(int ntype);
+    void signal_SaveVideo();
+    void signal_OpenProject(QString ProjectPath);
+    void signal_OpenVideo(QString VideoPath);
+    void signal_SendProject();
+    void signal_SendVideo();
+
 private:
     Ui::LoginWidget *ui;
+    QString     m_userID;
+    QString     m_UserToken;
+    QString     m_Ticket;
+    QString m_strSysID;
+    QString m_strJoincode;
+    QString m_strUrl;
+    enReturnType m_loginType;
+    QString m_strResourceName;
+    QString m_strResourceID;
+    QString m_strParentID;
+    QString m_strOwnerID;
+    QString m_strOwnerType;
 };
 
 #endif // LOGINWIDGET_H

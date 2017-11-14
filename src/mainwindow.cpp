@@ -177,8 +177,8 @@ MainWindow::MainWindow()
 #endif
 #ifdef Q_OS_WIN
     // Fullscreen on Windows is not allowing popups and other app windows to appear.
-    delete ui->actionFullscreen;
-    ui->actionFullscreen = 0;
+//    delete ui->actionFullscreen;
+//    ui->actionFullscreen = 0;
     delete ui->actionEnter_Full_Screen;
     ui->actionEnter_Full_Screen = 0;
 #endif
@@ -366,6 +366,8 @@ MainWindow::MainWindow()
     connect(this, SIGNAL(profileChanged()), SLOT(onProfileChanged()));
     connect(m_playlistDock->model(), SIGNAL(modified()), m_encodeDock, SLOT(onProducerOpened()));
     connect(m_timelineDock, SIGNAL(clipCopied()), m_encodeDock, SLOT(onProducerOpened()));
+    //绑定获取输出视频路径信号
+    connect(m_encodeDock, SIGNAL(SendVideoPath(QString)), this, SLOT(slot_GetVideoPath(QString)));
     m_encodeDock->onProfileChanged();
 
     m_jobsDock = new JobsDock(this);
@@ -457,46 +459,16 @@ MainWindow::MainWindow()
 
     m_timelineDock->setFocusPolicy(Qt::StrongFocus);
     //开始云里系统相关任务
-    //初始化
-    QString strSysID("00000000-0000-0000-0000-000000000003");
-    QString strJoincode("75c6c9bb17432454edf676f233800bb2");
-    QString strUrl("http://192.1.2.202:3000/ConfigCenter/ConfigurationCenterService.asmx");
-    int ret = CallUnifyLoginSrv::instance()->Init(strSysID,strJoincode,strUrl);
-    if(ret == 1)
-    {
-        LOG_DEBUG() << "云里初始化成功";
-    }else {
-        LOG_DEBUG() << "云里初始化失败";
-    }
-    //设置日志类型
-    ret = CallUnifyLoginSrv::instance()->SetLogType(1);
-    if(ret == 1)
-    {
-        LOG_DEBUG() << "设置日志类型成功";
-    }else {
-        LOG_DEBUG() << "设置日志类型失败";
-    }
-    //自动登录
-    QString strMoudle("VideoStudio");
-    wchar_t pszUserToken[256];
-    memset(pszUserToken,0,256 * sizeof(wchar_t));
-    int nSize =256;
-    wchar_t pUserID[256];
-    memset(pUserID,0,256 * sizeof(wchar_t));
-    int nIDSize =256;
-    ret = CallUnifyLoginSrv::instance()->AvoidLoginV2(strMoudle,pszUserToken,&nSize,pUserID,&nIDSize);
-    if(ret == 1)
-    {
-        LOG_DEBUG() << "自动登录成功";
-    }
-    if(ret == 5)
-    {
-        LOG_DEBUG() << "自动登录成功";
-    }
     //展示登录窗口
     m_loginwidget = new LoginWidget(this);
+    connect(m_loginwidget, &LoginWidget::signal_SaveProject, this,&MainWindow::slot_SaveProject);
+    connect(m_loginwidget, &LoginWidget::signal_SaveVideo, this,&MainWindow::slot_SaveVideo);
+    connect(m_loginwidget, &LoginWidget::signal_OpenProject, this,&MainWindow::slot_OpenProject);
+    connect(m_loginwidget, &LoginWidget::signal_OpenVideo, this,&MainWindow::slot_OpenVideo);
+    connect(m_loginwidget, &LoginWidget::signal_SendProject, this,&MainWindow::slot_SendProject);
+    connect(m_loginwidget, &LoginWidget::signal_SendVideo, this,&MainWindow::slot_SendVideo);
     QRect rect = this->geometry();
-    m_loginwidget->move(QPoint(rect.width()/2,rect.height()/2));
+    m_loginwidget->move(QPoint(rect.width()/5 *4,rect.height()/5 *1));
     m_loginwidget->show();
     LOG_DEBUG() << "end";
 }
@@ -1831,6 +1803,81 @@ void MainWindow::hideSetDataDirectory()
     delete ui->actionAppDataSet;
 }
 
+void MainWindow::slot_SaveProject(int ntype)
+{
+    on_actionSave_triggered();
+    if(m_loginwidget)
+    {
+        if(ntype == 1)
+        {
+            m_loginwidget->SaveProject(m_currentFile);
+        }
+        if(ntype == 2)
+        {
+            m_loginwidget->SaveProjectOther(m_currentFile);
+        }
+    }
+}
+
+void MainWindow::slot_SaveVideo()
+{
+    m_encodeDock->SetEncodeType(2);
+    m_encodeDock->setFloating(true);
+    m_encodeDock->show();
+    m_encodeDock->raise();
+}
+
+void MainWindow::slot_OpenProject(QString ProjectPath)
+{
+    QStringList filenames;
+    filenames.append(ProjectPath);
+    if (filenames.length() > 0) {
+        Settings.setOpenPath(QFileInfo(filenames.first()).path());
+        activateWindow();
+        if (filenames.length() > 1)
+            m_multipleFiles = filenames;
+        open(filenames.first());
+    }
+    else {
+        // If file invalid, then on some platforms the dialog messes up SDL.
+        MLT.onWindowResize();
+        activateWindow();
+    }
+}
+
+void MainWindow::slot_OpenVideo(QString VideoPath)
+{
+    QStringList filenames;
+    filenames.append(VideoPath);
+    if (filenames.length() > 0) {
+        Settings.setOpenPath(QFileInfo(filenames.first()).path());
+        activateWindow();
+        if (filenames.length() > 1)
+            m_multipleFiles = filenames;
+        open(filenames.first());
+    }
+    else {
+        // If file invalid, then on some platforms the dialog messes up SDL.
+        MLT.onWindowResize();
+        activateWindow();
+    }
+}
+
+void MainWindow::slot_SendProject()
+{
+
+}
+
+void MainWindow::slot_SendVideo()
+{
+
+}
+
+void MainWindow::slot_GetVideoPath(QString VideoPath)
+{
+   m_loginwidget->SaveVideo(VideoPath);
+}
+
 // Drag-n-drop events
 
 bool MainWindow::eventFilter(QObject* target, QEvent* event)
@@ -2481,12 +2528,17 @@ void MainWindow::onMeltedUnitActivated()
 
 void MainWindow::on_actionEnter_Full_Screen_triggered()
 {
-    if (isFullScreen()) {
-        showNormal();
-        ui->actionEnter_Full_Screen->setText(tr("Enter Full Screen"));
-    } else {
-        showFullScreen();
-        ui->actionEnter_Full_Screen->setText(tr("Exit Full Screen"));
+//    if (isFullScreen()) {
+//        showNormal();
+//        ui->actionEnter_Full_Screen->setText(tr("Enter Full Screen"));
+//    } else {
+//        showFullScreen();
+//        ui->actionEnter_Full_Screen->setText(tr("Exit Full Screen"));
+//    }
+    if(m_loginwidget)
+    {
+        m_loginwidget->show();
+        m_loginwidget->raise();
     }
 }
 

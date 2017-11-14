@@ -116,7 +116,8 @@ SOURCES += main.cpp\
     dialogs/unlinkedfilesdialog.cpp \
     CallDLL/callunifyloginsrv.cpp \
     MyWidgets/loginwidget.cpp \
-    MyWidgets/basemainwidget.cpp
+    MyWidgets/basemainwidget.cpp \
+    CallDLL/clouddiskinterface.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -228,7 +229,9 @@ HEADERS  += mainwindow.h \
     dialogs/unlinkedfilesdialog.h \
     CallDLL/callunifyloginsrv.h \
     MyWidgets/loginwidget.h \
-    MyWidgets/basemainwidget.h
+    MyWidgets/basemainwidget.h \
+    CallDLL/clouddiskinterface.h \
+    CallDLL/publicinfo.h
 
 FORMS    += mainwindow.ui \
     openotherdialog.ui \
