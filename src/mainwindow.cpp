@@ -119,6 +119,7 @@ MainWindow::MainWindow()
     , m_navigationPosition(0)
     , m_upgradeUrl("https://www.shotcut.org/download/")
     ,m_loginwidget(NULL)
+    ,m_nType(0)
 {
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
     QLibrary libJack("libjack.so.0");
@@ -465,10 +466,8 @@ MainWindow::MainWindow()
     connect(m_loginwidget, &LoginWidget::signal_SaveVideo, this,&MainWindow::slot_SaveVideo);
     connect(m_loginwidget, &LoginWidget::signal_OpenProject, this,&MainWindow::slot_OpenProject);
     connect(m_loginwidget, &LoginWidget::signal_OpenVideo, this,&MainWindow::slot_OpenVideo);
-    connect(m_loginwidget, &LoginWidget::signal_SendProject, this,&MainWindow::slot_SendProject);
-    connect(m_loginwidget, &LoginWidget::signal_SendVideo, this,&MainWindow::slot_SendVideo);
     QRect rect = this->geometry();
-    m_loginwidget->move(QPoint(rect.width()/5 *4,rect.height()/5 *1));
+    m_loginwidget->move(QPoint(rect.width()/10 *9,rect.height()/5 *1));
     m_loginwidget->show();
     LOG_DEBUG() << "end";
 }
@@ -1805,6 +1804,10 @@ void MainWindow::hideSetDataDirectory()
 
 void MainWindow::slot_SaveProject(int ntype)
 {
+    if(MLT.videoWidget())
+    {
+        MLT.pause();
+    }
     on_actionSave_triggered();
     if(m_loginwidget)
     {
@@ -1816,11 +1819,21 @@ void MainWindow::slot_SaveProject(int ntype)
         {
             m_loginwidget->SaveProjectOther(m_currentFile);
         }
+        if(ntype == 3)
+        {
+            m_loginwidget->SaveProject(m_currentFile);
+            m_loginwidget->SendProjectNoDlg(m_currentFile);
+        }
     }
 }
 
-void MainWindow::slot_SaveVideo()
+void MainWindow::slot_SaveVideo(int ntype)
 {
+    if(MLT.videoWidget())
+    {
+        MLT.pause();
+    }
+    m_nType = ntype;
     m_encodeDock->SetEncodeType(2);
     m_encodeDock->setFloating(true);
     m_encodeDock->show();
@@ -1863,19 +1876,20 @@ void MainWindow::slot_OpenVideo(QString VideoPath)
     }
 }
 
-void MainWindow::slot_SendProject()
-{
-
-}
-
-void MainWindow::slot_SendVideo()
-{
-
-}
-
 void MainWindow::slot_GetVideoPath(QString VideoPath)
 {
-   m_loginwidget->SaveVideo(VideoPath);
+    if(MLT.videoWidget())
+    {
+        MLT.pause();
+    }
+    if(m_nType == 1)
+    {
+        m_loginwidget->SendVideoNoDlg(VideoPath);
+    }
+    if(m_nType == 2)
+   {
+        m_loginwidget->SaveVideo(VideoPath);
+   }
 }
 
 // Drag-n-drop events
@@ -2537,6 +2551,8 @@ void MainWindow::on_actionEnter_Full_Screen_triggered()
 //    }
     if(m_loginwidget)
     {
+        QRect rect = this->geometry();
+        m_loginwidget->move(QPoint(rect.width()/10 *9,rect.height()/5 *1));
         m_loginwidget->show();
         m_loginwidget->raise();
     }

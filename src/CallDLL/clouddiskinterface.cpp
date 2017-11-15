@@ -159,12 +159,15 @@ int CloudDiskInterface::DownloadResource(QString lpszResourceID, QString lpszLoc
     return ret;
 }
 //上传资源添加多个文件
-int CloudDiskInterface::AddUploadFile(int nUploadJobID, QString lpszFile, QString lpszRelativeFile)
+int CloudDiskInterface::AddUploadFile(int nUploadJobID, QString lpszFile,
+                                      QString lpszRelativeFile,
+                                      enResourceMajorType nResourceMajorType,
+                                      QString lpszResourceSubType)
 {
-    typedef int (*Function)(int,const ushort*,const ushort*);
+    typedef int (*Function)(int,const ushort*,const ushort*,int ,const ushort*);
     Function fpInit = (Function)m_lib->resolve("DoAddUploadFile");
 
-    int ret = fpInit(nUploadJobID,lpszFile.utf16(),lpszRelativeFile.utf16());
+    int ret = fpInit(nUploadJobID,lpszFile.utf16(),lpszRelativeFile.utf16(),nResourceMajorType,lpszResourceSubType.utf16());
     return ret;
 }
 //云盘内资源发送
@@ -192,6 +195,15 @@ int CloudDiskInterface::Send(QString lpResourceID, QString lpszDestSystemID)
     Function fpInit = (Function)m_lib->resolve("DoSend");
 
     int ret = fpInit(lpResourceID.utf16(),lpszDestSystemID.utf16());
+    return ret;
+}
+
+int CloudDiskInterface::GetMainFilePath(wchar_t *szMainPath, int nsize)
+{
+    typedef int (*Function)(wchar_t *, int );
+    Function fpInit = (Function)m_lib->resolve("DoGetMainFilePath");
+
+    int ret = fpInit(szMainPath,nsize);
     return ret;
 }
 //单利对象

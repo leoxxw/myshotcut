@@ -198,6 +198,9 @@ color:#FFFFFF</string>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
              <widget class="QPushButton" name="pushButton_login">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="maximumSize">
                <size>
                 <width>32</width>
@@ -207,7 +210,8 @@ color:#FFFFFF</string>
               <property name="styleSheet">
                <string notr="true">QPushButton#pushButton_login{border-image: url(:/Resource/PNG/icon_user01.png);}
 QPushButton#pushButton_login:hover{border-image: url(:/Resource/PNG/icon_user02.png);}
-QPushButton#pushButton_login:pressed{border-image: url(:/Resource/PNG/icon_user02.png);}</string>
+QPushButton#pushButton_login:pressed{border-image: url(:/Resource/PNG/icon_user02.png);}
+QPushButton#pushButton_login:disabled{border-image: url(:/Resource/PNG/icon_user04.png);}</string>
               </property>
               <property name="text">
                <string/>
@@ -228,7 +232,8 @@ QPushButton#pushButton_login:pressed{border-image: url(:/Resource/PNG/icon_user0
               <property name="styleSheet">
                <string notr="true">QPushButton#pushButton_exit{border-image: url(:/Resource/PNG/icon_exit01.png);}
 QPushButton#pushButton_exit:hover{border-image: url(:/Resource/PNG/icon_exit02.png);}
-QPushButton#pushButton_exit:pressed{border-image: url(:/Resource/PNG/icon_exit02.png);}</string>
+QPushButton#pushButton_exit:pressed{border-image: url(:/Resource/PNG/icon_exit02.png);}
+QPushButton#pushButton_exit:disabled{border-image: url(:/Resource/PNG/icon_exit04.png);}</string>
               </property>
               <property name="text">
                <string/>
@@ -373,7 +378,8 @@ color:#FFFFFF</string>
                  <property name="styleSheet">
                   <string notr="true">QPushButton#pushButton_open{border-image: url(:/Resource/PNG/icon_open01.png);}
 QPushButton#pushButton_open:hover{border-image: url(:/Resource/PNG/icon_open02.png);}
-QPushButton#pushButton_open:pressed{border-image: url(:/Resource/PNG/icon_open02.png);}</string>
+QPushButton#pushButton_open:pressed{border-image: url(:/Resource/PNG/icon_open02.png);}
+QPushButton#pushButton_open:disabled{border-image: url(:/Resource/PNG/icon_open04.png);}</string>
                  </property>
                  <property name="text">
                   <string/>
@@ -394,7 +400,8 @@ QPushButton#pushButton_open:pressed{border-image: url(:/Resource/PNG/icon_open02
                  <property name="styleSheet">
                   <string notr="true">QPushButton#pushButton_send{border-image: url(:/Resource/PNG/icon_sendp01.png);}
 QPushButton#pushButton_send:hover{border-image: url(:/Resource/PNG/icon_sendp02.png);}
-QPushButton#pushButton_send:pressed{border-image: url(:/Resource/PNG/icon_sendp02.png);}</string>
+QPushButton#pushButton_send:pressed{border-image: url(:/Resource/PNG/icon_sendp02.png);}
+QPushButton#pushButton_send:disabled{border-image: url(:/Resource/PNG/icon_sendp04.png);}</string>
                  </property>
                  <property name="text">
                   <string/>
@@ -428,6 +435,7 @@ QPushButton#pushButton_send:pressed{border-image: url(:/Resource/PNG/icon_sendp0
                   <string notr="true">QPushButton#pushButton_save{border-image: url(:/Resource/PNG/icon_save01.png);}
 QPushButton#pushButton_save:hover{border-image: url(:/Resource/PNG/icon_save02.png);}
 QPushButton#pushButton_save:pressed{border-image: url(:/Resource/PNG/icon_save02.png);}
+QPushButton#pushButton_save:disabled{border-image: url(:/Resource/PNG/icon_save04.png);}
 </string>
                  </property>
                  <property name="text">
@@ -447,9 +455,10 @@ QPushButton#pushButton_save:pressed{border-image: url(:/Resource/PNG/icon_save02
                   </size>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">QPushButton#pushButton_save0{border-image: url(:/Resource/PNG/icon_saveo01.png);}
-QPushButton#pushButton_save0:hover{border-image: url(:/Resource/PNG/icon_saveo02.png);}
-QPushButton#pushButton_save0:pressed{border-image: url(:/Resource/PNG/icon_saveo02.png);}</string>
+                  <string notr="true">QPushButton#pushButton_saveoth{border-image: url(:/Resource/PNG/icon_saveo01.png);}
+QPushButton#pushButton_saveoth:hover{border-image: url(:/Resource/PNG/icon_saveo02.png);}
+QPushButton#pushButton_saveoth:pressed{border-image: url(:/Resource/PNG/icon_saveo02.png);}
+QPushButton#pushButton_saveoth:disabled{border-image: url(:/Resource/PNG/icon_saveo04.png);}</string>
                  </property>
                  <property name="text">
                   <string/>

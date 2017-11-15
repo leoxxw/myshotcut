@@ -2,6 +2,7 @@
 #define PUBLICINFO_H
 
 #endif // PUBLICINFO_H
+#include <QString>
 enum enReturnType
 {
     // 0：失败，具体失败原因请调用DoGetLastError
@@ -117,4 +118,12 @@ enum enResourceType
     EREST_Picture,
     EREST_Document,
     EREST_Other,
+};
+struct ResourceInfo
+{
+    QString m_strResourceName;
+    QString m_strResourceID;
+    QString m_strParentID;
+    QString m_strOwnerID;
+    QString m_strOwnerType;
 };

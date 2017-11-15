@@ -117,7 +117,7 @@ private:
     PresetsProxyModel m_presetsModel;
     QString m_outputFilename;
     bool m_isDefaultSettings;
-    int m_encodeType;
+    int m_encodeType;//1代表默认输出，2代表云里输出
 
     void loadPresets();
     Mlt::Properties* collectProperties(int realtime);

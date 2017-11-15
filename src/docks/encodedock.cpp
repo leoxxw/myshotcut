@@ -811,8 +811,6 @@ void EncodeDock::runMelt(const QString& target, int realtime)
 
 void EncodeDock::enqueueMelt(const QString& target, int realtime)
 {
-    //绑定信息
-    connect(&JOBS, SIGNAL(signal_Finished()), this, SLOT(slot_Finished()));
     Mlt::Producer* service = fromProducer();
     int pass = (ui->videoRateControlCombo->currentIndex() != RateControlQuality
             && !ui->videoCodecCombo->currentText().contains("nvenc")
@@ -991,6 +989,12 @@ void EncodeDock::on_presetsTree_activated(const QModelIndex &index)
 
 void EncodeDock::on_encodeButton_clicked()
 {
+    if(m_encodeType == 2)
+    {
+        //绑定信息
+        connect(&JOBS, SIGNAL(signal_Finished()), this, SLOT(slot_Finished()));
+        qDebug()<<"绑定信息 connect(&JOBS, SIGNAL(signal_Finished()), this, SLOT(slot_Finished()));";
+    }
     if (!MLT.producer())
         return;
     if (m_immediateJob) {
@@ -1342,6 +1346,7 @@ void EncodeDock::onFinished(AbstractJob* job, bool isSuccess)
 void EncodeDock::slot_Finished()
 {
     emit SendVideoPath(m_outputFilename);
+    qDebug()<<"slot_Finished";
 }
 
 void EncodeDock::on_stopCaptureButton_clicked()

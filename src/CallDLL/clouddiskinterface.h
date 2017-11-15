@@ -46,13 +46,17 @@ public:
                          HWND hParentWnd,
                          DWORD dwFlag);
 
-    int AddUploadFile(int nUploadJobID, QString lpszFile, QString lpszRelativeFile);
+    int AddUploadFile(int nUploadJobID, QString lpszFile, QString lpszRelativeFile,
+                      enResourceMajorType nResourceMajorType,
+                      QString lpszResourceSubType);
 
     int LocalSend(QString lpResourceID);
 
     int Send2BroadCast(QString lpResourceID);
 
     int Send (QString lpResourceID, QString lpszDestSystemID);
+
+    int GetMainFilePath(wchar_t* szMainPath, int nsize);
 
     static QSharedPointer<CloudDiskInterface>& instance();
 private:

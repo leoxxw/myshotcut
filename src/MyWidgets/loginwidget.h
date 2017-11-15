@@ -19,10 +19,14 @@ public:
     ~LoginWidget();
     void Init();
     void SetLoginSucceed(wchar_t* pUserID,wchar_t* pszUserToken);
-    bool GetListInfo(QString strBuffer);
+    bool GetListInfo(QString strBuffer,ResourceInfo &InfoList);
     void SaveProject(QString strFilePath);
     void SaveProjectOther(QString strFilePath);
     void SaveVideo(QString strFilePath);
+    void SendVideoNoDlg(QString strFilePath);
+    void SendProjectNoDlg(QString strFilePath);
+    bool DelDir(const QString &path);
+    void AddFile(QString filePath,int JobID,QString fatherPath,int type);
 
 private slots:
     void on_pushButton_login_clicked();
@@ -45,9 +49,11 @@ private slots:
 
     void on_pushButton_sendOthvideo_clicked();
 
+    void on_pushButton_send_clicked();
+
 signals:
     void signal_SaveProject(int ntype);
-    void signal_SaveVideo();
+    void signal_SaveVideo(int ntype);
     void signal_OpenProject(QString ProjectPath);
     void signal_OpenVideo(QString VideoPath);
     void signal_SendProject();
@@ -62,11 +68,8 @@ private:
     QString m_strJoincode;
     QString m_strUrl;
     enReturnType m_loginType;
-    QString m_strResourceName;
-    QString m_strResourceID;
-    QString m_strParentID;
-    QString m_strOwnerID;
-    QString m_strOwnerType;
+    ResourceInfo m_ProResourceInfo;
+    QString m_strBuffInfo;
 };
 
 #endif // LOGINWIDGET_H

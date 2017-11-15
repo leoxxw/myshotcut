@@ -84,11 +84,9 @@ public:
     void hideSetDataDirectory();
 private slots:
     void slot_SaveProject(int ntype);
-    void slot_SaveVideo();
+    void slot_SaveVideo(int ntype);
     void slot_OpenProject(QString ProjectPath);
     void slot_OpenVideo(QString VideoPath);
-    void slot_SendProject();
-    void slot_SendVideo();
     void slot_GetVideoPath(QString VideoPath);
 
 
@@ -156,6 +154,7 @@ private:
     QString m_upgradeUrl;
     //登录窗口
     LoginWidget *m_loginwidget;
+    int m_nType;//保存类型（1代表默认保存路径（默认保存路径主要用于发送视频），2代表自定义路径）
 
 #ifdef WITH_LIBLEAP
     LeapListener m_leapListener;
