@@ -71,6 +71,7 @@ enum enResourceMajorType
     ERMT_AUTO = 0,  // 自动确定
     ERMT_Audio = 1,
     ERMT_Video = 2,
+    ERMT_Audio_Video = 3,
     ERMT_Picture = 4,
     ERMT_Document = 8,
     ERMT_Other = 16,
@@ -118,6 +119,13 @@ enum enResourceType
     EREST_Picture,
     EREST_Document,
     EREST_Other,
+};
+enum SaveFileType
+{
+    SF_ShotCutSave  = 0,//本地保存
+    SF_Save         = 1,//云里系统默认保存
+    SF_SaveOther    = 2,//云里系统另存为
+    SF_SaveSend     = 3,//云里系统默认保存并发送
 };
 struct ResourceInfo
 {

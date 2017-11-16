@@ -20,13 +20,14 @@ public:
     void Init();
     void SetLoginSucceed(wchar_t* pUserID,wchar_t* pszUserToken);
     bool GetListInfo(QString strBuffer,ResourceInfo &InfoList);
-    void SaveProject(QString strFilePath);
+    void SaveProject(QString strFilePath,int ntype);
     void SaveProjectOther(QString strFilePath);
     void SaveVideo(QString strFilePath);
     void SendVideoNoDlg(QString strFilePath);
     void SendProjectNoDlg(QString strFilePath);
     bool DelDir(const QString &path);
     void AddFile(QString filePath,int JobID,QString fatherPath,int type);
+    enResourceType GetFileType(QString fileName);
 
 private slots:
     void on_pushButton_login_clicked();

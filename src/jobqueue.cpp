@@ -76,6 +76,7 @@ void JobQueue::onFinished(AbstractJob* job, bool isSuccess)
         if (isSuccess)
         {
             item->setText(tr("done"));
+            qDebug()<<"emit signal_Finished()";
             emit signal_Finished();
         }
         else if (job->stopped())

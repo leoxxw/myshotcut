@@ -30,7 +30,7 @@ public:
 
     int PreUploadResource(QString lpszResourceName, QString lpszResourceID,
                           QString lpszFile,QString lpszRelativeFile,
-                          enResourceMajorType nResourceMajorType,
+                          enResourceType nResourceMajorType,
                           QString lpszResourceSubType,
                           HWND hParentWnd,
                           enWebFlag dwFlag);
@@ -47,7 +47,7 @@ public:
                          DWORD dwFlag);
 
     int AddUploadFile(int nUploadJobID, QString lpszFile, QString lpszRelativeFile,
-                      enResourceMajorType nResourceMajorType,
+                      enResourceType nResourceMajorType,
                       QString lpszResourceSubType);
 
     int LocalSend(QString lpResourceID);

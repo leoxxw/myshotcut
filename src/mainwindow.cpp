@@ -119,7 +119,7 @@ MainWindow::MainWindow()
     , m_navigationPosition(0)
     , m_upgradeUrl("https://www.shotcut.org/download/")
     ,m_loginwidget(NULL)
-    ,m_nType(0)
+    ,m_nType(SF_ShotCutSave)
 {
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
     QLibrary libJack("libjack.so.0");
@@ -369,6 +369,7 @@ MainWindow::MainWindow()
     connect(m_timelineDock, SIGNAL(clipCopied()), m_encodeDock, SLOT(onProducerOpened()));
     //绑定获取输出视频路径信号
     connect(m_encodeDock, SIGNAL(SendVideoPath(QString)), this, SLOT(slot_GetVideoPath(QString)));
+
     m_encodeDock->onProfileChanged();
 
     m_jobsDock = new JobsDock(this);
@@ -1813,7 +1814,7 @@ void MainWindow::slot_SaveProject(int ntype)
     {
         if(ntype == 1)
         {
-            m_loginwidget->SaveProject(m_currentFile);
+            m_loginwidget->SaveProject(m_currentFile,ntype);
         }
         if(ntype == 2)
         {
@@ -1821,7 +1822,7 @@ void MainWindow::slot_SaveProject(int ntype)
         }
         if(ntype == 3)
         {
-            m_loginwidget->SaveProject(m_currentFile);
+            m_loginwidget->SaveProject(m_currentFile,ntype);
             m_loginwidget->SendProjectNoDlg(m_currentFile);
         }
     }
@@ -1834,7 +1835,7 @@ void MainWindow::slot_SaveVideo(int ntype)
         MLT.pause();
     }
     m_nType = ntype;
-    m_encodeDock->SetEncodeType(2);
+    m_encodeDock->SetEncodeType(ntype);
     m_encodeDock->setFloating(true);
     m_encodeDock->show();
     m_encodeDock->raise();
@@ -1882,14 +1883,18 @@ void MainWindow::slot_GetVideoPath(QString VideoPath)
     {
         MLT.pause();
     }
-    if(m_nType == 1)
+    if(m_nType == SF_SaveSend)
     {
         m_loginwidget->SendVideoNoDlg(VideoPath);
     }
-    if(m_nType == 2)
-   {
+    if(m_nType == SF_SaveOther)
+    {
         m_loginwidget->SaveVideo(VideoPath);
-   }
+    }
+    if(m_encodeDock)
+    {
+        m_encodeDock->hide();
+    }
 }
 
 // Drag-n-drop events

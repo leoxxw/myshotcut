@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>150</width>
+    <width>100</width>
     <height>363</height>
    </rect>
   </property>
@@ -196,6 +196,12 @@ color:#FFFFFF</string>
             </size>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="QPushButton" name="pushButton_login">
               <property name="enabled">
@@ -206,6 +212,9 @@ color:#FFFFFF</string>
                 <width>32</width>
                 <height>32</height>
                </size>
+              </property>
+              <property name="toolTip">
+               <string>登录</string>
               </property>
               <property name="styleSheet">
                <string notr="true">QPushButton#pushButton_login{border-image: url(:/Resource/PNG/icon_user01.png);}
@@ -228,6 +237,9 @@ QPushButton#pushButton_login:disabled{border-image: url(:/Resource/PNG/icon_user
                 <width>32</width>
                 <height>32</height>
                </size>
+              </property>
+              <property name="toolTip">
+               <string>注销</string>
               </property>
               <property name="styleSheet">
                <string notr="true">QPushButton#pushButton_exit{border-image: url(:/Resource/PNG/icon_exit01.png);}
@@ -372,6 +384,9 @@ color:#FFFFFF</string>
                    <height>32</height>
                   </size>
                  </property>
+                 <property name="toolTip">
+                  <string>打开工程</string>
+                 </property>
                  <property name="toolTipDuration">
                   <number>0</number>
                  </property>
@@ -396,6 +411,9 @@ QPushButton#pushButton_open:disabled{border-image: url(:/Resource/PNG/icon_open0
                    <width>32</width>
                    <height>32</height>
                   </size>
+                 </property>
+                 <property name="toolTip">
+                  <string>发送工程</string>
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton#pushButton_send{border-image: url(:/Resource/PNG/icon_sendp01.png);}
@@ -431,6 +449,9 @@ QPushButton#pushButton_send:disabled{border-image: url(:/Resource/PNG/icon_sendp
                    <height>32</height>
                   </size>
                  </property>
+                 <property name="toolTip">
+                  <string>保存工程</string>
+                 </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton#pushButton_save{border-image: url(:/Resource/PNG/icon_save01.png);}
 QPushButton#pushButton_save:hover{border-image: url(:/Resource/PNG/icon_save02.png);}
@@ -453,6 +474,9 @@ QPushButton#pushButton_save:disabled{border-image: url(:/Resource/PNG/icon_save0
                    <width>32</width>
                    <height>32</height>
                   </size>
+                 </property>
+                 <property name="toolTip">
+                  <string>另存为</string>
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton#pushButton_saveoth{border-image: url(:/Resource/PNG/icon_saveo01.png);}
@@ -530,7 +554,7 @@ font-size:12px;
 color:#FFFFFF</string>
               </property>
               <property name="text">
-               <string>视频文件</string>
+               <string>资源文件</string>
               </property>
              </widget>
             </item>
@@ -561,6 +585,9 @@ color:#FFFFFF</string>
            <layout class="QHBoxLayout" name="horizontalLayout_7">
             <item>
              <widget class="QPushButton" name="pushButton_openvideo">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="minimumSize">
                <size>
                 <width>32</width>
@@ -572,6 +599,16 @@ color:#FFFFFF</string>
                 <width>32</width>
                 <height>32</height>
                </size>
+              </property>
+              <property name="toolTip">
+               <string>打开资源</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton#pushButton_openvideo{border-image: url(:/Resource/PNG/icon_outs01.png);}
+QPushButton#pushButton_openvideo:hover{border-image: url(:/Resource/PNG/icon_outs02.png);}
+QPushButton#pushButton_openvideo:pressed{border-image: url(:/Resource/PNG/icon_outs02.png);}
+QPushButton#pushButton_openvideo:disabled{border-image: url(:/Resource/PNG/icon_outs04.png);}
+</string>
               </property>
               <property name="text">
                <string/>
@@ -580,6 +617,9 @@ color:#FFFFFF</string>
             </item>
             <item>
              <widget class="QPushButton" name="pushButton_savevideo">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="minimumSize">
                <size>
                 <width>32</width>
@@ -591,6 +631,16 @@ color:#FFFFFF</string>
                 <width>32</width>
                 <height>32</height>
                </size>
+              </property>
+              <property name="toolTip">
+               <string>保存资源</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton#pushButton_savevideo{border-image: url(:/Resource/PNG/icon_ins01.png);}
+QPushButton#pushButton_savevideo:hover{border-image: url(:/Resource/PNG/icon_ins02.png);}
+QPushButton#pushButton_savevideo:pressed{border-image: url(:/Resource/PNG/icon_ins02.png);}
+QPushButton#pushButton_savevideo:disabled{border-image: url(:/Resource/PNG/icon_ins04.png);}
+</string>
               </property>
               <property name="text">
                <string/>
@@ -611,25 +661,9 @@ color:#FFFFFF</string>
            <layout class="QHBoxLayout" name="horizontalLayout_8">
             <item>
              <widget class="QPushButton" name="pushButton_sendvideo">
-              <property name="minimumSize">
-               <size>
-                <width>32</width>
-                <height>32</height>
-               </size>
+              <property name="enabled">
+               <bool>false</bool>
               </property>
-              <property name="maximumSize">
-               <size>
-                <width>32</width>
-                <height>32</height>
-               </size>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton_sendOthvideo">
               <property name="minimumSize">
                <size>
                 <width>32</width>
@@ -643,7 +677,46 @@ color:#FFFFFF</string>
                </size>
               </property>
               <property name="toolTip">
-               <string>发送云里视频</string>
+               <string>发送资源</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton#pushButton_sendvideo{border-image: url(:/Resource/PNG/icon_sends01.png);}
+QPushButton#pushButton_sendvideo:hover{border-image: url(:/Resource/PNG/icon_sends02.png);}
+QPushButton#pushButton_sendvideo:pressed{border-image: url(:/Resource/PNG/icon_sends02.png);}
+QPushButton#pushButton_sendvideo:disabled{border-image: url(:/Resource/PNG/icon_sends04.png);}
+</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_sendOthvideo">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>发送云里资源</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton#pushButton_sendOthvideo{border-image: url(:/Resource/PNG/icon_sends01.png);}
+QPushButton#pushButton_sendOthvideo:hover{border-image: url(:/Resource/PNG/icon_sends02.png);}
+QPushButton#pushButton_sendOthvideo:pressed{border-image: url(:/Resource/PNG/icon_sends02.png);}
+QPushButton#pushButton_sendOthvideo:disabled{border-image: url(:/Resource/PNG/icon_sends04.png);}
+</string>
               </property>
               <property name="text">
                <string/>

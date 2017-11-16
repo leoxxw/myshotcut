@@ -96,7 +96,7 @@ int CloudDiskInterface::PreUploadResource(QString lpszResourceName,
                                           QString lpszResourceID,
                                           QString lpszFile,
                                           QString lpszRelativeFile,
-                                          enResourceMajorType nResourceMajorType,
+                                          enResourceType nResourceMajorType,
                                           QString lpszResourceSubType,
                                           HWND hParentWnd,
                                           enWebFlag dwFlag)
@@ -161,7 +161,7 @@ int CloudDiskInterface::DownloadResource(QString lpszResourceID, QString lpszLoc
 //上传资源添加多个文件
 int CloudDiskInterface::AddUploadFile(int nUploadJobID, QString lpszFile,
                                       QString lpszRelativeFile,
-                                      enResourceMajorType nResourceMajorType,
+                                      enResourceType nResourceMajorType,
                                       QString lpszResourceSubType)
 {
     typedef int (*Function)(int,const ushort*,const ushort*,int ,const ushort*);

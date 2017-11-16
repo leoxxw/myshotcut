@@ -48,7 +48,7 @@ EncodeDock::EncodeDock(QWidget *parent) :
     m_presets(Mlt::Repository::presets()),
     m_immediateJob(0),
     m_profiles(Mlt::Profile::list()),
-    m_encodeType(1),
+    m_encodeType(SF_ShotCutSave),
     m_isDefaultSettings(true)
 {
     LOG_DEBUG() << "begin";
@@ -327,7 +327,6 @@ bool EncodeDock::isExportInProgress() const
 
 void EncodeDock::SetEncodeType(int nType)
 {
-    //1代表默认输出，2代表云里输出
     m_encodeType = nType;
 }
 
@@ -989,7 +988,7 @@ void EncodeDock::on_presetsTree_activated(const QModelIndex &index)
 
 void EncodeDock::on_encodeButton_clicked()
 {
-    if(m_encodeType == 2)
+    if(m_encodeType == SF_SaveSend ||m_encodeType == SF_SaveOther)
     {
         //绑定信息
         connect(&JOBS, SIGNAL(signal_Finished()), this, SLOT(slot_Finished()));
@@ -1012,11 +1011,11 @@ void EncodeDock::on_encodeButton_clicked()
     }
     bool seekable = MLT.isSeekable(fromProducer());
     QString directory;
-    if(m_encodeType == 1)
+    if(m_encodeType == SF_ShotCutSave)
     {
      directory = Settings.encodePath();
     }
-    if(m_encodeType == 2)
+    if(m_encodeType == SF_SaveSend || m_encodeType == SF_SaveOther)
     {
      directory = QCoreApplication::applicationDirPath()+"/Temp";
     }
@@ -1037,7 +1036,7 @@ void EncodeDock::on_encodeButton_clicked()
         }
 #endif
     }
-    if(m_encodeType == 1)
+    if(m_encodeType == SF_ShotCutSave)
     {
         m_outputFilename = QFileDialog::getSaveFileName(this,
             seekable? tr("Export File") : tr("Capture File"), directory,
@@ -1096,7 +1095,7 @@ void EncodeDock::on_encodeButton_clicked()
             }
         }
     }
-    if(m_encodeType == 2)
+    if(m_encodeType == SF_SaveSend || m_encodeType == SF_SaveOther)
     {
         //修改输出路径
         QString fileName = ui->lineEdit->text();
@@ -1345,7 +1344,12 @@ void EncodeDock::onFinished(AbstractJob* job, bool isSuccess)
 
 void EncodeDock::slot_Finished()
 {
-    emit SendVideoPath(m_outputFilename);
+    if(m_encodeType == SF_SaveOther || m_encodeType == SF_SaveSend)
+    {
+        emit SendVideoPath(m_outputFilename);
+        m_encodeType = SF_ShotCutSave;
+    }
+
     qDebug()<<"slot_Finished";
 }
 
