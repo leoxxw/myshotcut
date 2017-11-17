@@ -29,6 +29,9 @@ public:
     void AddFile(QString filePath,int JobID,QString fatherPath,int type);
     enResourceType GetFileType(QString fileName);
 
+    void UploadVideo(QString strFilePath);
+    void UploadSendVideo(QString strFilePath);
+
 private slots:
     void on_pushButton_login_clicked();
 
@@ -59,6 +62,7 @@ signals:
     void signal_OpenVideo(QString VideoPath);
     void signal_SendProject();
     void signal_SendVideo();
+    void Signal_UploadVideo(bool);
 
 private:
     Ui::LoginWidget *ui;
@@ -71,6 +75,7 @@ private:
     enReturnType m_loginType;
     ResourceInfo m_ProResourceInfo;
     QString m_strBuffInfo;
+    bool m_bIsworking;
 };
 
 #endif // LOGINWIDGET_H

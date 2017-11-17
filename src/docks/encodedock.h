@@ -25,6 +25,7 @@
 #include <QSortFilterProxyModel>
 #include <MltProperties.h>
 
+
 class QTreeWidgetItem;
 class QStringList;
 namespace Ui {
@@ -54,9 +55,12 @@ public:
     void loadPresetFromProperties(Mlt::Properties&);
     bool isExportInProgress() const;
     void SetEncodeType(int nType);
+    void SetSaveType(int nType);
+    void encodeVideo();
 
 signals:
     void captureStateChanged(bool);
+    void FinisheUploadVideo(QString);
     void SendVideoPath(QString);
 
 public slots:
@@ -116,8 +120,10 @@ private:
     Mlt::Properties *m_profiles;
     PresetsProxyModel m_presetsModel;
     QString m_outputFilename;
+    QString m_yunliFilename;
     bool m_isDefaultSettings;
-    int m_encodeType;//1代表默认输出，2代表云里输出
+    int m_SaveType;
+    int m_EncodeType;
 
     void loadPresets();
     Mlt::Properties* collectProperties(int realtime);

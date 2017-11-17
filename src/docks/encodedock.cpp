@@ -48,7 +48,8 @@ EncodeDock::EncodeDock(QWidget *parent) :
     m_presets(Mlt::Repository::presets()),
     m_immediateJob(0),
     m_profiles(Mlt::Profile::list()),
-    m_encodeType(SF_ShotCutSave),
+    m_SaveType(SF_ShotCutSave),
+    m_EncodeType(EV_ShotCut),
     m_isDefaultSettings(true)
 {
     LOG_DEBUG() << "begin";
@@ -327,8 +328,14 @@ bool EncodeDock::isExportInProgress() const
 
 void EncodeDock::SetEncodeType(int nType)
 {
-    m_encodeType = nType;
+    m_EncodeType = nType;
 }
+
+void EncodeDock::SetSaveType(int nType)
+{
+    m_SaveType = nType;
+}
+
 
 void EncodeDock::onProducerOpened()
 {
@@ -988,7 +995,7 @@ void EncodeDock::on_presetsTree_activated(const QModelIndex &index)
 
 void EncodeDock::on_encodeButton_clicked()
 {
-    if(m_encodeType == SF_SaveSend ||m_encodeType == SF_SaveOther)
+    if(m_SaveType == SF_YUNLI)
     {
         //绑定信息
         connect(&JOBS, SIGNAL(signal_Finished()), this, SLOT(slot_Finished()));
@@ -1011,13 +1018,13 @@ void EncodeDock::on_encodeButton_clicked()
     }
     bool seekable = MLT.isSeekable(fromProducer());
     QString directory;
-    if(m_encodeType == SF_ShotCutSave)
+    if(m_SaveType == SF_ShotCutSave)
     {
-     directory = Settings.encodePath();
+        directory = Settings.encodePath();
     }
-    if(m_encodeType == SF_SaveSend || m_encodeType == SF_SaveOther)
+    if(m_SaveType == SF_YUNLI)
     {
-     directory = QCoreApplication::applicationDirPath()+"/Temp";
+        directory = QCoreApplication::applicationDirPath()+"/Temp";
     }
     if (!m_extension.isEmpty()) {
         if (!MAIN.fileName().isEmpty()) {
@@ -1036,7 +1043,7 @@ void EncodeDock::on_encodeButton_clicked()
         }
 #endif
     }
-    if(m_encodeType == SF_ShotCutSave)
+    if(m_SaveType == SF_ShotCutSave)
     {
         m_outputFilename = QFileDialog::getSaveFileName(this,
             seekable? tr("Export File") : tr("Capture File"), directory,
@@ -1095,7 +1102,7 @@ void EncodeDock::on_encodeButton_clicked()
             }
         }
     }
-    if(m_encodeType == SF_SaveSend || m_encodeType == SF_SaveOther)
+    if(m_SaveType == SF_YUNLI)
     {
         //修改输出路径
         QString fileName = ui->lineEdit->text();
@@ -1115,56 +1122,66 @@ void EncodeDock::on_encodeButton_clicked()
         {
             QFileInfo fi(m_outputFilename);
             MLT.pause();
-            Settings.setEncodePath(fi.path());
+            Settings.setEncodePath("");
             if (!m_extension.isEmpty()) {
                 if (fi.suffix().isEmpty()) {
                     m_outputFilename += '.';
                     m_outputFilename += m_extension;
                 }
             }
-            if (seekable) {
-                // Batch encode
-                int threadCount = QThread::idealThreadCount();
-                if (threadCount > 2 && ui->parallelCheckbox->isChecked())
-                    threadCount = qMin(threadCount - 1, 4);
-                else
-                    threadCount = 1;
-                enqueueMelt(m_outputFilename, Settings.playerGPU()? -1 : -threadCount);
-            }
-            else if (MLT.producer()->get_int(kBackgroundCaptureProperty)) {
-                // Capture in background
-                ui->dualPassCheckbox->setChecked(false);
-                m_immediateJob.reset(createMeltJob(fromProducer(), m_outputFilename, -1));
-                if (m_immediateJob) {
-                    // Close the player's producer to prevent resource contention.
-                    MAIN.hideProducer();
-
-                    m_immediateJob->setIsStreaming(true);
-                    connect(m_immediateJob.data(), SIGNAL(finished(AbstractJob*,bool)), this, SLOT(onFinished(AbstractJob*,bool)));
-
-                    if (MLT.resource().startsWith("gdigrab:") || MLT.resource().startsWith("x11grab:")) {
-                        ui->stopCaptureButton->show();
-                    } else {
-                        ui->encodeButton->setText(tr("Stop Capture"));
-                        ui->fromCombo->setDisabled(true);
-                    }
-                    if (MLT.resource().startsWith("gdigrab:"))
-                        MAIN.showMinimized();
-
-                    int msec = MLT.producer()->get_int(kBackgroundCaptureProperty) * 1000;
-                    QTimer::singleShot(msec, m_immediateJob.data(), SLOT(start()));
-                }
-            }
-            else {
-                // Capture to file
-                // use multi consumer to encode and preview simultaneously
-                ui->dualPassCheckbox->setChecked(false);
-                ui->encodeButton->setText(tr("Stop Capture"));
-                encode(m_outputFilename);
-                emit captureStateChanged(true);
-                ui->streamButton->setDisabled(true);
-            }
+            emit SendVideoPath(m_outputFilename);
+            m_yunliFilename = m_outputFilename;
+            m_SaveType = SF_ShotCutSave;
+            this->hide();
+            return;
         }
+    }
+}
+
+void EncodeDock::encodeVideo()
+{
+    bool seekable = MLT.isSeekable(fromProducer());
+    if (seekable) {
+        // Batch encode
+        int threadCount = QThread::idealThreadCount();
+        if (threadCount > 2 && ui->parallelCheckbox->isChecked())
+            threadCount = qMin(threadCount - 1, 4);
+        else
+            threadCount = 1;
+        enqueueMelt(m_outputFilename, Settings.playerGPU()? -1 : -threadCount);
+    }
+    else if (MLT.producer()->get_int(kBackgroundCaptureProperty)) {
+        // Capture in background
+        ui->dualPassCheckbox->setChecked(false);
+        m_immediateJob.reset(createMeltJob(fromProducer(), m_outputFilename, -1));
+        if (m_immediateJob) {
+            // Close the player's producer to prevent resource contention.
+            MAIN.hideProducer();
+
+            m_immediateJob->setIsStreaming(true);
+            connect(m_immediateJob.data(), SIGNAL(finished(AbstractJob*,bool)), this, SLOT(onFinished(AbstractJob*,bool)));
+
+            if (MLT.resource().startsWith("gdigrab:") || MLT.resource().startsWith("x11grab:")) {
+                ui->stopCaptureButton->show();
+            } else {
+                ui->encodeButton->setText(tr("Stop Capture"));
+                ui->fromCombo->setDisabled(true);
+            }
+            if (MLT.resource().startsWith("gdigrab:"))
+                MAIN.showMinimized();
+
+            int msec = MLT.producer()->get_int(kBackgroundCaptureProperty) * 1000;
+            QTimer::singleShot(msec, m_immediateJob.data(), SLOT(start()));
+        }
+    }
+    else {
+        // Capture to file
+        // use multi consumer to encode and preview simultaneously
+        ui->dualPassCheckbox->setChecked(false);
+        ui->encodeButton->setText(tr("Stop Capture"));
+        encode(m_outputFilename);
+        emit captureStateChanged(true);
+        ui->streamButton->setDisabled(true);
     }
 }
 
@@ -1344,10 +1361,11 @@ void EncodeDock::onFinished(AbstractJob* job, bool isSuccess)
 
 void EncodeDock::slot_Finished()
 {
-    if(m_encodeType == SF_SaveOther || m_encodeType == SF_SaveSend)
+    if(m_EncodeType == EV_YUNLI)
     {
-        emit SendVideoPath(m_outputFilename);
-        m_encodeType = SF_ShotCutSave;
+        emit FinisheUploadVideo(m_yunliFilename);
+        qDebug()<<"emit UploadVideo m_yunliFilename =" << m_yunliFilename;
+        m_EncodeType = EV_ShotCut;
     }
 
     qDebug()<<"slot_Finished";

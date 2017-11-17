@@ -87,7 +87,9 @@ private slots:
     void slot_SaveVideo(int ntype);
     void slot_OpenProject(QString ProjectPath);
     void slot_OpenVideo(QString VideoPath);
+    void slot_UploadVideo(bool);
     void slot_GetVideoPath(QString VideoPath);
+    void slot_FinisheUploadVideo(QString VideoPath);
 
 
 signals:
@@ -154,7 +156,7 @@ private:
     QString m_upgradeUrl;
     //登录窗口
     LoginWidget *m_loginwidget;
-    int m_nType;//保存类型（1代表默认保存路径（默认保存路径主要用于发送视频），2代表自定义路径）
+    int m_nType;//保存类型
 
 #ifdef WITH_LIBLEAP
     LeapListener m_leapListener;

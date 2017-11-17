@@ -286,6 +286,8 @@ int main(int argc, char **argv)
         restart->waitForFinished(1000);
         result = EXIT_SUCCESS;
     }
- //   exit(0);
+#ifdef QT_DEBUG
+    exit(0);
+#endif
     return result;
 }

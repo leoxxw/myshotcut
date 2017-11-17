@@ -369,6 +369,7 @@ MainWindow::MainWindow()
     connect(m_timelineDock, SIGNAL(clipCopied()), m_encodeDock, SLOT(onProducerOpened()));
     //绑定获取输出视频路径信号
     connect(m_encodeDock, SIGNAL(SendVideoPath(QString)), this, SLOT(slot_GetVideoPath(QString)));
+    connect(m_encodeDock, SIGNAL(FinisheUploadVideo(QString)), this, SLOT(slot_FinisheUploadVideo(QString)));
 
     m_encodeDock->onProfileChanged();
 
@@ -467,8 +468,10 @@ MainWindow::MainWindow()
     connect(m_loginwidget, &LoginWidget::signal_SaveVideo, this,&MainWindow::slot_SaveVideo);
     connect(m_loginwidget, &LoginWidget::signal_OpenProject, this,&MainWindow::slot_OpenProject);
     connect(m_loginwidget, &LoginWidget::signal_OpenVideo, this,&MainWindow::slot_OpenVideo);
+    connect(m_loginwidget,&LoginWidget::Signal_UploadVideo,this,&MainWindow::slot_UploadVideo);
     QRect rect = this->geometry();
     m_loginwidget->move(QPoint(rect.width()/10 *9,rect.height()/5 *1));
+    m_loginwidget->setWindowFlags( Qt::WindowStaysOnTopHint);
     m_loginwidget->show();
     LOG_DEBUG() << "end";
 }
@@ -1812,15 +1815,15 @@ void MainWindow::slot_SaveProject(int ntype)
     on_actionSave_triggered();
     if(m_loginwidget)
     {
-        if(ntype == 1)
+        if(ntype == SF_Save)
         {
             m_loginwidget->SaveProject(m_currentFile,ntype);
         }
-        if(ntype == 2)
+        if(ntype == SF_SaveOther)
         {
             m_loginwidget->SaveProjectOther(m_currentFile);
         }
-        if(ntype == 3)
+        if(ntype == SF_SaveSend)
         {
             m_loginwidget->SaveProject(m_currentFile,ntype);
             m_loginwidget->SendProjectNoDlg(m_currentFile);
@@ -1835,8 +1838,12 @@ void MainWindow::slot_SaveVideo(int ntype)
         MLT.pause();
     }
     m_nType = ntype;
-    m_encodeDock->SetEncodeType(ntype);
+    m_encodeDock->SetSaveType(SF_YUNLI);
+    m_encodeDock->SetEncodeType(EV_YUNLI);
     m_encodeDock->setFloating(true);
+    QRect rect = this->geometry();
+    m_encodeDock->move(QPoint(rect.width()/5*1,rect.height()/5*1));
+    m_encodeDock->resize(510,414);
     m_encodeDock->show();
     m_encodeDock->raise();
 }
@@ -1877,6 +1884,23 @@ void MainWindow::slot_OpenVideo(QString VideoPath)
     }
 }
 
+void MainWindow::slot_UploadVideo(bool bIsUpload)
+{
+    if(m_encodeDock)
+    {
+        if(!bIsUpload)
+        {
+            m_encodeDock->SetSaveType(SF_ShotCutSave);
+            m_encodeDock->SetEncodeType(EV_ShotCut);
+        }
+        else
+        {
+            m_encodeDock->encodeVideo();
+            qDebug()<<"开始输出视频 encodeVideo";
+        }
+    }
+}
+
 void MainWindow::slot_GetVideoPath(QString VideoPath)
 {
     if(MLT.videoWidget())
@@ -1893,7 +1917,20 @@ void MainWindow::slot_GetVideoPath(QString VideoPath)
     }
     if(m_encodeDock)
     {
+        m_encodeDock->setFloating(false);
         m_encodeDock->hide();
+    }
+}
+
+void MainWindow::slot_FinisheUploadVideo(QString VideoPath)
+{
+    if(m_nType == SF_SaveOther)
+    {
+        m_loginwidget->UploadVideo(VideoPath);
+    }
+    if(m_nType == SF_SaveSend)
+    {
+        m_loginwidget->UploadSendVideo(VideoPath);
     }
 }
 
