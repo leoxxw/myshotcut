@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Shotcut</string>
+   <string>VideoStudio</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../icons/resources.qrc">

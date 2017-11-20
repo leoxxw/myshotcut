@@ -49,6 +49,7 @@ public:
 signals:
     void jobAdded();
     void signal_Finished();
+    void signal_Start();
 
 public slots:
     void onProgressUpdated(QModelIndex index, uint percent);

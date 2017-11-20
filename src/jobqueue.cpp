@@ -76,7 +76,7 @@ void JobQueue::onFinished(AbstractJob* job, bool isSuccess)
         if (isSuccess)
         {
             item->setText(tr("done"));
-            qDebug()<<"emit signal_Finished()";
+            qDebug()<<"onFinished输出完成";
             emit signal_Finished();
         }
         else if (job->stopped())
@@ -98,6 +98,7 @@ void JobQueue::startNextJob()
                 break;
             // otherwise, start first non-started job and exit
             if (!job->ran()) {
+                emit signal_Start();
                 job->start();
                 break;
             }

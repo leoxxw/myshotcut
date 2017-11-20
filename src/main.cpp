@@ -256,9 +256,9 @@ int main(int argc, char **argv)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
     Application a(argc, argv);
-    QSplashScreen splash(QPixmap(":/icons/shotcut-logo-640.png"));
-    splash.showMessage(QCoreApplication::translate("main", "Loading plugins..."), Qt::AlignHCenter | Qt::AlignBottom);
-    splash.show();
+//    QSplashScreen splash(QPixmap(":/icons/shotcut-logo-640.png"));
+//    splash.showMessage(QCoreApplication::translate("main", "Loading plugins..."), Qt::AlignHCenter | Qt::AlignBottom);
+//    splash.show();
 
     a.setProperty("system-style", a.style()->objectName());
     MainWindow::changeTheme(Settings.theme());
@@ -269,7 +269,7 @@ int main(int argc, char **argv)
         a.mainWindow->hideSetDataDirectory();
     a.mainWindow->show();
     a.mainWindow->setFullScreen(a.isFullScreen);
-    splash.finish(a.mainWindow);
+//    splash.finish(a.mainWindow);
 
     if (!a.resourceArg.isEmpty())
         a.mainWindow->open(a.resourceArg);

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>112</width>
-    <height>376</height>
+    <height>400</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -37,10 +37,16 @@
    </property>
    <item>
     <widget class="QWidget" name="widget" native="true">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>24</height>
+      </size>
+     </property>
      <property name="maximumSize">
       <size>
        <width>200</width>
-       <height>30</height>
+       <height>24</height>
       </size>
      </property>
      <property name="styleSheet">
@@ -77,6 +83,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="pushButton_close">
+        <property name="minimumSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
           <width>24</width>
@@ -143,15 +155,33 @@ QPushButton#pushButton_close:pressed{border-image: url(:/Resource/PNG/btn_Close0
          </property>
          <item>
           <widget class="QWidget" name="widget_6" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>16777215</width>
-             <height>30</height>
+             <height>25</height>
             </size>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <property name="spacing">
+             <number>0</number>
+            </property>
             <property name="leftMargin">
              <number>10</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
             </property>
             <item>
              <widget class="QLabel" name="label">
@@ -186,20 +216,26 @@ color:#FFFFFF</string>
            <property name="minimumSize">
             <size>
              <width>0</width>
-             <height>50</height>
+             <height>40</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>16777215</width>
-             <height>50</height>
+             <height>40</height>
             </size>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
             <property name="leftMargin">
              <number>0</number>
             </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
             <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
              <number>0</number>
             </property>
             <item>
@@ -263,7 +299,7 @@ QPushButton#pushButton_exit:disabled{border-image: url(:/Resource/PNG/icon_exit0
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>130</height>
+          <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
@@ -290,10 +326,16 @@ QPushButton#pushButton_exit:disabled{border-image: url(:/Resource/PNG/icon_exit0
          </property>
          <item>
           <widget class="QWidget" name="widget_8" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>16777215</width>
-             <height>30</height>
+             <height>25</height>
             </size>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -360,10 +402,16 @@ color:#FFFFFF</string>
             </property>
             <item>
              <widget class="QWidget" name="widget_10" native="true">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>40</height>
+               </size>
+              </property>
               <property name="maximumSize">
                <size>
                 <width>16777215</width>
-                <height>50</height>
+                <height>40</height>
                </size>
               </property>
               <property name="toolTip">
@@ -373,6 +421,18 @@ color:#FFFFFF</string>
                <string/>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
                <item>
                 <widget class="QPushButton" name="pushButton_open">
                  <property name="enabled">
@@ -431,13 +491,31 @@ QPushButton#pushButton_send:disabled{border-image: url(:/Resource/PNG/icon_sendp
             </item>
             <item>
              <widget class="QWidget" name="widget_11" native="true">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>40</height>
+               </size>
+              </property>
               <property name="maximumSize">
                <size>
                 <width>16777215</width>
-                <height>50</height>
+                <height>40</height>
                </size>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
                <item>
                 <widget class="QPushButton" name="pushButton_save">
                  <property name="enabled">
@@ -503,13 +581,13 @@ QPushButton#pushButton_saveoth:disabled{border-image: url(:/Resource/PNG/icon_sa
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>130</height>
+          <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>130</height>
+          <height>180</height>
          </size>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -530,6 +608,18 @@ QPushButton#pushButton_saveoth:disabled{border-image: url(:/Resource/PNG/icon_sa
          </property>
          <item>
           <widget class="QWidget" name="widget_14" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>25</height>
+            </size>
+           </property>
            <layout class="QHBoxLayout" name="horizontalLayout_9">
             <property name="spacing">
              <number>0</number>
@@ -576,13 +666,31 @@ color:#FFFFFF</string>
          </item>
          <item>
           <widget class="QWidget" name="widget_12" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>40</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>16777215</width>
-             <height>16777215</height>
+             <height>40</height>
             </size>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="QPushButton" name="pushButton_openvideo">
               <property name="enabled">
@@ -652,13 +760,31 @@ QPushButton#pushButton_savevideo:disabled{border-image: url(:/Resource/PNG/icon_
          </item>
          <item>
           <widget class="QWidget" name="widget_13" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>40</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>16777215</width>
-             <height>16777215</height>
+             <height>40</height>
             </size>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="QPushButton" name="pushButton_sendvideo">
               <property name="enabled">
@@ -724,6 +850,60 @@ QPushButton#pushButton_sendOthvideo:disabled{border-image: url(:/Resource/PNG/ic
              </widget>
             </item>
            </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_15" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>40</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>40</height>
+            </size>
+           </property>
+           <widget class="QPushButton" name="pushButton_search">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>14</x>
+              <y>4</y>
+              <width>32</width>
+              <height>32</height>
+             </rect>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>搜索资源</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton#pushButton_search{border-image: url(:/Resource/PNG/icon_search01.png);}
+QPushButton#pushButton_search:hover{border-image: url(:/Resource/PNG/icon_search02.png);}
+QPushButton#pushButton_search:pressed{border-image: url(:/Resource/PNG/icon_search02.png);}
+QPushButton#pushButton_search:disabled{border-image: url(:/Resource/PNG/icon_search04.png);}
+</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
           </widget>
          </item>
         </layout>

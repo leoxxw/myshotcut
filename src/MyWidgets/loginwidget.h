@@ -32,6 +32,10 @@ public:
     void UploadVideo(QString strFilePath);
     void UploadSendVideo(QString strFilePath);
 
+    void GetInitFileInfo();
+    void SetIsWorking(bool bIsWorking);
+    bool IsWoking();
+
 private slots:
     void on_pushButton_login_clicked();
 
@@ -55,6 +59,8 @@ private slots:
 
     void on_pushButton_send_clicked();
 
+    void on_pushButton_search_clicked();
+
 signals:
     void signal_SaveProject(int ntype);
     void signal_SaveVideo(int ntype);
@@ -76,6 +82,7 @@ private:
     ResourceInfo m_ProResourceInfo;
     QString m_strBuffInfo;
     bool m_bIsworking;
+    int m_nSearch;
 };
 
 #endif // LOGINWIDGET_H

@@ -90,6 +90,7 @@ private slots:
     void slot_UploadVideo(bool);
     void slot_GetVideoPath(QString VideoPath);
     void slot_FinisheUploadVideo(QString VideoPath);
+    void setShowfilepropertycheck(bool);
 
 
 signals:

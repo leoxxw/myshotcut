@@ -268,5 +268,6 @@
         <file>../Resource/PNG/CloudInDisable.png</file>
         <file>../Resource/PNG/CloudInDown.png</file>
         <file>../Resource/PNG/CloudInUp.png</file>
+        <file>../Resource/PNG/icon_search03.png</file>
     </qresource>
 </RCC>

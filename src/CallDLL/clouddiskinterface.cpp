@@ -206,6 +206,23 @@ int CloudDiskInterface::GetMainFilePath(wchar_t *szMainPath, int nsize)
     int ret = fpInit(szMainPath,nsize);
     return ret;
 }
+
+int CloudDiskInterface::SearchOpenEx(int nResourceMajorTypeFilter,
+                                   QString lpszResourceSubTypeFilter,
+                                   HWND hParentWnd,
+                                   DWORD dwFlag,
+                                   QString lpszNotSub)
+{
+    typedef int (*Function)(int ,const ushort*,HWND,DWORD,const ushort*);
+    Function fpInit = (Function)m_lib->resolve("DoSearchOpenEx");
+
+    int ret = fpInit(nResourceMajorTypeFilter,
+                     lpszResourceSubTypeFilter.utf16(),
+                     hParentWnd,
+                     dwFlag,
+                     lpszNotSub.utf16());
+    return ret;
+}
 //单利对象
 QSharedPointer<CloudDiskInterface> &CloudDiskInterface::instance()
 {

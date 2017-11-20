@@ -4,7 +4,7 @@ QT       += widgets opengl xml network printsupport qml quick sql webkitwidgets
 QT       += multimedia websockets quickwidgets
 QT       += qml-private core-private quick-private gui-private
 
-TARGET = shotcut
+TARGET = VideoStudio
 TEMPLATE = app
 
 win32:DEFINES += QT_STATIC

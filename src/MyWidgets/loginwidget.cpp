@@ -10,7 +10,8 @@
 LoginWidget::LoginWidget(QWidget *parent) :
     BaseMainWidget(parent),
     ui(new Ui::LoginWidget),
-    m_bIsworking(false)
+    m_bIsworking(false),
+    m_nSearch(0)
 {
     ui->setupUi(this);
     // this->setWindowFlags(Qt::FramelessWindowHint);//去掉标题栏
@@ -28,6 +29,13 @@ LoginWidget::~LoginWidget()
 
 void LoginWidget::Init()
 {
+    //检查配置文件
+    GetInitFileInfo();
+    if(m_nSearch == 0)
+    {
+        ui->widget_15->hide();
+        this->resize(112,360);
+    }
     //删除临时文件
     QString strLoadPath = QCoreApplication::applicationDirPath()+"/Temp";
     DelDir(strLoadPath);
@@ -96,6 +104,8 @@ void LoginWidget::SetLoginSucceed(wchar_t *pUserID, wchar_t *pszUserToken)
     ui->pushButton_savevideo->setEnabled(true);
     ui->pushButton_sendvideo->setEnabled(true);
     ui->pushButton_sendOthvideo->setEnabled(true);
+    ui->pushButton_search->setEnabled(true);
+
     //初始化CloudDiskInterface
     CloudDiskInterface::instance()->Init(m_strSysID,m_strUrl,m_userID,m_strJoincode);
     CloudDiskInterface::instance()->SetLogType(ELT_ALL);
@@ -221,7 +231,7 @@ void LoginWidget::SaveProject(QString strFilePath,int ntype)
         qDebug() <<"save succeed";
         if(ntype != SF_SaveSend)
         {
-            QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("工程保存成功"));
+            QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程保存成功      "));
         }
     }else{
         qDebug() <<"save failed";
@@ -279,7 +289,7 @@ void LoginWidget::SaveProjectOther(QString strFilePath)
         if(ret == ERT_TRUE)
         {
             qDebug() <<"save succeed";
-            QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("工程保存成功"));
+            QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程保存成功      "));
         }
     }
 }
@@ -303,7 +313,6 @@ void LoginWidget::SaveVideo(QString strFilePath)
     if(nsize < ERT_TRUE)
     {
         qDebug() <<QStringLiteral("CloudDiskInterface failed");
-        return;
     }
     if(nsize == ERT_CANCEL)
     {
@@ -345,12 +354,10 @@ void LoginWidget::SendVideoNoDlg(QString strFilePath)
     if(nsize < ERT_TRUE)
     {
         qDebug() <<QStringLiteral("CloudDiskInterface failed");
-        return;
     }
     if(nsize == ERT_CANCEL)
     {
         qDebug() <<QStringLiteral("cancle");
-        return;
     }
     if(nsize > ERT_CANCEL)
     {
@@ -430,9 +437,11 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
             if(t == ERT_TRUE)
             {
                 qDebug()<<"LocalSend successful";
-                QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("工程发送成功"));
-            }else{
-                QMessageBox::about(NULL, QStringLiteral("失败"), QStringLiteral("工程发送失败"));
+                QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程发送成功      "));
+            }
+            else if(t < ERT_TRUE)
+            {
+                QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      工程发送失败      "));
             }
         }
     }
@@ -539,11 +548,6 @@ enResourceType LoginWidget::GetFileType(QString fileName)
 void LoginWidget::UploadVideo(QString strFilePath)
 {
     m_bIsworking = false;
-    if(strFilePath == "")
-    {
-        QMessageBox::about(NULL, QStringLiteral("失败"), QStringLiteral("视频保存失败"));
-        return;
-    }
     int npoint= strFilePath.lastIndexOf(QRegExp("/"));
     int tpoint = strFilePath.lastIndexOf('.');
     QString filePath = strFilePath.mid(npoint+1,strFilePath.length()-npoint);
@@ -575,9 +579,11 @@ void LoginWidget::UploadVideo(QString strFilePath)
     if(ret == ERT_TRUE)
     {
         qDebug() <<"save succeed";
-        QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("视频保存成功"));
-    }else{
-        QMessageBox::about(NULL, QStringLiteral("失败"), QStringLiteral("视频保存失败"));
+        QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     视频保存成功      "));
+    }
+    if(ret < ERT_TRUE)
+    {
+        QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      视频保存失败      "));
     }
 
 }
@@ -585,11 +591,11 @@ void LoginWidget::UploadVideo(QString strFilePath)
 void LoginWidget::UploadSendVideo(QString strFilePath)
 {
     m_bIsworking = false;
-    if(strFilePath == "")
-    {
-        QMessageBox::about(NULL, QStringLiteral("失败"), QStringLiteral("视频发送失败"));
-        return;
-    }
+//    if(strFilePath == "")
+//    {
+//        QMessageBox::about(NULL, QStringLiteral("失败"), QStringLiteral("视频发送失败"));
+//        return;
+//    }
     wchar_t pBuff[1024];
     memset(pBuff,0,1024 * sizeof(wchar_t));
     int npoint= strFilePath.lastIndexOf(QRegExp("/"));
@@ -628,12 +634,45 @@ void LoginWidget::UploadSendVideo(QString strFilePath)
         if(t == ERT_TRUE)
         {
             qDebug()<<"LocalSend successful";
-            QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("视频发送成功"));
-        }else{
-            QMessageBox::about(NULL, QStringLiteral("失败"), QStringLiteral("视频发送失败"));
+            QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     视频发送成功      "));
+        }
+        if(t < ERT_TRUE)
+        {
+            QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      视频发送失败      "));
         }
     }
 
+}
+
+void LoginWidget::GetInitFileInfo()
+{
+    QSettings *configIniRead = NULL;
+    QString path = QCoreApplication::applicationDirPath();
+    path.append("/ShotcutInfo.ini");
+    configIniRead = new QSettings(path, QSettings::IniFormat);
+    //将读取到的ini文件保存在QString中，先取值，然后通过toString()函数转换成QString类型
+    if(!configIniRead)
+    {
+        qDebug() <<"read ServerStatus.ini false";
+        return ;
+    }
+    m_nSearch = configIniRead->value("/SETTING/search").toInt();
+
+    //打印得到的结果
+    qDebug() << "search ="<< m_nSearch;
+
+    //读入入完成后删除指针
+    delete configIniRead;
+}
+
+void LoginWidget::SetIsWorking(bool bIsWorking)
+{
+    m_bIsworking = bIsWorking;
+}
+
+bool LoginWidget::IsWoking()
+{
+    return m_bIsworking;
 }
 
 void LoginWidget::on_pushButton_login_clicked()
@@ -686,7 +725,7 @@ void LoginWidget::on_pushButton_exit_clicked()
 {
     if(m_bIsworking)
     {
-        QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         return;
     }
     //调用注销接口
@@ -704,6 +743,7 @@ void LoginWidget::on_pushButton_exit_clicked()
     ui->pushButton_savevideo->setEnabled(false);
     ui->pushButton_sendvideo->setEnabled(false);
     ui->pushButton_sendOthvideo->setEnabled(false);
+     ui->pushButton_search->setEnabled(false);
     m_userID = "";
     m_UserToken = "";
     m_Ticket = "";
@@ -714,7 +754,7 @@ void LoginWidget::on_pushButton_open_clicked()
 {
     if(m_bIsworking)
     {
-        QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         return;
     }
     //打开选择窗口
@@ -782,7 +822,7 @@ void LoginWidget::on_pushButton_save_clicked()
 {
     if(m_bIsworking)
     {
-        QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         return;
     }
     emit signal_SaveProject(SF_Save);//代表默认保存
@@ -793,7 +833,7 @@ void LoginWidget::on_pushButton_saveoth_clicked()
 {
     if(m_bIsworking)
     {
-        QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         return;
     }
     emit signal_SaveProject(SF_SaveOther);//代表另存为
@@ -803,7 +843,7 @@ void LoginWidget::on_pushButton_openvideo_clicked()
 {
     if(m_bIsworking)
     {
-        QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         return;
     }
     //打开选择窗口
@@ -853,7 +893,7 @@ void LoginWidget::on_pushButton_openvideo_clicked()
             QString strVideoPath = strLoadPath + QString::fromWCharArray(FileListBuffer);
             emit signal_OpenVideo(strVideoPath);
         }else{
-             QMessageBox::about(NULL, QStringLiteral("失败"), QStringLiteral("下载资源失败"));
+             QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("     下载资源失败      "));
         }
     }
 }
@@ -864,7 +904,7 @@ void LoginWidget::on_pushButton_savevideo_clicked()
 {
     if(m_bIsworking)
     {
-        QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         return;
     }
     emit signal_SaveVideo(SF_SaveOther);//代表自己选择路径保存
@@ -874,7 +914,7 @@ void LoginWidget::on_pushButton_sendvideo_clicked()
 {
     if(m_bIsworking)
     {
-        QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         return;
     }
     //发送视频前先默认保存视频
@@ -885,7 +925,7 @@ void LoginWidget::on_pushButton_sendOthvideo_clicked()
 {
     if(m_bIsworking)
     {
-        QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         return;
     }
     //打开选择窗口
@@ -924,9 +964,11 @@ void LoginWidget::on_pushButton_sendOthvideo_clicked()
         if(t == ERT_TRUE)
         {
             qDebug()<<"LocalSend successful";
-            QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("视频发送成功"));
-        }else{
-            QMessageBox::about(NULL, QStringLiteral("失败"), QStringLiteral("视频发送失败"));
+            QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     视频发送成功      "));
+        }
+        if(t < ERT_TRUE)
+        {
+            QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      视频发送失败      "));
         }
     }
 }
@@ -935,8 +977,65 @@ void LoginWidget::on_pushButton_send_clicked()
 {
     if(m_bIsworking)
     {
-        QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         return;
     }
     emit signal_SaveProject(SF_SaveSend);//代表默认保存并发送
+}
+
+void LoginWidget::on_pushButton_search_clicked()
+{
+    if(m_bIsworking)
+    {
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        return;
+    }
+    int nsize = CloudDiskInterface::instance()->SearchOpenEx(ERMT_ALL,
+                                                         "",
+                                                         NULL,
+                                                         EWF_WEB_OPEN_FLAG_DEFAULT,
+                                                         "");
+    if(nsize < ERT_TRUE)
+    {
+        qDebug() <<QStringLiteral("ResourceDialog failed");
+        return;
+    }
+    if(nsize == ERT_CANCEL)
+    {
+        qDebug() <<QStringLiteral("cancle");
+    }
+    if(nsize > ERT_CANCEL)
+    {
+        //获取资源选中窗口的信息
+        wchar_t pBuff[1024];
+        memset(pBuff,0,1024 * sizeof(wchar_t));
+        CloudDiskInterface::instance()->GetResourceList(pBuff,nsize);
+        qDebug() <<QString::fromWCharArray(pBuff);
+        ResourceInfo infoList;
+        if(!GetListInfo(QString::fromWCharArray(pBuff),infoList))
+        {
+            qDebug()<<"获取资源信息失败";
+            return;
+        }
+
+        //下载资源
+        QString strLoadPath = QCoreApplication::applicationDirPath()+"/DownLoad";
+        wchar_t FileListBuffer[512];
+        memset(FileListBuffer,0,512 * sizeof(wchar_t));
+        int nbufferSize = 512;
+        int t = CloudDiskInterface::instance()->DownloadResource(infoList.m_strResourceID,
+                                                                 strLoadPath,
+                                                                 FileListBuffer,
+                                                                 nbufferSize,
+                                                                 NULL,
+                                                                 EDFalg_PROMPT);
+        if(t == ERT_TRUE)
+        {
+            qDebug()<<"DownloadResource successful";
+            QString strVideoPath = strLoadPath + QString::fromWCharArray(FileListBuffer);
+            emit signal_OpenVideo(strVideoPath);
+        }else{
+            QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      下载资源失败      "));
+        }
+    }
 }

@@ -58,6 +58,11 @@ public:
 
     int GetMainFilePath(wchar_t* szMainPath, int nsize);
 
+    int SearchOpenEx(int nResourceMajorTypeFilter,
+                   QString lpszResourceSubTypeFilter,
+                   HWND hParentWnd,
+                   DWORD dwFlag,QString lpszNotSub);
+
     static QSharedPointer<CloudDiskInterface>& instance();
 private:
     CloudDiskInterface();

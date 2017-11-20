@@ -54,13 +54,14 @@ public:
 
     void loadPresetFromProperties(Mlt::Properties&);
     bool isExportInProgress() const;
-    void SetEncodeType(int nType);
     void SetSaveType(int nType);
     void encodeVideo();
+    bool IsWorking();
 
 signals:
     void captureStateChanged(bool);
     void FinisheUploadVideo(QString);
+    void EncodeWorking(bool);
     void SendVideoPath(QString);
 
 public slots:
@@ -69,6 +70,7 @@ public slots:
 
 private slots:
     void on_presetsTree_clicked(const QModelIndex &index);
+
     void on_presetsTree_activated(const QModelIndex &index);
 
     void on_encodeButton_clicked();
@@ -80,7 +82,9 @@ private slots:
     void on_removePresetButton_clicked();
 
     void onFinished(AbstractJob*, bool isSuccess);
+
     void slot_Finished();
+    void slot_Start();
 
     void on_stopCaptureButton_clicked();
 
@@ -124,6 +128,7 @@ private:
     bool m_isDefaultSettings;
     int m_SaveType;
     int m_EncodeType;
+    bool m_bIsWorking;
 
     void loadPresets();
     Mlt::Properties* collectProperties(int realtime);

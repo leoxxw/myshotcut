@@ -370,7 +370,7 @@ MainWindow::MainWindow()
     //绑定获取输出视频路径信号
     connect(m_encodeDock, SIGNAL(SendVideoPath(QString)), this, SLOT(slot_GetVideoPath(QString)));
     connect(m_encodeDock, SIGNAL(FinisheUploadVideo(QString)), this, SLOT(slot_FinisheUploadVideo(QString)));
-
+    connect(m_encodeDock,SIGNAL(visibilityChanged(bool)),this,SLOT(setShowfilepropertycheck(bool)));
     m_encodeDock->onProfileChanged();
 
     m_jobsDock = new JobsDock(this);
@@ -1833,19 +1833,24 @@ void MainWindow::slot_SaveProject(int ntype)
 
 void MainWindow::slot_SaveVideo(int ntype)
 {
+    if(m_encodeDock->IsWorking())
+    {
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        m_loginwidget->SetIsWorking(false);
+        return;
+    }
     if(MLT.videoWidget())
     {
         MLT.pause();
     }
     m_nType = ntype;
-    m_encodeDock->SetSaveType(SF_YUNLI);
-    m_encodeDock->SetEncodeType(EV_YUNLI);
     m_encodeDock->setFloating(true);
     QRect rect = this->geometry();
-    m_encodeDock->move(QPoint(rect.width()/5*1,rect.height()/5*1));
+    m_encodeDock->move(QPoint(rect.width()/5*2,rect.height()/5*1));
     m_encodeDock->resize(510,414);
     m_encodeDock->show();
     m_encodeDock->raise();
+    m_encodeDock->SetSaveType(SF_YUNLI);
 }
 
 void MainWindow::slot_OpenProject(QString ProjectPath)
@@ -1891,7 +1896,9 @@ void MainWindow::slot_UploadVideo(bool bIsUpload)
         if(!bIsUpload)
         {
             m_encodeDock->SetSaveType(SF_ShotCutSave);
-            m_encodeDock->SetEncodeType(EV_ShotCut);
+            m_encodeDock->setFloating(false);
+            m_encodeDock->hide();
+            qDebug()<<"取消操作 encodeVideo";
         }
         else
         {
@@ -1931,6 +1938,16 @@ void MainWindow::slot_FinisheUploadVideo(QString VideoPath)
     if(m_nType == SF_SaveSend)
     {
         m_loginwidget->UploadSendVideo(VideoPath);
+    }
+}
+
+void MainWindow::setShowfilepropertycheck(bool)
+{
+    if(m_encodeDock->isHidden()==true)
+    {
+        m_encodeDock->SetSaveType(SF_ShotCutSave);
+        m_encodeDock->setFloating(false);
+        qDebug()<<"关闭m_encodeDock窗口";
     }
 }
 
@@ -2212,6 +2229,11 @@ QUndoStack* MainWindow::undoStack() const
 
 void MainWindow::onEncodeTriggered(bool checked)
 {
+    if(m_loginwidget && m_loginwidget->IsWoking())
+    {
+        QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        return;
+    }
     if (checked) {
         m_encodeDock->show();
         m_encodeDock->raise();

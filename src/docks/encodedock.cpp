@@ -50,10 +50,14 @@ EncodeDock::EncodeDock(QWidget *parent) :
     m_profiles(Mlt::Profile::list()),
     m_SaveType(SF_ShotCutSave),
     m_EncodeType(EV_ShotCut),
+    m_bIsWorking(false),
     m_isDefaultSettings(true)
 {
     LOG_DEBUG() << "begin";
     ui->setupUi(this);
+    //绑定信号
+    connect(&JOBS, SIGNAL(signal_Finished()), this, SLOT(slot_Finished()));
+    connect(&JOBS, SIGNAL(signal_Start()), this, SLOT(slot_Start()));
     ui->stopCaptureButton->hide();
     ui->videoCodecThreadsSpinner->setMaximum(QThread::idealThreadCount());
     if (QThread::idealThreadCount() < 3)
@@ -324,11 +328,6 @@ void EncodeDock::loadPresetFromProperties(Mlt::Properties& preset)
 bool EncodeDock::isExportInProgress() const
 {
     return !m_immediateJob.isNull();
-}
-
-void EncodeDock::SetEncodeType(int nType)
-{
-    m_EncodeType = nType;
 }
 
 void EncodeDock::SetSaveType(int nType)
@@ -995,12 +994,6 @@ void EncodeDock::on_presetsTree_activated(const QModelIndex &index)
 
 void EncodeDock::on_encodeButton_clicked()
 {
-    if(m_SaveType == SF_YUNLI)
-    {
-        //绑定信息
-        connect(&JOBS, SIGNAL(signal_Finished()), this, SLOT(slot_Finished()));
-        qDebug()<<"绑定信息 connect(&JOBS, SIGNAL(signal_Finished()), this, SLOT(slot_Finished()));";
-    }
     if (!MLT.producer())
         return;
     if (m_immediateJob) {
@@ -1108,7 +1101,7 @@ void EncodeDock::on_encodeButton_clicked()
         QString fileName = ui->lineEdit->text();
         if(fileName == "")
         {
-            QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("输出文件名为空！"));
+            QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("输出文件名为空！"));
             return;
         }
         QString tempPath =QCoreApplication::applicationDirPath()+"/Temp/";
@@ -1131,7 +1124,6 @@ void EncodeDock::on_encodeButton_clicked()
             }
             emit SendVideoPath(m_outputFilename);
             m_yunliFilename = m_outputFilename;
-            m_SaveType = SF_ShotCutSave;
             this->hide();
             return;
         }
@@ -1140,6 +1132,7 @@ void EncodeDock::on_encodeButton_clicked()
 
 void EncodeDock::encodeVideo()
 {
+    m_EncodeType = EV_YUNLI;
     bool seekable = MLT.isSeekable(fromProducer());
     if (seekable) {
         // Batch encode
@@ -1183,6 +1176,11 @@ void EncodeDock::encodeVideo()
         emit captureStateChanged(true);
         ui->streamButton->setDisabled(true);
     }
+}
+
+bool EncodeDock::IsWorking()
+{
+    return m_bIsWorking;
 }
 
 void EncodeDock::onProfileChanged()
@@ -1364,11 +1362,16 @@ void EncodeDock::slot_Finished()
     if(m_EncodeType == EV_YUNLI)
     {
         emit FinisheUploadVideo(m_yunliFilename);
-        qDebug()<<"emit UploadVideo m_yunliFilename =" << m_yunliFilename;
+        qDebug()<<"输出完成";
+        m_SaveType = SF_ShotCutSave;
         m_EncodeType = EV_ShotCut;
     }
+    m_bIsWorking = false;
+}
 
-    qDebug()<<"slot_Finished";
+void EncodeDock::slot_Start()
+{
+    m_bIsWorking = true;
 }
 
 void EncodeDock::on_stopCaptureButton_clicked()
