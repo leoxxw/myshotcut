@@ -173,13 +173,12 @@ bool LoginWidget::GetListInfo(QString strBuffer,ResourceInfo &InfoList)
     return true;
 }
 
-void LoginWidget::SaveProject(QString strFilePath,int ntype)
+bool LoginWidget::SaveProject(QString strFilePath,int ntype,int projectType)
 {
     //获取资源选中窗口的信息
-    if(m_ProResourceInfo.m_strResourceID == "")
+    if(m_ProResourceInfo.m_strResourceID == "" || projectType ==EV_ShotCut)
     {
-        SaveProjectOther(strFilePath);
-        return;
+        return SaveProjectOther(strFilePath);
     }
     wchar_t pBuff[1024];
     memset(pBuff,0,1024 * sizeof(wchar_t));
@@ -221,7 +220,7 @@ void LoginWidget::SaveProject(QString strFilePath,int ntype)
     if(nJobID <= 0)
     {
         qDebug() <<"save failed";
-        return;
+        return false;
     }
     AddFile(strFilePath,nJobID,"",1);
     int ret = CloudDiskInterface::instance()->UploadResource(nJobID,m_strBuffInfo);
@@ -233,13 +232,15 @@ void LoginWidget::SaveProject(QString strFilePath,int ntype)
         {
             QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程保存成功      "));
         }
+        return true;
     }else{
         qDebug() <<"save failed";
+        return false;
     }
     //  }
 }
 
-void LoginWidget::SaveProjectOther(QString strFilePath)
+bool LoginWidget::SaveProjectOther(QString strFilePath)
 {
 
     int npoint= strFilePath.lastIndexOf(QRegExp("/"));
@@ -256,11 +257,12 @@ void LoginWidget::SaveProjectOther(QString strFilePath)
     if(nsize < ERT_TRUE)
     {
         qDebug() <<QStringLiteral("CloudDiskInterface failed");
-        return;
+        return false;
     }
     if(nsize == ERT_CANCEL)
     {
         qDebug() <<QStringLiteral("cancle");
+        return false;
     }
     if(nsize > ERT_CANCEL)
     {
@@ -282,7 +284,7 @@ void LoginWidget::SaveProjectOther(QString strFilePath)
         if(nJobID <= 0)
         {
             qDebug() <<"save failed";
-            return;
+            return false;;
         }
         AddFile(strFilePath,nJobID,"",1);
         int ret = CloudDiskInterface::instance()->UploadResource(nJobID,m_strBuffInfo);
@@ -290,6 +292,7 @@ void LoginWidget::SaveProjectOther(QString strFilePath)
         {
             qDebug() <<"save succeed";
             QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程保存成功      "));
+            return true;
         }
     }
 }
@@ -648,7 +651,7 @@ void LoginWidget::GetInitFileInfo()
 {
     QSettings *configIniRead = NULL;
     QString path = QCoreApplication::applicationDirPath();
-    path.append("/ShotcutInfo.ini");
+    path.append("/VideoStudio.ini");
     configIniRead = new QSettings(path, QSettings::IniFormat);
     //将读取到的ini文件保存在QString中，先取值，然后通过toString()函数转换成QString类型
     if(!configIniRead)
@@ -700,7 +703,7 @@ void LoginWidget::on_pushButton_login_clicked()
         int nSize =256;
         ret = CallUnifyLoginSrv::instance()->GetLastError(pError,&nSize);
         qDebug() << pError << nSize;
-
+        return;
     }
     wchar_t pszTicket[256];
     memset(pszTicket,0,256 * sizeof(wchar_t));
@@ -773,6 +776,7 @@ void LoginWidget::on_pushButton_open_clicked()
     if(nsize == ERT_CANCEL)
     {
         qDebug() <<QStringLiteral("cancle");
+        return;
     }
     if(nsize > ERT_CANCEL)
     {
@@ -802,19 +806,19 @@ void LoginWidget::on_pushButton_open_clicked()
         if(t == ERT_TRUE)
         {
             qDebug()<<"DownloadResource successful";
+            //加载到工程
+            //获取主工程路径
+            wchar_t FilePathBuffer[512];
+            memset(FilePathBuffer,0,512 * sizeof(wchar_t));
+            int rt =  CloudDiskInterface::instance()->GetMainFilePath(FilePathBuffer,512);
+            if(rt != ERT_TRUE)
+            {
+                qDebug()<<"GetMainFilePath failed";
+            }
+            QString strMainFilePath = QString::fromWCharArray(FilePathBuffer);
+            QString strProjectPath = strLoadPath + "/"+m_ProResourceInfo.m_strResourceID+"/"+strMainFilePath;
+            emit signal_OpenProject(strProjectPath);
         }
-        //加载到工程
-        //获取主工程路径
-        wchar_t FilePathBuffer[512];
-        memset(FilePathBuffer,0,512 * sizeof(wchar_t));
-        int rt =  CloudDiskInterface::instance()->GetMainFilePath(FilePathBuffer,512);
-        if(rt != ERT_TRUE)
-        {
-            qDebug()<<"GetMainFilePath failed";
-        }
-        QString strMainFilePath = QString::fromWCharArray(FilePathBuffer);
-        QString strProjectPath = strLoadPath + "/"+m_ProResourceInfo.m_strResourceID+"/"+strMainFilePath;
-        emit signal_OpenProject(strProjectPath);
     }
 }
 
@@ -861,6 +865,7 @@ void LoginWidget::on_pushButton_openvideo_clicked()
     if(nsize == ERT_CANCEL)
     {
         qDebug() <<QStringLiteral("cancle");
+        return;
     }
     if(nsize > ERT_CANCEL)
     {
@@ -944,6 +949,7 @@ void LoginWidget::on_pushButton_sendOthvideo_clicked()
     if(nsize == ERT_CANCEL)
     {
         qDebug() <<QStringLiteral("cancle");
+        return;
     }
     if(nsize > ERT_CANCEL)
     {
@@ -1003,6 +1009,7 @@ void LoginWidget::on_pushButton_search_clicked()
     if(nsize == ERT_CANCEL)
     {
         qDebug() <<QStringLiteral("cancle");
+        return;
     }
     if(nsize > ERT_CANCEL)
     {

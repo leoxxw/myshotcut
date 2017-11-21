@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2012-2015 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -20,12 +20,15 @@
 #include "ui_textviewerdialog.h"
 #include "settings.h"
 #include <QFileDialog>
+#include <QPushButton>
 
 TextViewerDialog::TextViewerDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TextViewerDialog)
 {
     ui->setupUi(this);
+    ui->buttonBox->button(QDialogButtonBox::Save)->setText("保存");
+    ui->buttonBox->button(QDialogButtonBox::Close)->setText("关闭");
 }
 
 TextViewerDialog::~TextViewerDialog()

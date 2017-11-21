@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
@@ -735,7 +735,7 @@ void HtmlEditor::setCurrentFileName(const QString &fileName)
 
     QString shownName;
     if (fileName.isEmpty())
-        shownName = "untitled";
+        shownName = "Linker";
     else
         shownName = QFileInfo(fileName).fileName();
 

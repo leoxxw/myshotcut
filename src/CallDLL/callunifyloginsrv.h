@@ -20,14 +20,14 @@ public:
     int GetUserInfoEx(QString strNodeName,wchar_t *pValue, int *nSize);
     int GetTicket(wchar_t *pTicket, int *nSize);    // 返回票据
     int Logout();
-    static QSharedPointer<CallUnifyLoginSrv>& instance();
+    static CallUnifyLoginSrv* instance();
 private:
     CallUnifyLoginSrv();
     CallUnifyLoginSrv(const CallUnifyLoginSrv&){}
-    CallUnifyLoginSrv& operator==(const CallUnifyLoginSrv&){}
+    CallUnifyLoginSrv* operator==(const CallUnifyLoginSrv&){}
 private:
     static QMutex m_Mutex;
-    static QSharedPointer<CallUnifyLoginSrv> m_pInstance;
+    static CallUnifyLoginSrv* m_pInstance;
     QLibrary* m_lib;
 
 };

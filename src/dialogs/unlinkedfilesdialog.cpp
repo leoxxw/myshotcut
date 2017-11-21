@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2016-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -23,12 +23,15 @@
 #include "mltxmlchecker.h"
 #include <QFileDialog>
 #include <QStringList>
+#include <QPushButton>
 
 UnlinkedFilesDialog::UnlinkedFilesDialog(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::UnlinkedFilesDialog)
 {
     ui->setupUi(this);
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText("确定");
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("取消");
 }
 
 UnlinkedFilesDialog::~UnlinkedFilesDialog()

@@ -29,6 +29,7 @@
 #include "mltcontroller.h"
 #include "mltxmlchecker.h"
 #include "MyWidgets/loginwidget.h"
+#include "MyWidgets/aboutwidget.h"
 #define EXIT_RESTART (42)
 
 namespace Ui {
@@ -82,6 +83,8 @@ public:
     void keyPressEvent(QKeyEvent*);
     void keyReleaseEvent(QKeyEvent *);
     void hideSetDataDirectory();
+    //videostudio
+    void SaveVideostudioProject();
 private slots:
     void slot_SaveProject(int ntype);
     void slot_SaveVideo(int ntype);
@@ -158,6 +161,8 @@ private:
     //登录窗口
     LoginWidget *m_loginwidget;
     int m_nType;//保存类型
+    AboutWidget* m_AboutWidget;
+    int m_ProjectType;//工程类型
 
 #ifdef WITH_LIBLEAP
     LeapListener m_leapListener;

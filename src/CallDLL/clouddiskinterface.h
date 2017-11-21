@@ -63,14 +63,14 @@ public:
                    HWND hParentWnd,
                    DWORD dwFlag,QString lpszNotSub);
 
-    static QSharedPointer<CloudDiskInterface>& instance();
+    static CloudDiskInterface* instance();
 private:
     CloudDiskInterface();
     CloudDiskInterface(const CloudDiskInterface&){}
     CloudDiskInterface& operator==(const CloudDiskInterface&){}
 private:
     static QMutex m_MutexCloud;
-    static QSharedPointer<CloudDiskInterface> m_pInstance;
+    static CloudDiskInterface* m_pInstance;
     QLibrary* m_lib;
 
 };

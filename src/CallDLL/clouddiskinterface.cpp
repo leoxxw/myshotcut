@@ -3,7 +3,7 @@
 #include <QMutexLocker>
 #include <QDebug>
 QMutex CloudDiskInterface::m_MutexCloud;
-QSharedPointer<CloudDiskInterface> CloudDiskInterface::m_pInstance;
+CloudDiskInterface* CloudDiskInterface::m_pInstance;
 
 
 CloudDiskInterface::CloudDiskInterface()
@@ -19,6 +19,10 @@ CloudDiskInterface::~CloudDiskInterface()
         m_lib->unload();
         delete m_lib;
         m_lib = NULL;
+    }
+    if(m_pInstance)
+    {
+        delete m_pInstance;
     }
 }
 //加载dll
@@ -224,14 +228,14 @@ int CloudDiskInterface::SearchOpenEx(int nResourceMajorTypeFilter,
     return ret;
 }
 //单利对象
-QSharedPointer<CloudDiskInterface> &CloudDiskInterface::instance()
+CloudDiskInterface* CloudDiskInterface::instance()
 {
-    if (m_pInstance.isNull())
+    if (m_pInstance== NULL)
     {
         QMutexLocker mutexLocker(&m_MutexCloud);
-        if (m_pInstance.isNull())
+        if (m_pInstance==NULL)
         {
-            m_pInstance = QSharedPointer<CloudDiskInterface>(new CloudDiskInterface());
+            m_pInstance = new CloudDiskInterface();
             m_pInstance->LoadDll();
         }
     }

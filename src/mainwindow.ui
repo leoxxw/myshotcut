@@ -14,8 +14,8 @@
    <string>VideoStudio</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../icons/resources.qrc">
-    <normaloff>:/icons/shotcut-logo-64.png</normaloff>:/icons/shotcut-logo-64.png</iconset>
+   <iconset>
+    <normaloff>../icons/VideoStudio.png</normaloff>../icons/VideoStudio.png</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -89,13 +89,7 @@
     <property name="title">
      <string>&amp;Help</string>
     </property>
-    <addaction name="actionUpgrade"/>
-    <addaction name="actionFAQ"/>
-    <addaction name="actionTutorials"/>
-    <addaction name="actionForum"/>
-    <addaction name="separator"/>
     <addaction name="actionAbout_Shotcut"/>
-    <addaction name="actionAbout_Qt"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -269,7 +263,7 @@
   </action>
   <action name="actionAbout_Shotcut">
    <property name="text">
-    <string>&amp;About Shotcut</string>
+    <string>&amp;About VideoStudio</string>
    </property>
    <property name="menuRole">
     <enum>QAction::AboutRole</enum>

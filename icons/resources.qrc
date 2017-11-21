@@ -269,5 +269,15 @@
         <file>../Resource/PNG/CloudInDown.png</file>
         <file>../Resource/PNG/CloudInUp.png</file>
         <file>../Resource/PNG/icon_search03.png</file>
+        <file>../Resource/PNG/logo.png</file>
+        <file>../Resource/PNG/btn_Close_a.png</file>
+        <file>../Resource/PNG/btn_Close02_a.png</file>
+        <file>../Resource/PNG/ok01.png</file>
+        <file>../Resource/PNG/sendoth01.png</file>
+        <file>../Resource/PNG/sendoth02.png</file>
+        <file>../Resource/PNG/sendoth03.png</file>
+        <file>../Resource/PNG/sendoth04.png</file>
+        <file>../Resource/PNG/ok02.png</file>
+        <file>VideoStudio.png</file>
     </qresource>
 </RCC>

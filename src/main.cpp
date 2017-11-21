@@ -107,9 +107,9 @@ public:
         dir.cd("lib");
         dir.cd("qt5");
         addLibraryPath(dir.absolutePath());
-        setOrganizationName("Meltytech");
-        setOrganizationDomain("meltytech.com");
-        setApplicationName("Shotcut");
+        setOrganizationName("VideoStudio");
+        setOrganizationDomain("VideoStudio.com");
+        setApplicationName("VideoStudio");
         setApplicationVersion(SHOTCUT_VERSION);
         setAttribute(Qt::AA_UseHighDpiPixmaps);
         setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
@@ -157,7 +157,7 @@ public:
         // Startup logging.
         dir = Settings.appDataLocation();
         if (!dir.exists()) dir.mkpath(dir.path());
-        const QString logFileName = dir.filePath("shotcut-log.txt");
+        const QString logFileName = dir.filePath("VideoStudio-log.txt");
         QFile::remove(logFileName);
         FileAppender* fileAppender = new FileAppender(logFileName);
         fileAppender->setFormat("[%-7l] <%c> %m\n");
@@ -209,7 +209,7 @@ public:
     #else
         dir.cdUp();
         dir.cd("share");
-        dir.cd("shotcut");
+        dir.cd("VideoStudio");
         dir.cd("translations");
     #endif
         if (locale.startsWith("pt_"))
@@ -286,8 +286,8 @@ int main(int argc, char **argv)
         restart->waitForFinished(1000);
         result = EXIT_SUCCESS;
     }
-#ifdef QT_DEBUG
-    exit(0);
-#endif
+//#ifdef QT_DEBUG
+//    exit(0);
+//#endif
     return result;
 }

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2012-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -29,6 +29,8 @@ OpenOtherDialog::OpenOtherDialog(QWidget *parent) :
     ui(new Ui::OpenOtherDialog)
 {
     ui->setupUi(this);
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText("确定");
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("取消");
     m_current = ui->networkWidget;
 
     QScopedPointer<Mlt::Properties> mltProducers(MLT.repository()->producers());

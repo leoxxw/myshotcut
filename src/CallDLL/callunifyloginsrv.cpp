@@ -3,7 +3,7 @@
 #include <QMutexLocker>
 #include <QDebug>
 QMutex CallUnifyLoginSrv::m_Mutex;
-QSharedPointer<CallUnifyLoginSrv> CallUnifyLoginSrv::m_pInstance;
+CallUnifyLoginSrv* CallUnifyLoginSrv::m_pInstance;
 
 CallUnifyLoginSrv::CallUnifyLoginSrv()
          : m_lib(NULL)
@@ -18,6 +18,15 @@ CallUnifyLoginSrv::~CallUnifyLoginSrv()
         delete m_lib;
         m_lib = NULL;
     }
+    if(m_pInstance)
+    {
+        delete m_pInstance;
+    }
+}
+
+static void doDeleteLater(CallUnifyLoginSrv *obj)
+{
+    delete obj;
 }
 
 bool CallUnifyLoginSrv::LoadDll()
@@ -113,14 +122,14 @@ int CallUnifyLoginSrv::Logout()
     return ret;
 }
 
-QSharedPointer<CallUnifyLoginSrv> &CallUnifyLoginSrv::instance()
+CallUnifyLoginSrv* CallUnifyLoginSrv::instance()
 {
-    if (m_pInstance.isNull())
+    if (m_pInstance==NULL)
     {
         QMutexLocker mutexLocker(&m_Mutex);
-        if (m_pInstance.isNull())
+        if (m_pInstance==NULL)
         {
-            m_pInstance = QSharedPointer<CallUnifyLoginSrv>(new CallUnifyLoginSrv());
+            m_pInstance = new CallUnifyLoginSrv();
             m_pInstance->LoadDll();
         }
     }

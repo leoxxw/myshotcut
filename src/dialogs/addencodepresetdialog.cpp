@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2012 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -18,12 +18,15 @@
 
 #include "addencodepresetdialog.h"
 #include "ui_addencodepresetdialog.h"
+#include <QPushButton>
 
 AddEncodePresetDialog::AddEncodePresetDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddEncodePresetDialog)
 {
     ui->setupUi(this);
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText("确定");
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("取消");
 }
 
 AddEncodePresetDialog::~AddEncodePresetDialog()

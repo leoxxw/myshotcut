@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2013-2015 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -68,7 +68,7 @@ QDir QmlUtilities::qmlDir()
     dir.cdUp();
 #endif
     dir.cd("share");
-    dir.cd("shotcut");
+    dir.cd("VideoStudio");
     dir.cd("qml");
     return dir;
 }

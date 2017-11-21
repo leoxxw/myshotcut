@@ -20,8 +20,8 @@ public:
     void Init();
     void SetLoginSucceed(wchar_t* pUserID,wchar_t* pszUserToken);
     bool GetListInfo(QString strBuffer,ResourceInfo &InfoList);
-    void SaveProject(QString strFilePath,int ntype);
-    void SaveProjectOther(QString strFilePath);
+    bool SaveProject(QString strFilePath,int ntype,int projectType);
+    bool SaveProjectOther(QString strFilePath);
     void SaveVideo(QString strFilePath);
     void SendVideoNoDlg(QString strFilePath);
     void SendProjectNoDlg(QString strFilePath);

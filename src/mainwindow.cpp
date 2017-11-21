@@ -120,6 +120,8 @@ MainWindow::MainWindow()
     , m_upgradeUrl("https://www.shotcut.org/download/")
     ,m_loginwidget(NULL)
     ,m_nType(SF_ShotCutSave)
+    ,m_ProjectType(EV_ShotCut)
+    ,m_AboutWidget(NULL)
 {
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
     QLibrary libJack("libjack.so.0");
@@ -471,7 +473,7 @@ MainWindow::MainWindow()
     connect(m_loginwidget,&LoginWidget::Signal_UploadVideo,this,&MainWindow::slot_UploadVideo);
     QRect rect = this->geometry();
     m_loginwidget->move(QPoint(rect.width()/10 *9,rect.height()/5 *1));
-    m_loginwidget->setWindowFlags( Qt::WindowStaysOnTopHint);
+    m_loginwidget->setWindowFlags(Qt::WindowStaysOnTopHint);
     m_loginwidget->show();
     LOG_DEBUG() << "end";
 }
@@ -1160,6 +1162,7 @@ void MainWindow::openVideo()
         if (filenames.length() > 1)
             m_multipleFiles = filenames;
         open(filenames.first());
+        m_ProjectType = EV_ShotCut;
     }
     else {
         // If file invalid, then on some platforms the dialog messes up SDL.
@@ -1394,7 +1397,7 @@ void MainWindow::configureVideoWidget()
 
 void MainWindow::setCurrentFile(const QString &filename)
 {
-    QString shownName = "Untitled";
+    QString shownName = "Linker";
     if (filename == untitledFileName())
         m_currentFile.clear();
     else
@@ -1406,29 +1409,15 @@ void MainWindow::setCurrentFile(const QString &filename)
 
 void MainWindow::on_actionAbout_Shotcut_triggered()
 {
-    QMessageBox::about(this, tr("About Shotcut"),
-             tr("<h1>Shotcut version %1</h1>"
-                "<p><a href=\"https://www.shotcut.org/\">Shotcut</a> is a free, open source, cross platform video editor.</p>"
-                "<small><p>Copyright &copy; 2011-2016 <a href=\"https://www.meltytech.com/\">Meltytech</a>, LLC</p>"
-                "<p>Licensed under the <a href=\"http://www.gnu.org/licenses/gpl.html\">GNU General Public License v3.0</a></p>"
-                "<p>This program proudly uses the following projects:<ul>"
-                "<li><a href=\"http://www.qt-project.org/\">Qt</a> application and UI framework</li>"
-                "<li><a href=\"http://www.mltframework.org/\">MLT</a> multimedia authoring framework</li>"
-                "<li><a href=\"http://www.ffmpeg.org/\">FFmpeg</a> multimedia format and codec libraries</li>"
-                "<li><a href=\"http://www.videolan.org/developers/x264.html\">x264</a> H.264 encoder</li>"
-                "<li><a href=\"http://www.webmproject.org/\">WebM</a> VP8 and VP9 encoders</li>"
-                "<li><a href=\"http://lame.sourceforge.net/\">LAME</a> MP3 encoder</li>"
-                "<li><a href=\"http://www.dyne.org/software/frei0r/\">Frei0r</a> video plugins</li>"
-                "<li><a href=\"http://www.ladspa.org/\">LADSPA</a> audio plugins</li>"
-                "<li><a href=\"http://www.defaulticon.com/\">DefaultIcon</a> icon collection by <a href=\"http://www.interactivemania.com/\">interactivemania</a></li>"
-                "<li><a href=\"http://www.oxygen-icons.org/\">Oxygen</a> icon collection</li>"
-                "</ul></p>"
-                "<p>The source code used to build this program can be downloaded from "
-                "<a href=\"https://www.shotcut.org/\">shotcut.org</a>.</p>"
-                "This program is distributed in the hope that it will be useful, "
-                "but WITHOUT ANY WARRANTY; without even the implied warranty of "
-                "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</small>"
-                ).arg(qApp->applicationVersion()));
+    if(m_AboutWidget == NULL)
+    {
+        m_AboutWidget = new AboutWidget(this);
+    }
+    QRect rect = this->geometry();
+    m_AboutWidget->move(200,50);
+    m_AboutWidget->setWindowFlags( Qt::WindowStaysOnTopHint);
+    m_AboutWidget->show();
+
 }
 
 
@@ -1806,18 +1795,58 @@ void MainWindow::hideSetDataDirectory()
     delete ui->actionAppDataSet;
 }
 
+void MainWindow::SaveVideostudioProject()
+{
+    if (m_currentFile.isEmpty()) {
+        if (!MLT.producer())
+            return ;
+        QString tempName = "/新建工程";
+        QDateTime current_date_time =QDateTime::currentDateTime();
+        QString current_date =current_date_time.toString("yyyyMMddhh");
+        tempName.append(current_date);
+        QString filename =Settings.savePath() + tempName;
+        qDebug()<<"filename = " <<filename;
+        if (!filename.isEmpty()) {
+            QFileInfo fi(filename);
+            Settings.setSavePath(fi.path());
+            if (fi.suffix() != "mlt")
+                filename += ".mlt";
+            saveXML(filename);
+            if (m_autosaveFile)
+                m_autosaveFile->changeManagedFile(filename);
+            else
+                m_autosaveFile.reset(new AutoSaveFile(filename));
+            setCurrentFile(filename);
+            setWindowModified(false);
+            if (MLT.producer())
+                showStatusMessage(tr("Saved %1").arg(m_currentFile));
+            m_undoStack->setClean();
+            m_recentDock->add(filename);
+        }
+    } else {
+        saveXML(m_currentFile);
+        setCurrentFile(m_currentFile);
+        setWindowModified(false);
+        showStatusMessage(tr("Saved %1").arg(m_currentFile));
+        m_undoStack->setClean();
+        return ;
+    }
+
+}
+
 void MainWindow::slot_SaveProject(int ntype)
 {
     if(MLT.videoWidget())
     {
         MLT.pause();
     }
-    on_actionSave_triggered();
+    SaveVideostudioProject();
+  //  on_actionSave_triggered();
     if(m_loginwidget)
     {
         if(ntype == SF_Save)
         {
-            m_loginwidget->SaveProject(m_currentFile,ntype);
+            m_loginwidget->SaveProject(m_currentFile,ntype,m_ProjectType);
         }
         if(ntype == SF_SaveOther)
         {
@@ -1825,8 +1854,10 @@ void MainWindow::slot_SaveProject(int ntype)
         }
         if(ntype == SF_SaveSend)
         {
-            m_loginwidget->SaveProject(m_currentFile,ntype);
-            m_loginwidget->SendProjectNoDlg(m_currentFile);
+            if(m_loginwidget->SaveProject(m_currentFile,ntype,m_ProjectType))
+            {
+                m_loginwidget->SendProjectNoDlg(m_currentFile);
+            }
         }
     }
 }
@@ -1863,6 +1894,7 @@ void MainWindow::slot_OpenProject(QString ProjectPath)
         if (filenames.length() > 1)
             m_multipleFiles = filenames;
         open(filenames.first());
+        m_ProjectType = EV_YUNLI;
     }
     else {
         // If file invalid, then on some platforms the dialog messes up SDL.
@@ -2144,6 +2176,7 @@ bool MainWindow::on_actionSave_As_triggered()
     QString path = Settings.savePath();
     path.append("/.mlt");
     QString filename = QFileDialog::getSaveFileName(this, tr("Save XML"), path, tr("MLT XML (*.mlt)"));
+    qDebug()<<"filename = " <<path;
     if (!filename.isEmpty()) {
         QFileInfo fi(filename);
         Settings.setSavePath(fi.path());
@@ -2231,7 +2264,7 @@ void MainWindow::onEncodeTriggered(bool checked)
 {
     if(m_loginwidget && m_loginwidget->IsWoking())
     {
-        QMessageBox::about(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         return;
     }
     if (checked) {
@@ -3157,7 +3190,7 @@ void MainWindow::on_actionApplicationLog_triggered()
 {
     TextViewerDialog dialog(this);
     QDir dir = Settings.appDataLocation();
-    QFile logFile(dir.filePath("shotcut-log.txt"));
+    QFile logFile(dir.filePath("VideoStudio-log.txt"));
     logFile.open(QIODevice::ReadOnly | QIODevice::Text);
     dialog.setText(logFile.readAll());
     logFile.close();

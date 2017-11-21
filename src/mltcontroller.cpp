@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2011-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -122,7 +122,7 @@ int Controller::open(const QString &url)
         }
         if (m_url.isEmpty() && QString(m_producer->get("xml")) == "was here") {
             if (m_producer->get_int("_original_type") != tractor_type ||
-               (m_producer->get_int("_original_type") == tractor_type && m_producer->get("shotcut")))
+               (m_producer->get_int("_original_type") == tractor_type && m_producer->get("VideoStudio")))
                 m_url = url;
         }
         setImageDurationFromDefault(m_producer);
@@ -409,7 +409,7 @@ QString Controller::XML(Service* service, bool withProfile)
         s.set("ignore_points", 0);
     c.set("no_meta", 1);
     c.set("no_profile", !withProfile);
-    c.set("store", "shotcut");
+    c.set("store", "VideoStudio");
     c.connect(s);
     c.start();
     if (ignore)
@@ -514,7 +514,7 @@ bool Controller::isMultitrack() const
     return m_producer && m_producer->is_valid()
         && !m_producer->get_int(kShotcutVirtualClip)
         && (m_producer->get_int("_original_type") == tractor_type || resource() == "<tractor>")
-            && (m_producer->get("shotcut"));
+            && (m_producer->get("VideoStudio"));
 }
 
 bool Controller::isImageProducer(Service* service) const

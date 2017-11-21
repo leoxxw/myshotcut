@@ -117,7 +117,8 @@ SOURCES += main.cpp\
     CallDLL/callunifyloginsrv.cpp \
     MyWidgets/loginwidget.cpp \
     MyWidgets/basemainwidget.cpp \
-    CallDLL/clouddiskinterface.cpp
+    CallDLL/clouddiskinterface.cpp \
+    MyWidgets/aboutwidget.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -231,7 +232,9 @@ HEADERS  += mainwindow.h \
     MyWidgets/loginwidget.h \
     MyWidgets/basemainwidget.h \
     CallDLL/clouddiskinterface.h \
-    CallDLL/publicinfo.h
+    CallDLL/publicinfo.h \
+    MyWidgets/aboutwidget.h \
+    version.h
 
 FORMS    += mainwindow.ui \
     openotherdialog.ui \
@@ -274,7 +277,8 @@ FORMS    += mainwindow.ui \
     widgets/trackpropertieswidget.ui \
     widgets/timelinepropertieswidget.ui \
     dialogs/unlinkedfilesdialog.ui \
-    MyWidgets/loginwidget.ui
+    MyWidgets/loginwidget.ui \
+    MyWidgets/aboutwidget.ui
 
 RESOURCES += \
     ../icons/resources.qrc \

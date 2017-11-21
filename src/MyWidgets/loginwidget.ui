@@ -838,10 +838,10 @@ QPushButton#pushButton_sendvideo:disabled{border-image: url(:/Resource/PNG/icon_
                <string>发送云里资源</string>
               </property>
               <property name="styleSheet">
-               <string notr="true">QPushButton#pushButton_sendOthvideo{border-image: url(:/Resource/PNG/icon_sends01.png);}
-QPushButton#pushButton_sendOthvideo:hover{border-image: url(:/Resource/PNG/icon_sends02.png);}
-QPushButton#pushButton_sendOthvideo:pressed{border-image: url(:/Resource/PNG/icon_sends02.png);}
-QPushButton#pushButton_sendOthvideo:disabled{border-image: url(:/Resource/PNG/icon_sends04.png);}
+               <string notr="true">QPushButton#pushButton_sendOthvideo{border-image: url(:/Resource/PNG/sendoth01.png);}
+QPushButton#pushButton_sendOthvideo:hover{border-image: url(:/Resource/PNG/sendoth02.png);}
+QPushButton#pushButton_sendOthvideo:pressed{border-image: url(:/Resource/PNG/sendoth02.png);}
+QPushButton#pushButton_sendOthvideo:disabled{border-image: url(:/Resource/PNG/sendoth04.png);}
 </string>
               </property>
               <property name="text">

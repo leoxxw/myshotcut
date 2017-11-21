@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2013-2016 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -22,6 +22,7 @@
 #include "settings.h"
 #include <QDir>
 #include <QDesktopServices>
+#include <QPushButton>
 
 CustomProfileDialog::CustomProfileDialog(QWidget *parent) :
     QDialog(parent),
@@ -35,6 +36,8 @@ CustomProfileDialog::CustomProfileDialog(QWidget *parent) :
     ui->fpsSpinner->setValue(MLT.profile().fps());
     ui->scanModeCombo->setCurrentIndex(MLT.profile().progressive());
     ui->colorspaceCombo->setCurrentIndex(MLT.profile().colorspace() == 709);
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText("确定");
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("取消");
 }
 
 CustomProfileDialog::~CustomProfileDialog()
