@@ -5,7 +5,6 @@
 #include "basemainwidget.h"
 #include <QWidget>
 #include "CallDLL/clouddiskinterface.h"
-
 namespace Ui {
 class LoginWidget;
 }
@@ -24,7 +23,7 @@ public:
     bool SaveProjectOther(QString strFilePath);
     void SaveVideo(QString strFilePath);
     void SendVideoNoDlg(QString strFilePath);
-    void SendProjectNoDlg(QString strFilePath);
+    void SendProjectNoDlg(QString strFilePath,int projectType);
     bool DelDir(const QString &path);
     void AddFile(QString filePath,int JobID,QString fatherPath,int type);
     enResourceType GetFileType(QString fileName);
@@ -60,6 +59,7 @@ private slots:
     void on_pushButton_send_clicked();
 
     void on_pushButton_search_clicked();
+
 
 signals:
     void signal_SaveProject(int ntype);

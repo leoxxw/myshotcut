@@ -63,6 +63,8 @@ signals:
     void FinisheUploadVideo(QString);
     void EncodeWorking(bool);
     void SendVideoPath(QString);
+protected:
+    void closeEvent(QCloseEvent *event);
 
 public slots:
     void onProducerOpened();

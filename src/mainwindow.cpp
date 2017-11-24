@@ -89,6 +89,8 @@
 
 #include <CallDLL/callunifyloginsrv.h>
 #include "MyWidgets/loginwidget.h"
+#include <QMetaType>
+#include"videostudiolog.h"
 
 static bool eventDebugCallback(void **data)
 {
@@ -122,7 +124,12 @@ MainWindow::MainWindow()
     ,m_nType(SF_ShotCutSave)
     ,m_ProjectType(EV_ShotCut)
     ,m_AboutWidget(NULL)
+    ,m_objThread(NULL)
+    ,m_obj(NULL)
 {
+    //注册自己的变量类型
+    qRegisterMetaType<QMap<QString,QString> >("QMap<QString,QString> ");
+
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
     QLibrary libJack("libjack.so.0");
     if (!libJack.load()) {
@@ -372,7 +379,7 @@ MainWindow::MainWindow()
     //绑定获取输出视频路径信号
     connect(m_encodeDock, SIGNAL(SendVideoPath(QString)), this, SLOT(slot_GetVideoPath(QString)));
     connect(m_encodeDock, SIGNAL(FinisheUploadVideo(QString)), this, SLOT(slot_FinisheUploadVideo(QString)));
-    connect(m_encodeDock,SIGNAL(visibilityChanged(bool)),this,SLOT(setShowfilepropertycheck(bool)));
+  //  connect(m_encodeDock,SIGNAL(visibilityChanged(bool)),this,SLOT(setShowfilepropertycheck(bool)));
     m_encodeDock->onProfileChanged();
 
     m_jobsDock = new JobsDock(this);
@@ -466,6 +473,7 @@ MainWindow::MainWindow()
     //开始云里系统相关任务
     //展示登录窗口
     m_loginwidget = new LoginWidget(this);
+    m_loginwidget->hide();
     connect(m_loginwidget, &LoginWidget::signal_SaveProject, this,&MainWindow::slot_SaveProject);
     connect(m_loginwidget, &LoginWidget::signal_SaveVideo, this,&MainWindow::slot_SaveVideo);
     connect(m_loginwidget, &LoginWidget::signal_OpenProject, this,&MainWindow::slot_OpenProject);
@@ -531,6 +539,12 @@ MainWindow& MainWindow::singleton()
 
 MainWindow::~MainWindow()
 {
+    if(m_objThread)
+    {
+        m_objThread->quit();
+        m_objThread->wait();
+    }
+
     delete ui;
     Mlt::Controller::destroy();
 }
@@ -923,9 +937,9 @@ bool MainWindow::isXmlRepaired(MltXmlChecker& checker, QString& fileName)
         LOG_WARNING() << fileName;
         QMessageBox dialog(QMessageBox::Question,
            qApp->applicationName(),
-           tr("Shotcut noticed some problems in your project.\n"
-              "Do you want Shotcut to try to repair it?\n\n"
-              "If you choose Yes, Shotcut will create a copy of your project\n"
+           tr("VideoStudio noticed some problems in your project.\n"
+              "Do you want VideoStudio to try to repair it?\n\n"
+              "If you choose Yes, VideoStudio will create a copy of your project\n"
               "with \"- Repaired\" in the file name and open it."),
            QMessageBox::No |
            QMessageBox::Yes,
@@ -1150,17 +1164,20 @@ void MainWindow::open(QString url, const Mlt::Properties* properties)
 
 void MainWindow::openVideo()
 {
-    QString path = Settings.openPath();
+    QString path;// = Settings.openPath();
 #ifdef Q_OS_MAC
     path.append("/*");
 #endif
     QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path);
 
-    if (filenames.length() > 0) {
+    if (filenames.length() > 0)
+    {
         Settings.setOpenPath(QFileInfo(filenames.first()).path());
         activateWindow();
         if (filenames.length() > 1)
+        {
             m_multipleFiles = filenames;
+        }
         open(filenames.first());
         m_ProjectType = EV_ShotCut;
     }
@@ -1397,7 +1414,7 @@ void MainWindow::configureVideoWidget()
 
 void MainWindow::setCurrentFile(const QString &filename)
 {
-    QString shownName = "Linker";
+    QString shownName = "blank";
     if (filename == untitledFileName())
         m_currentFile.clear();
     else
@@ -1797,14 +1814,15 @@ void MainWindow::hideSetDataDirectory()
 
 void MainWindow::SaveVideostudioProject()
 {
-    if (m_currentFile.isEmpty()) {
+    if (m_currentFile.isEmpty())
+    {
         if (!MLT.producer())
             return ;
         QString tempName = "/新建工程";
         QDateTime current_date_time =QDateTime::currentDateTime();
         QString current_date =current_date_time.toString("yyyyMMddhh");
         tempName.append(current_date);
-        QString filename =Settings.savePath() + tempName;
+        QString filename =Settings.openPath() + tempName;
         qDebug()<<"filename = " <<filename;
         if (!filename.isEmpty()) {
             QFileInfo fi(filename);
@@ -1824,6 +1842,13 @@ void MainWindow::SaveVideostudioProject()
             m_recentDock->add(filename);
         }
     } else {
+        //先拷贝一份mlt文件
+        int n= m_currentFile.lastIndexOf(".");
+        QString targetFile = m_currentFile.mid(0,n);
+        targetFile.append("_new.mlt");
+        QFile::copy(m_currentFile,targetFile);
+        m_currentFile = targetFile;
+
         saveXML(m_currentFile);
         setCurrentFile(m_currentFile);
         setWindowModified(false);
@@ -1834,32 +1859,140 @@ void MainWindow::SaveVideostudioProject()
 
 }
 
+void MainWindow::readXML(QString strFilePath)
+{
+    QMap<QString,QString> FilePathList;
+    //打开文件
+    QFile file(strFilePath); //相对路径、绝对路径、资源路径都可以
+    if(!file.open(QFile::ReadOnly))
+        return;
+
+    QDomDocument doc;
+    if(!doc.setContent(&file))
+    {
+        file.close();
+        return;
+    }
+    file.close();
+
+    QDomNode node = doc.firstChild();
+    while (!node.isNull())
+    {
+        QDomElement element = node.toElement(); // try to convert the node to an element.
+        if(!element.isNull())
+        {
+            //qDebug()<<element.tagName() << ":" << element.text();
+            QDomNode nodeson = element.firstChild();
+            while(!nodeson.isNull())
+            {
+                QDomElement elementson = nodeson.toElement();
+                if(!elementson.isNull())
+                {
+                    qDebug()<< "---" <<elementson.tagName();
+                    QDomNode n = elementson.firstChild();
+                    while(!n.isNull())
+                    {
+                        QDomElement e = n.toElement();
+                        if(!e.isNull())
+                        {
+                            qDebug()<< "---" <<e.tagName();
+                            if (e.tagName() == "property")
+                            {
+                               QString name = e.attribute("name");
+                               if(name == "resource")
+                               {
+                                   QString filePath = e.text();
+                                   int npoint= filePath.lastIndexOf("/");
+                                   if(npoint != -1)
+                                   {
+                                       QString fileName = filePath.mid(npoint+1,filePath.length()-npoint);
+                                       QDomNode oldnode = e.firstChild();
+                                       e.firstChild().setNodeValue(fileName);
+                                       QDomNode newnode = e.firstChild();
+                                       node.replaceChild(newnode,oldnode);
+                                       //拷贝文件
+                                       int n = strFilePath.lastIndexOf("/");
+                                       QString toPath = strFilePath.mid(0,n+1);
+                                       toPath.append(fileName);
+                                       qDebug()<<"55555"<<filePath;
+                                       qDebug()<<"6666"<<toPath;
+                                       FilePathList.insert(filePath,toPath);
+                                   }
+
+                               }
+                               if(name == "shotcut:detail")
+                               {
+                                   QString filePath = e.text();
+                                   int npoint= filePath.lastIndexOf(QRegExp("/"));
+                                   QString fileName = filePath.mid(npoint+1,filePath.length()-npoint);
+                                   QDomNode oldnode = e.firstChild();
+                                   e.firstChild().setNodeValue(fileName);
+                                   QDomNode newnode = e.firstChild();
+                                   node.replaceChild(newnode,oldnode);
+                               }
+                            }
+                        }
+                        n = n.nextSibling();
+                    }
+                }
+                nodeson = nodeson.nextSibling();
+            }
+        }
+        node = node.nextSibling();
+    }
+    if(!file.open(QFile::WriteOnly|QFile::Truncate))
+        return;
+    //输出到文件
+    QTextStream out_stream(&file);
+    doc.save(out_stream,4); //缩进4格
+    file.close();
+    m_objThread= new QThread();
+    m_obj = new ObjectThread();
+    m_obj->moveToThread(m_objThread);
+    connect(m_objThread,&QThread::finished,m_objThread,&QObject::deleteLater);
+    connect(m_objThread,&QThread::finished,m_obj,&QObject::deleteLater);
+    QObject::connect(this,SIGNAL(CopeFile(QMap<QString,QString>)), m_obj, SLOT(runWork(QMap<QString, QString>)));
+    QObject::connect(m_obj,SIGNAL(signal_WorkFinished(bool)),this,SLOT(slot_WorkFinished(bool)));
+    m_objThread->start();
+    emit CopeFile(FilePathList);
+}
+
+void MainWindow::slot_WorkFinished(bool flag)
+{
+    if(flag)
+    {
+        if(m_loginwidget)
+        {
+            if(m_nType == SF_Save)
+            {
+                m_loginwidget->SaveProject(m_currentFile,m_nType,m_ProjectType);
+            }
+            if(m_nType == SF_SaveOther)
+            {
+                m_loginwidget->SaveProjectOther(m_currentFile);
+            }
+            if(m_nType == SF_SaveSend)
+            {
+                m_loginwidget->SendProjectNoDlg(m_currentFile,m_ProjectType);
+            }
+        }
+    }else{
+        LOG("保存工程失败","ERROR");
+        QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      保存工程失败      "));
+    }
+
+}
+
 void MainWindow::slot_SaveProject(int ntype)
 {
     if(MLT.videoWidget())
     {
         MLT.pause();
     }
+    m_nType = ntype;
     SaveVideostudioProject();
   //  on_actionSave_triggered();
-    if(m_loginwidget)
-    {
-        if(ntype == SF_Save)
-        {
-            m_loginwidget->SaveProject(m_currentFile,ntype,m_ProjectType);
-        }
-        if(ntype == SF_SaveOther)
-        {
-            m_loginwidget->SaveProjectOther(m_currentFile);
-        }
-        if(ntype == SF_SaveSend)
-        {
-            if(m_loginwidget->SaveProject(m_currentFile,ntype,m_ProjectType))
-            {
-                m_loginwidget->SendProjectNoDlg(m_currentFile);
-            }
-        }
-    }
+    readXML(m_currentFile);
 }
 
 void MainWindow::slot_SaveVideo(int ntype)
@@ -1888,7 +2021,8 @@ void MainWindow::slot_OpenProject(QString ProjectPath)
 {
     QStringList filenames;
     filenames.append(ProjectPath);
-    if (filenames.length() > 0) {
+    if (filenames.length() > 0)
+    {
         Settings.setOpenPath(QFileInfo(filenames.first()).path());
         activateWindow();
         if (filenames.length() > 1)
@@ -1963,25 +2097,28 @@ void MainWindow::slot_GetVideoPath(QString VideoPath)
 
 void MainWindow::slot_FinisheUploadVideo(QString VideoPath)
 {
+    qDebug()<<"slot_FinisheUploadVideo";
     if(m_nType == SF_SaveOther)
     {
         m_loginwidget->UploadVideo(VideoPath);
+        qDebug()<<"SF_SaveOther";
     }
     if(m_nType == SF_SaveSend)
     {
         m_loginwidget->UploadSendVideo(VideoPath);
+        qDebug()<<"SF_SaveSend";
     }
 }
 
-void MainWindow::setShowfilepropertycheck(bool)
-{
-    if(m_encodeDock->isHidden()==true)
-    {
-        m_encodeDock->SetSaveType(SF_ShotCutSave);
-        m_encodeDock->setFloating(false);
-        qDebug()<<"关闭m_encodeDock窗口";
-    }
-}
+//void MainWindow::setShowfilepropertycheck(bool)
+//{
+//    if(m_encodeDock->isHidden()==true)
+//    {
+//        m_encodeDock->SetSaveType(SF_ShotCutSave);
+//        m_encodeDock->setFloating(false);
+//        qDebug()<<"关闭m_encodeDock窗口";
+//    }
+//}
 
 // Drag-n-drop events
 
@@ -2160,6 +2297,12 @@ bool MainWindow::on_actionSave_triggered()
     if (m_currentFile.isEmpty()) {
         return on_actionSave_As_triggered();
     } else {
+//        //先拷贝一份mlt文件
+//        int n= m_currentFile.lastIndexOf(".");
+//        QString targetFile = m_currentFile.mid(0,n);
+//        targetFile.append("_new.mlt");
+//        QFile::copy(m_currentFile,targetFile);
+//        m_currentFile = targetFile;
         saveXML(m_currentFile);
         setCurrentFile(m_currentFile);
         setWindowModified(false);
@@ -2650,6 +2793,7 @@ void MainWindow::on_actionEnter_Full_Screen_triggered()
     {
         QRect rect = this->geometry();
         m_loginwidget->move(QPoint(rect.width()/10 *9,rect.height()/5 *1));
+        m_loginwidget->setWindowFlags(Qt::WindowStaysOnTopHint);
         m_loginwidget->show();
         m_loginwidget->raise();
     }

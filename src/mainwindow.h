@@ -51,7 +51,7 @@ class HtmlEditor;
 class TimelineDock;
 class AutoSaveFile;
 class QNetworkReply;
-
+#include "objectthread.h"
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -85,7 +85,9 @@ public:
     void hideSetDataDirectory();
     //videostudio
     void SaveVideostudioProject();
+    void readXML(QString strFilePath);
 private slots:
+    void slot_WorkFinished(bool flag);
     void slot_SaveProject(int ntype);
     void slot_SaveVideo(int ntype);
     void slot_OpenProject(QString ProjectPath);
@@ -93,14 +95,15 @@ private slots:
     void slot_UploadVideo(bool);
     void slot_GetVideoPath(QString VideoPath);
     void slot_FinisheUploadVideo(QString VideoPath);
-    void setShowfilepropertycheck(bool);
 
 
 signals:
+    void CopeFile(QMap<QString,QString> );
     void producerOpened();
     void profileChanged();
     void openFailed(QString);
     void aboutToShutDown();
+
 
 protected:
     MainWindow();
@@ -163,6 +166,9 @@ private:
     int m_nType;//保存类型
     AboutWidget* m_AboutWidget;
     int m_ProjectType;//工程类型
+
+    QThread*     m_objThread;
+    ObjectThread*    m_obj;
 
 #ifdef WITH_LIBLEAP
     LeapListener m_leapListener;

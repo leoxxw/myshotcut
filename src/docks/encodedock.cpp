@@ -1183,6 +1183,14 @@ bool EncodeDock::IsWorking()
     return m_bIsWorking;
 }
 
+void EncodeDock::closeEvent(QCloseEvent *event)
+{
+    m_SaveType = SF_ShotCutSave;
+    this->setFloating(false);
+    QDockWidget::closeEvent(event);
+    qDebug()<<"closeEvent";
+}
+
 void EncodeDock::onProfileChanged()
 {
     int width = MLT.profile().width();
@@ -1362,7 +1370,7 @@ void EncodeDock::slot_Finished()
     if(m_EncodeType == EV_YUNLI)
     {
         emit FinisheUploadVideo(m_yunliFilename);
-        qDebug()<<"输出完成";
+        qDebug()<<"输出完成" <<m_yunliFilename;
         m_SaveType = SF_ShotCutSave;
         m_EncodeType = EV_ShotCut;
     }
