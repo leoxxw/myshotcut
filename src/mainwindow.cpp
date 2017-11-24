@@ -1421,7 +1421,7 @@ void MainWindow::setCurrentFile(const QString &filename)
         m_currentFile = filename;
     if (!m_currentFile.isEmpty())
         shownName = QFileInfo(m_currentFile).fileName();
-    setWindowTitle(tr("%1[*] - %2").arg(shownName).arg(qApp->applicationName()));
+    setWindowTitle(tr("%1[*] - %2").arg(shownName).arg("VideoStudio"));
 }
 
 void MainWindow::on_actionAbout_Shotcut_triggered()
@@ -1842,13 +1842,6 @@ void MainWindow::SaveVideostudioProject()
             m_recentDock->add(filename);
         }
     } else {
-        //先拷贝一份mlt文件
-        int n= m_currentFile.lastIndexOf(".");
-        QString targetFile = m_currentFile.mid(0,n);
-        targetFile.append("_new.mlt");
-        QFile::copy(m_currentFile,targetFile);
-        m_currentFile = targetFile;
-
         saveXML(m_currentFile);
         setCurrentFile(m_currentFile);
         setWindowModified(false);
@@ -1951,14 +1944,20 @@ void MainWindow::readXML(QString strFilePath)
     m_obj->moveToThread(m_objThread);
     connect(m_objThread,&QThread::finished,m_objThread,&QObject::deleteLater);
     connect(m_objThread,&QThread::finished,m_obj,&QObject::deleteLater);
-    QObject::connect(this,SIGNAL(CopeFile(QMap<QString,QString>)), m_obj, SLOT(runWork(QMap<QString, QString>)));
-    QObject::connect(m_obj,SIGNAL(signal_WorkFinished(bool)),this,SLOT(slot_WorkFinished(bool)));
+    connect(this,SIGNAL(CopeFile(QMap<QString,QString>)), m_obj, SLOT(runWork(QMap<QString, QString>)));
+    connect(m_obj,SIGNAL(signal_WorkFinished(bool)),this,SLOT(slot_WorkFinished(bool)));
     m_objThread->start();
     emit CopeFile(FilePathList);
+    qDebug() <<"emit CopeFile";
 }
 
 void MainWindow::slot_WorkFinished(bool flag)
 {
+    if(m_objThread)
+    {
+        m_objThread->quit();
+        m_objThread->wait();
+    }
     if(flag)
     {
         if(m_loginwidget)
@@ -2297,12 +2296,6 @@ bool MainWindow::on_actionSave_triggered()
     if (m_currentFile.isEmpty()) {
         return on_actionSave_As_triggered();
     } else {
-//        //先拷贝一份mlt文件
-//        int n= m_currentFile.lastIndexOf(".");
-//        QString targetFile = m_currentFile.mid(0,n);
-//        targetFile.append("_new.mlt");
-//        QFile::copy(m_currentFile,targetFile);
-//        m_currentFile = targetFile;
         saveXML(m_currentFile);
         setCurrentFile(m_currentFile);
         setWindowModified(false);

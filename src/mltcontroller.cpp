@@ -409,7 +409,7 @@ QString Controller::XML(Service* service, bool withProfile)
         s.set("ignore_points", 0);
     c.set("no_meta", 1);
     c.set("no_profile", !withProfile);
-    c.set("store", "VideoStudio");
+    c.set("store", "shotcut");
     c.connect(s);
     c.start();
     if (ignore)
@@ -514,7 +514,7 @@ bool Controller::isMultitrack() const
     return m_producer && m_producer->is_valid()
         && !m_producer->get_int(kShotcutVirtualClip)
         && (m_producer->get_int("_original_type") == tractor_type || resource() == "<tractor>")
-            && (m_producer->get("VideoStudio"));
+            && (m_producer->get("shotcut"));
 }
 
 bool Controller::isImageProducer(Service* service) const

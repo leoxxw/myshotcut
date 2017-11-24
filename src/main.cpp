@@ -107,9 +107,9 @@ public:
         dir.cd("lib");
         dir.cd("qt5");
         addLibraryPath(dir.absolutePath());
-        setOrganizationName("VideoStudio");
-        setOrganizationDomain("VideoStudio.com");
-        setApplicationName("VideoStudio");
+        setOrganizationName("Meltytech");
+        setOrganizationDomain("Meltytech.com");
+        setApplicationName("shotcut");
         setApplicationVersion(SHOTCUT_VERSION);
         setAttribute(Qt::AA_UseHighDpiPixmaps);
         setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
@@ -209,7 +209,7 @@ public:
     #else
         dir.cdUp();
         dir.cd("share");
-        dir.cd("VideoStudio");
+        dir.cd("shotcut");
         dir.cd("translations");
     #endif
         if (locale.startsWith("pt_"))

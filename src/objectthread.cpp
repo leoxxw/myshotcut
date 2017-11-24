@@ -44,6 +44,7 @@ void ObjectThread::runWork(QMap<QString,QString> pathList)
         if (exist)
         {
             createfile->remove(targetFile);
+            qDebug() <<"remove" << targetFile;
         }
 
         if(!QFile::copy(sourceFile,targetFile))

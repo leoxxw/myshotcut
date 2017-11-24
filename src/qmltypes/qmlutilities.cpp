@@ -68,7 +68,7 @@ QDir QmlUtilities::qmlDir()
     dir.cdUp();
 #endif
     dir.cd("share");
-    dir.cd("VideoStudio");
+    dir.cd("shotcut");
     dir.cd("qml");
     return dir;
 }
