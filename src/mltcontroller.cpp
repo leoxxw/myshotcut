@@ -122,7 +122,7 @@ int Controller::open(const QString &url)
         }
         if (m_url.isEmpty() && QString(m_producer->get("xml")) == "was here") {
             if (m_producer->get_int("_original_type") != tractor_type ||
-               (m_producer->get_int("_original_type") == tractor_type && m_producer->get("VideoStudio")))
+               (m_producer->get_int("_original_type") == tractor_type && m_producer->get("Shotcut")))
                 m_url = url;
         }
         setImageDurationFromDefault(m_producer);

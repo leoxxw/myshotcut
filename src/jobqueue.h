@@ -48,7 +48,7 @@ public:
 
 signals:
     void jobAdded();
-    void signal_Finished();
+    void signal_Finished(bool);
     void signal_Start();
 
 public slots:

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2012-2015 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -200,6 +200,8 @@ void MeltedPlaylistDock::on_actionRemoveAll_triggered()
                            "Do you want to continue?"),
                         QMessageBox::No | QMessageBox::Yes,
                         this);
+    dialog.setButtonText (QMessageBox::Yes,QString("是"));
+    dialog.setButtonText (QMessageBox::No,QString("否"));
     dialog.setDefaultButton(QMessageBox::Yes);
     dialog.setEscapeButton(QMessageBox::No);
     dialog.setWindowModality(QmlApplication::dialogModality());
@@ -217,6 +219,8 @@ void MeltedPlaylistDock::on_actionWipe_triggered()
                            "Do you want to continue?"),
                         QMessageBox::No | QMessageBox::Yes,
                         this);
+    dialog.setButtonText (QMessageBox::Yes,QString("是"));
+    dialog.setButtonText (QMessageBox::No,QString("否"));
     dialog.setDefaultButton(QMessageBox::Yes);
     dialog.setEscapeButton(QMessageBox::No);
     dialog.setWindowModality(QmlApplication::dialogModality());
@@ -235,6 +239,8 @@ void MeltedPlaylistDock::on_actionClean_triggered()
                           "Do you want to continue?"),
                         QMessageBox::No | QMessageBox::Yes,
                         this);
+    dialog.setButtonText (QMessageBox::Yes,QString("是"));
+    dialog.setButtonText (QMessageBox::No,QString("否"));
     dialog.setDefaultButton(QMessageBox::Yes);
     dialog.setEscapeButton(QMessageBox::No);
     dialog.setWindowModality(QmlApplication::dialogModality());

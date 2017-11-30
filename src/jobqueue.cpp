@@ -77,12 +77,16 @@ void JobQueue::onFinished(AbstractJob* job, bool isSuccess)
         {
             item->setText(tr("done"));
             qDebug()<<"onFinished输出完成";
-            emit signal_Finished();
+            emit signal_Finished(true);
         }
-        else if (job->stopped())
+        else if (job->stopped()){
             item->setText(tr("stopped"));
-        else
+        }
+        else{
+            qDebug()<<"onFinished输出失败";
+            emit signal_Finished(false);
             item->setText(tr("failed"));
+        }
     }
     startNextJob();
 }

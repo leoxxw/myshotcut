@@ -120,7 +120,8 @@ SOURCES += main.cpp\
     CallDLL/clouddiskinterface.cpp \
     MyWidgets/aboutwidget.cpp \
     videostudiolog.cpp \
-    objectthread.cpp
+    objectthread.cpp \
+    singleapplication.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -238,7 +239,8 @@ HEADERS  += mainwindow.h \
     MyWidgets/aboutwidget.h \
     version.h \
     videostudiolog.h \
-    objectthread.h
+    objectthread.h \
+    singleapplication.h
 
 FORMS    += mainwindow.ui \
     openotherdialog.ui \

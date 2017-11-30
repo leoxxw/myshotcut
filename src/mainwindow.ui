@@ -93,7 +93,7 @@
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
-     <string>Settings</string>
+     <string>&amp;Settings</string>
     </property>
     <widget class="QMenu" name="menuDeinterlacer">
      <property name="title">
@@ -161,7 +161,6 @@
      <addaction name="actionAppDataSet"/>
      <addaction name="actionAppDataShow"/>
     </widget>
-    <addaction name="actionProject"/>
     <addaction name="actionGPU"/>
     <addaction name="menuProfile"/>
     <addaction name="separator"/>

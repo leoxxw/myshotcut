@@ -35,7 +35,7 @@ public:
                           HWND hParentWnd,
                           enWebFlag dwFlag);
 
-    int UploadResource(int nUploadJobID,QString lpszRelativeFile);
+    int UploadResource(int nUploadJobID,QString lpszRelativeFile, int nCheck);
 
     int GetResourceList(wchar_t* szBuffer, int nSize);
 

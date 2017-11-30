@@ -126,12 +126,12 @@ int CloudDiskInterface::PreUploadResource(QString lpszResourceName,
     return ret;
 }
 //上传资源
-int CloudDiskInterface::UploadResource(int nUploadJobID, QString lpszRelativeFile)
+int CloudDiskInterface::UploadResource(int nUploadJobID, QString lpszRelativeFile, int nCheck)
 {
-    typedef int (*Function)(int,const ushort*);
-    Function fpInit = (Function)m_lib->resolve("DoUploadResource");
+    typedef int (*Function)(int,const ushort*,int);
+    Function fpInit = (Function)m_lib->resolve("DoUploadResourceAndCheck");
 
-    int ret = fpInit(nUploadJobID,lpszRelativeFile.utf16());
+    int ret = fpInit(nUploadJobID,lpszRelativeFile.utf16(),nCheck);
     return ret;
 }
 //获取资源列表

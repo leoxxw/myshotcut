@@ -56,7 +56,7 @@ EncodeDock::EncodeDock(QWidget *parent) :
     LOG_DEBUG() << "begin";
     ui->setupUi(this);
     //绑定信号
-    connect(&JOBS, SIGNAL(signal_Finished()), this, SLOT(slot_Finished()));
+    connect(&JOBS, SIGNAL(signal_Finished(bool)), this, SLOT(slot_Finished(bool)));
     connect(&JOBS, SIGNAL(signal_Start()), this, SLOT(slot_Start()));
     ui->stopCaptureButton->hide();
     ui->videoCodecThreadsSpinner->setMaximum(QThread::idealThreadCount());
@@ -1101,7 +1101,13 @@ void EncodeDock::on_encodeButton_clicked()
         QString fileName = ui->lineEdit->text();
         if(fileName == "")
         {
-            QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("输出文件名为空！"));
+            QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("输出文件名为空！"));
+            return;
+        }
+        int pos = fileName.indexOf(QRegExp("[\*\&\?\\\|\/\>\<\"\:]"));
+        if(pos != -1)
+        {
+            QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("文件名不允许出现特殊字符！"));
             return;
         }
         QString tempPath =QCoreApplication::applicationDirPath()+"/Temp/";
@@ -1365,11 +1371,11 @@ void EncodeDock::onFinished(AbstractJob* job, bool isSuccess)
 
 }
 
-void EncodeDock::slot_Finished()
+void EncodeDock::slot_Finished(bool bFinished)
 {
     if(m_EncodeType == EV_YUNLI)
     {
-        emit FinisheUploadVideo(m_yunliFilename);
+        emit FinisheUploadVideo(m_yunliFilename,bFinished);
         qDebug()<<"输出完成" <<m_yunliFilename;
         m_SaveType = SF_ShotCutSave;
         m_EncodeType = EV_ShotCut;

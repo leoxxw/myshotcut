@@ -84,17 +84,18 @@ public:
     void keyReleaseEvent(QKeyEvent *);
     void hideSetDataDirectory();
     //videostudio
-    void SaveVideostudioProject();
+    void SaveVideostudioProject(QString ProjectName);
     void readXML(QString strFilePath);
 private slots:
     void slot_WorkFinished(bool flag);
-    void slot_SaveProject(int ntype);
+    void slot_SaveProject(int ntype,QString ProjectName);
     void slot_SaveVideo(int ntype);
     void slot_OpenProject(QString ProjectPath);
     void slot_OpenVideo(QString VideoPath);
     void slot_UploadVideo(bool);
     void slot_GetVideoPath(QString VideoPath);
-    void slot_FinisheUploadVideo(QString VideoPath);
+    void slot_FinisheUploadVideo(QString VideoPath,bool bFinished);
+    void slot_CloseProject();
 
 
 signals:
@@ -103,6 +104,7 @@ signals:
     void profileChanged();
     void openFailed(QString);
     void aboutToShutDown();
+    void Signal_open_clicked();
 
 
 protected:
@@ -112,6 +114,7 @@ protected:
     void dropEvent(QDropEvent*);
     void closeEvent(QCloseEvent*);
     void showEvent(QShowEvent*);
+    void resizeEvent(QResizeEvent*);
 
 private:
     void setupSettingsMenu();
@@ -165,7 +168,6 @@ private:
     LoginWidget *m_loginwidget;
     int m_nType;//保存类型
     AboutWidget* m_AboutWidget;
-    int m_ProjectType;//工程类型
 
     QThread*     m_objThread;
     ObjectThread*    m_obj;

@@ -122,7 +122,6 @@ MainWindow::MainWindow()
     , m_upgradeUrl("https://www.shotcut.org/download/")
     ,m_loginwidget(NULL)
     ,m_nType(SF_ShotCutSave)
-    ,m_ProjectType(EV_ShotCut)
     ,m_AboutWidget(NULL)
     ,m_objThread(NULL)
     ,m_obj(NULL)
@@ -378,7 +377,7 @@ MainWindow::MainWindow()
     connect(m_timelineDock, SIGNAL(clipCopied()), m_encodeDock, SLOT(onProducerOpened()));
     //绑定获取输出视频路径信号
     connect(m_encodeDock, SIGNAL(SendVideoPath(QString)), this, SLOT(slot_GetVideoPath(QString)));
-    connect(m_encodeDock, SIGNAL(FinisheUploadVideo(QString)), this, SLOT(slot_FinisheUploadVideo(QString)));
+    connect(m_encodeDock, SIGNAL(FinisheUploadVideo(QString,bool)), this, SLOT(slot_FinisheUploadVideo(QString,bool)));
   //  connect(m_encodeDock,SIGNAL(visibilityChanged(bool)),this,SLOT(setShowfilepropertycheck(bool)));
     m_encodeDock->onProfileChanged();
 
@@ -438,8 +437,8 @@ MainWindow::MainWindow()
     }
 
     // Configure the View menu.
-    ui->menuView->addSeparator();
-    ui->menuView->addAction(ui->actionApplicationLog);
+  //  ui->menuView->addSeparator();
+  //  ui->menuView->addAction(ui->actionApplicationLog);
 
     // connect video widget signals
     Mlt::GLWidget* videoWidget = (Mlt::GLWidget*) &(MLT);
@@ -479,10 +478,13 @@ MainWindow::MainWindow()
     connect(m_loginwidget, &LoginWidget::signal_OpenProject, this,&MainWindow::slot_OpenProject);
     connect(m_loginwidget, &LoginWidget::signal_OpenVideo, this,&MainWindow::slot_OpenVideo);
     connect(m_loginwidget,&LoginWidget::Signal_UploadVideo,this,&MainWindow::slot_UploadVideo);
-    QRect rect = this->geometry();
-    m_loginwidget->move(QPoint(rect.width()/10 *9,rect.height()/5 *1));
-    m_loginwidget->setWindowFlags(Qt::WindowStaysOnTopHint);
-    m_loginwidget->show();
+    connect(m_loginwidget,&LoginWidget::Signal_CloseProject,this,&MainWindow::slot_CloseProject);
+    connect(this,&MainWindow::Signal_open_clicked,m_loginwidget,&LoginWidget::open_clicked);
+
+//    QRect rect = this->geometry();
+//    m_loginwidget->move(QPoint(rect.width()/10 *9,rect.height()/5 *1));
+//    m_loginwidget->setWindowFlags(Qt::WindowStaysOnTopHint);
+//    m_loginwidget->show();
     LOG_DEBUG() << "end";
 }
 
@@ -884,6 +886,8 @@ bool MainWindow::isCompatibleWithGpuMode(MltXmlChecker& checker)
            QMessageBox::No |
            QMessageBox::Yes,
            this);
+        dialog.setButtonText (QMessageBox::Yes,QString("是"));
+        dialog.setButtonText (QMessageBox::No,QString("否"));
         dialog.setWindowModality(QmlApplication::dialogModality());
         dialog.setDefaultButton(QMessageBox::Yes);
         dialog.setEscapeButton(QMessageBox::No);
@@ -937,13 +941,15 @@ bool MainWindow::isXmlRepaired(MltXmlChecker& checker, QString& fileName)
         LOG_WARNING() << fileName;
         QMessageBox dialog(QMessageBox::Question,
            qApp->applicationName(),
-           tr("VideoStudio noticed some problems in your project.\n"
-              "Do you want VideoStudio to try to repair it?\n\n"
-              "If you choose Yes, VideoStudio will create a copy of your project\n"
+           tr("Shotcut noticed some problems in your project.\n"
+              "Do you want Shotcut to try to repair it?\n\n"
+              "If you choose Yes, Shotcut will create a copy of your project\n"
               "with \"- Repaired\" in the file name and open it."),
            QMessageBox::No |
            QMessageBox::Yes,
            this);
+        dialog.setButtonText (QMessageBox::Yes,QString("是"));
+        dialog.setButtonText (QMessageBox::No,QString("否"));
         dialog.setWindowModality(QmlApplication::dialogModality());
         dialog.setDefaultButton(QMessageBox::Yes);
         dialog.setEscapeButton(QMessageBox::No);
@@ -975,6 +981,8 @@ bool MainWindow::checkAutoSave(QString &url)
         QMessageBox dialog(QMessageBox::Question, qApp->applicationName(),
            tr("Auto-saved files exist. Do you want to recover them now?"),
            QMessageBox::No | QMessageBox::Yes, this);
+        dialog.setButtonText (QMessageBox::Yes,QString("是"));
+        dialog.setButtonText (QMessageBox::No,QString("否"));
         dialog.setWindowModality(QmlApplication::dialogModality());
         dialog.setDefaultButton(QMessageBox::Yes);
         dialog.setEscapeButton(QMessageBox::No);
@@ -1168,8 +1176,8 @@ void MainWindow::openVideo()
 #ifdef Q_OS_MAC
     path.append("/*");
 #endif
-    QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path);
-
+    QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path,"工程(*.mlt);;音频(*.mp3);;图片(*.jpg *.png);;视频(*.mp4 *.avi)");
+   // QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path);
     if (filenames.length() > 0)
     {
         Settings.setOpenPath(QFileInfo(filenames.first()).path());
@@ -1179,7 +1187,15 @@ void MainWindow::openVideo()
             m_multipleFiles = filenames;
         }
         open(filenames.first());
-        m_ProjectType = EV_ShotCut;
+        //本地打开工程文件则将工程类型设置为EV_ShotCut
+        int n = filenames.lastIndexOf(".mlt");
+        if( n != -1)
+        {
+            if(m_loginwidget)
+            {
+                m_loginwidget->SetProjrctType(EV_ShotCut);
+            }
+        }
     }
     else {
         // If file invalid, then on some platforms the dialog messes up SDL.
@@ -1221,7 +1237,7 @@ void MainWindow::closeProducer()
     MLT.setSavedProducer(0);
 }
 
-void MainWindow::showStatusMessage(QAction* action, int timeoutSeconds)
+void MainWindow::showStatusMessage(QAction* /*action*/, int /*timeoutSeconds*/)
 {
     // This object takes ownership of the passed action.
     // This version does not currently log its message.
@@ -1414,25 +1430,25 @@ void MainWindow::configureVideoWidget()
 
 void MainWindow::setCurrentFile(const QString &filename)
 {
-    QString shownName = "blank";
+    QString shownName = "专业视频工作站";
     if (filename == untitledFileName())
         m_currentFile.clear();
     else
         m_currentFile = filename;
     if (!m_currentFile.isEmpty())
         shownName = QFileInfo(m_currentFile).fileName();
-    setWindowTitle(tr("%1[*] - %2").arg(shownName).arg("VideoStudio"));
+    int n = shownName.lastIndexOf(".");
+    shownName = shownName.mid(0,n);
+    setWindowTitle(tr("%1[*]").arg(shownName));
 }
 
 void MainWindow::on_actionAbout_Shotcut_triggered()
 {
     if(m_AboutWidget == NULL)
     {
-        m_AboutWidget = new AboutWidget(this);
+        m_AboutWidget = new AboutWidget();
     }
-    QRect rect = this->geometry();
     m_AboutWidget->move(200,50);
-    m_AboutWidget->setWindowFlags( Qt::WindowStaysOnTopHint);
     m_AboutWidget->show();
 
 }
@@ -1812,17 +1828,33 @@ void MainWindow::hideSetDataDirectory()
     delete ui->actionAppDataSet;
 }
 
-void MainWindow::SaveVideostudioProject()
+void MainWindow::SaveVideostudioProject(QString ProjectName)
 {
-    if (m_currentFile.isEmpty())
+    if (m_currentFile.isEmpty() || m_nType == SF_SaveOther)
     {
         if (!MLT.producer())
             return ;
-        QString tempName = "/新建工程";
+        QString tempName;
         QDateTime current_date_time =QDateTime::currentDateTime();
-        QString current_date =current_date_time.toString("yyyyMMddhh");
-        tempName.append(current_date);
-        QString filename =Settings.openPath() + tempName;
+        if(ProjectName == "")
+        {
+            tempName.append("/新建工程");
+
+            QString current_date =current_date_time.toString("yyyyMMddhh");
+            tempName.append(current_date);
+        }else{
+            tempName.append("/");
+            tempName.append(ProjectName);
+        }
+        QString strLoadPath = QCoreApplication::applicationDirPath()+"/DownLoad";
+        QString strTimeName = current_date_time.toString("/新建工程yyyyMMddhhmmss");
+        strLoadPath.append(strTimeName);
+        QDir dir(strLoadPath);
+        if(!dir.exists())
+        {
+           dir.mkpath(strLoadPath);//创建多级目录
+        }
+        QString filename =strLoadPath + tempName;
         qDebug()<<"filename = " <<filename;
         if (!filename.isEmpty()) {
             QFileInfo fi(filename);
@@ -1961,10 +1993,10 @@ void MainWindow::slot_WorkFinished(bool flag)
     if(flag)
     {
         if(m_loginwidget)
-        {
+        { 
             if(m_nType == SF_Save)
             {
-                m_loginwidget->SaveProject(m_currentFile,m_nType,m_ProjectType);
+                m_loginwidget->SaveProject(m_currentFile,m_nType);
             }
             if(m_nType == SF_SaveOther)
             {
@@ -1972,7 +2004,7 @@ void MainWindow::slot_WorkFinished(bool flag)
             }
             if(m_nType == SF_SaveSend)
             {
-                m_loginwidget->SendProjectNoDlg(m_currentFile,m_ProjectType);
+                m_loginwidget->SendProjectNoDlg(m_currentFile);
             }
         }
     }else{
@@ -1982,15 +2014,14 @@ void MainWindow::slot_WorkFinished(bool flag)
 
 }
 
-void MainWindow::slot_SaveProject(int ntype)
+void MainWindow::slot_SaveProject(int ntype,QString ProjectName)
 {
     if(MLT.videoWidget())
     {
         MLT.pause();
     }
     m_nType = ntype;
-    SaveVideostudioProject();
-  //  on_actionSave_triggered();
+    SaveVideostudioProject(ProjectName);
     readXML(m_currentFile);
 }
 
@@ -2027,7 +2058,10 @@ void MainWindow::slot_OpenProject(QString ProjectPath)
         if (filenames.length() > 1)
             m_multipleFiles = filenames;
         open(filenames.first());
-        m_ProjectType = EV_YUNLI;
+        if(m_loginwidget)
+        {
+            m_loginwidget->SetProjrctType(EV_YUNLI);
+        }
     }
     else {
         // If file invalid, then on some platforms the dialog messes up SDL.
@@ -2094,9 +2128,14 @@ void MainWindow::slot_GetVideoPath(QString VideoPath)
     }
 }
 
-void MainWindow::slot_FinisheUploadVideo(QString VideoPath)
+void MainWindow::slot_FinisheUploadVideo(QString VideoPath,bool bFinished)
 {
     qDebug()<<"slot_FinisheUploadVideo";
+    if(!bFinished)
+    {
+        m_loginwidget->SetIsWorking(false);
+        return;
+    }
     if(m_nType == SF_SaveOther)
     {
         m_loginwidget->UploadVideo(VideoPath);
@@ -2106,6 +2145,14 @@ void MainWindow::slot_FinisheUploadVideo(QString VideoPath)
     {
         m_loginwidget->UploadSendVideo(VideoPath);
         qDebug()<<"SF_SaveSend";
+    }
+}
+
+void MainWindow::slot_CloseProject()
+{
+    if(continueModified())
+    {
+        emit Signal_open_clicked();
     }
 }
 
@@ -2223,6 +2270,19 @@ void MainWindow::showEvent(QShowEvent* event)
     }
 }
 
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    if(m_loginwidget)
+    {
+        QRect rect = this->geometry();
+        m_loginwidget->move(QPoint(rect.width()/10 *9,rect.height()/5 *1));
+        m_loginwidget->setWindowFlags(Qt::WindowStaysOnTopHint);
+        m_loginwidget->show();
+        m_loginwidget->raise();
+    }
+    QWidget::resizeEvent(event);
+}
+
 void MainWindow::on_actionOpenOther_triggered()
 {
     // these static are used to open dialog with previous configuration
@@ -2308,7 +2368,10 @@ bool MainWindow::on_actionSave_triggered()
 bool MainWindow::on_actionSave_As_triggered()
 {
     if (!MLT.producer())
+    {
+        QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
         return false;
+    }
     QString path = Settings.savePath();
     path.append("/.mlt");
     QString filename = QFileDialog::getSaveFileName(this, tr("Save XML"), path, tr("MLT XML (*.mlt)"));
@@ -2344,6 +2407,9 @@ bool MainWindow::continueModified()
                                      QMessageBox::Cancel |
                                      QMessageBox::Yes,
                                      this);
+        dialog.setButtonText (QMessageBox::Yes,QString("保存"));
+        dialog.setButtonText (QMessageBox::No,QString("不保存"));
+        dialog.setButtonText (QMessageBox::Cancel,QString("取消"));
         dialog.setWindowModality(QmlApplication::dialogModality());
         dialog.setDefaultButton(QMessageBox::Yes);
         dialog.setEscapeButton(QMessageBox::Cancel);
@@ -3054,6 +3120,8 @@ void MainWindow::on_actionGPU_triggered(bool checked)
                           "Do you want to restart now?"),
                        QMessageBox::No | QMessageBox::Yes,
                        this);
+    dialog.setButtonText (QMessageBox::Yes,QString("是"));
+    dialog.setButtonText (QMessageBox::No,QString("否"));
     dialog.setDefaultButton(QMessageBox::Yes);
     dialog.setEscapeButton(QMessageBox::No);
     dialog.setWindowModality(QmlApplication::dialogModality());
@@ -3313,6 +3381,8 @@ void MainWindow::onDrawingMethodTriggered(QAction *action)
                           "Do you want to restart now?"),
                        QMessageBox::No | QMessageBox::Yes,
                        this);
+    dialog.setButtonText (QMessageBox::Yes,QString("是"));
+    dialog.setButtonText (QMessageBox::No,QString("否"));
     dialog.setDefaultButton(QMessageBox::Yes);
     dialog.setEscapeButton(QMessageBox::No);
     dialog.setWindowModality(QmlApplication::dialogModality());
@@ -3416,6 +3486,10 @@ void MainWindow::on_actionCopy_triggered()
 
 void MainWindow::on_actionPaste_triggered()
 {
+    if(m_currentFile == "")
+    {
+        return;
+    }
     m_timelineDock->show();
     m_timelineDock->raise();
     m_timelineDock->insert(-1);
@@ -3525,6 +3599,8 @@ void MainWindow::on_actionAppDataSet_triggered()
                           "Do you want to continue?"),
                        QMessageBox::No | QMessageBox::Yes,
                        this);
+    dialog.setButtonText (QMessageBox::Yes,QString("是"));
+    dialog.setButtonText (QMessageBox::No,QString("否"));
     dialog.setDefaultButton(QMessageBox::Yes);
     dialog.setEscapeButton(QMessageBox::No);
     dialog.setWindowModality(QmlApplication::dialogModality());

@@ -20,6 +20,7 @@ public:
     int GetUserInfoEx(QString strNodeName,wchar_t *pValue, int *nSize);
     int GetTicket(wchar_t *pTicket, int *nSize);    // 返回票据
     int Logout();
+    int GetConfigCenterAddr(wchar_t *pUrl, int *nSize);
     static CallUnifyLoginSrv* instance();
 private:
     CallUnifyLoginSrv();

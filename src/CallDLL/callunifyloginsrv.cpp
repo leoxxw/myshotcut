@@ -122,6 +122,15 @@ int CallUnifyLoginSrv::Logout()
     return ret;
 }
 
+int CallUnifyLoginSrv::GetConfigCenterAddr(wchar_t *pUrl, int *nSize)
+{
+    typedef int (*Function)(wchar_t *, int *);
+    Function fpInit = (Function)m_lib->resolve("DoGetConfigCenterAddr");
+
+    int ret = fpInit(pUrl,nSize);
+    return ret;
+}
+
 CallUnifyLoginSrv* CallUnifyLoginSrv::instance()
 {
     if (m_pInstance==NULL)

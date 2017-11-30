@@ -60,7 +60,7 @@ public:
 
 signals:
     void captureStateChanged(bool);
-    void FinisheUploadVideo(QString);
+    void FinisheUploadVideo(QString,bool);
     void EncodeWorking(bool);
     void SendVideoPath(QString);
 protected:
@@ -85,7 +85,7 @@ private slots:
 
     void onFinished(AbstractJob*, bool isSuccess);
 
-    void slot_Finished();
+    void slot_Finished(bool bFinished);
     void slot_Start();
 
     void on_stopCaptureButton_clicked();

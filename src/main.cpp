@@ -27,8 +27,8 @@
 #include <QProcess>
 #include <QCommandLineParser>
 #include <framework/mlt_log.h>
-
-
+#include "singleapplication.h"
+#include <QMessageBox>
 #ifdef Q_OS_WIN
 #ifdef QT_DEBUG
 #   include <exchndl.h>
@@ -89,7 +89,7 @@ static void mlt_log_handler(void *service, int mlt_level, const char *format, va
     Logger::write(cuteLoggerLevel, __FILE__, __LINE__, "MLT", message);
 }
 
-class Application : public QApplication
+class Application : public SingleApplication
 {
 public:
     MainWindow* mainWindow;
@@ -100,8 +100,8 @@ public:
     bool isFullScreen;
     QString appDirArg;
 
-    Application(int &argc, char **argv)
-        : QApplication(argc, argv)
+    Application(int &argc, char **argv,const QString uniqueKey)
+        : SingleApplication(argc, argv,uniqueKey)
     {
         QDir dir(applicationDirPath());
         dir.cd("lib");
@@ -109,7 +109,7 @@ public:
         addLibraryPath(dir.absolutePath());
         setOrganizationName("Meltytech");
         setOrganizationDomain("Meltytech.com");
-        setApplicationName("shotcut");
+        setApplicationName("VideoStudio");
         setApplicationVersion(SHOTCUT_VERSION);
         setAttribute(Qt::AA_UseHighDpiPixmaps);
         setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
@@ -245,6 +245,13 @@ protected:
 
 int main(int argc, char **argv)
 {
+    Application a(argc, argv, "some unique key string");
+    if (a.isRunning())
+    {
+        a.sendMessage("message from other instance.");
+        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("\r\n VideoStudio已经在运行了！\r\n"));
+        return 0;
+    }
 
 #if defined(Q_OS_WIN) && defined(QT_DEBUG)
     ExcHndlInit();
@@ -255,7 +262,7 @@ int main(int argc, char **argv)
 #if QT_VERSION >= 0x050600
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
-    Application a(argc, argv);
+ //   Application a(argc, argv);
 //    QSplashScreen splash(QPixmap(":/icons/shotcut-logo-640.png"));
 //    splash.showMessage(QCoreApplication::translate("main", "Loading plugins..."), Qt::AlignHCenter | Qt::AlignBottom);
 //    splash.show();
@@ -278,13 +285,13 @@ int main(int argc, char **argv)
 
     int result = a.exec();
 
-    if (EXIT_RESTART == result) {
-        LOG_DEBUG() << "restarting app";
-        QProcess* restart = new QProcess;
-        restart->start(a.applicationFilePath(), QStringList());
-        restart->waitForReadyRead();
-        restart->waitForFinished(1000);
-        result = EXIT_SUCCESS;
-    }
+//    if (EXIT_RESTART == result) {
+//        LOG_DEBUG() << "restarting app";
+//        QProcess* restart = new QProcess;
+//        restart->start(a.applicationFilePath(), QStringList());
+//        restart->waitForReadyRead();
+//        restart->waitForFinished(1000);
+//        result = EXIT_SUCCESS;
+//    }
     return result;
 }
