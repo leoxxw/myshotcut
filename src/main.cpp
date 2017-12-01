@@ -109,7 +109,7 @@ public:
         addLibraryPath(dir.absolutePath());
         setOrganizationName("Meltytech");
         setOrganizationDomain("Meltytech.com");
-        setApplicationName("VideoStudio");
+        setApplicationName("Shotcut");
         setApplicationVersion(SHOTCUT_VERSION);
         setAttribute(Qt::AA_UseHighDpiPixmaps);
         setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
@@ -157,7 +157,7 @@ public:
         // Startup logging.
         dir = Settings.appDataLocation();
         if (!dir.exists()) dir.mkpath(dir.path());
-        const QString logFileName = dir.filePath("VideoStudio-log.txt");
+        const QString logFileName = dir.filePath("Shotcut-log.txt");
         QFile::remove(logFileName);
         FileAppender* fileAppender = new FileAppender(logFileName);
         fileAppender->setFormat("[%-7l] <%c> %m\n");

@@ -95,6 +95,16 @@ int CloudDiskInterface::ResourceDialog(int bIsOpen,
                      lpszResourceSubTypeFilter.utf16(),hParentWnd,dwFlag);
     return ret;
 }
+
+int CloudDiskInterface::ResourceDialogEx(int bIsOpen, QString lpszTitle, QString lpszFileName, enResourceMajorType nResourceMajorTypeFilter, QString lpszResourceSubTypeFilter, HWND hParentWnd, enWebFlag dwFlag, QString lpszNotSub)
+{
+    typedef int (*Function)(int ,const ushort*,const ushort*,int,const ushort*,HWND,DWORD,const ushort*);
+    Function fpInit = (Function)m_lib->resolve("DoResourceDialogEx");
+
+    int ret = fpInit(bIsOpen,lpszTitle.utf16(),lpszFileName.utf16(),nResourceMajorTypeFilter,
+                     lpszResourceSubTypeFilter.utf16(),hParentWnd,dwFlag,lpszNotSub.utf16());
+    return ret;
+}
 //预上传资源
 int CloudDiskInterface::PreUploadResource(QString lpszResourceName,
                                           QString lpszResourceID,

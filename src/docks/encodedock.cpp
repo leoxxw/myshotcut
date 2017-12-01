@@ -1015,24 +1015,36 @@ void EncodeDock::on_encodeButton_clicked()
     {
         directory = Settings.encodePath();
     }
-    if(m_SaveType == SF_YUNLI)
+    //修改输出路径
+    QString fileName = ui->lineEdit->text();
+    if(fileName == "")
     {
-        directory = QCoreApplication::applicationDirPath()+"/Temp";
+        QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("输出文件名为空！"));
+        return;
+    }
+    int pos = fileName.indexOf(QRegExp("[\*\&\?\\\|\/\>\<\"\:]"));
+    if(pos != -1)
+    {
+        QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("文件名不允许出现特殊字符！"));
+        return;
     }
     if (!m_extension.isEmpty()) {
         if (!MAIN.fileName().isEmpty()) {
             directory += QString("/%1.%2").arg(QFileInfo(MAIN.fileName()).baseName())
                                           .arg(m_extension);
         } else {
-            directory += "/." + m_extension;
+            directory +="/" +fileName ;
+            directory += "." + m_extension;
+
         }
     } else {
         if (!MAIN.fileName().isEmpty()) {
-            directory += "/" + QFileInfo(MAIN.fileName()).baseName();
+
+            directory += "/" + fileName + QFileInfo(MAIN.fileName()).baseName();
         }
 #ifdef Q_OS_MAC
         else {
-            directory += "/.mp4";
+            directory += "/"+fileName +".mp4";
         }
 #endif
     }
@@ -1122,12 +1134,16 @@ void EncodeDock::on_encodeButton_clicked()
             QFileInfo fi(m_outputFilename);
             MLT.pause();
             Settings.setEncodePath("");
-            if (!m_extension.isEmpty()) {
-                if (fi.suffix().isEmpty()) {
-                    m_outputFilename += '.';
-                    m_outputFilename += m_extension;
+            if (m_extension.isEmpty()) {
+                if (fi.suffix().isEmpty())
+                {
+                   QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("     无法确定输出格式！      "));
+                   return;
                 }
             }
+            m_outputFilename += '.';
+            m_outputFilename += m_extension;
+            qDebug()<<"文件后缀名"<<m_extension;
             emit SendVideoPath(m_outputFilename);
             m_yunliFilename = m_outputFilename;
             this->hide();
@@ -1521,6 +1537,7 @@ void EncodeDock::on_formatCombo_currentIndexChanged(int index)
 {
     Q_UNUSED(index);
     m_extension.clear();
+    m_extension = ui->formatCombo->itemText(index);
 }
 
 void EncodeDock::on_videoBufferDurationChanged()

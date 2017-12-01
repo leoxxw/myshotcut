@@ -194,7 +194,7 @@ void MeltedPlaylistDock::on_actionGoto_triggered()
 void MeltedPlaylistDock::on_actionRemoveAll_triggered()
 {
     QMessageBox dialog(QMessageBox::Warning,
-                       qApp->applicationName(),
+                       "VideoStudio",
                         tr("\"Remove All\" will remove all of clips in the playlist.\n\n"
                            "IMPORTANT: You cannot Undo this action!\n\n"
                            "Do you want to continue?"),
@@ -213,7 +213,7 @@ void MeltedPlaylistDock::on_actionRemoveAll_triggered()
 void MeltedPlaylistDock::on_actionWipe_triggered()
 {
     QMessageBox dialog(QMessageBox::Warning,
-                       qApp->applicationName(),
+                       "VideoStudio",
                         tr("\"Remove All\" will remove all of clips in the playlist.\n\n"
                            "IMPORTANT: You cannot Undo this action!\n\n"
                            "Do you want to continue?"),
@@ -232,7 +232,7 @@ void MeltedPlaylistDock::on_actionWipe_triggered()
 void MeltedPlaylistDock::on_actionClean_triggered()
 {
     QMessageBox dialog(QMessageBox::Warning,
-                       qApp->applicationName(),
+                       "VideoStudio",
                        tr("\"Clean\" will remove all of clips in the playlist\n"
                           "except the currently playing clip.\n\n"
                           "IMPORTANT: You cannot Undo this action!\n\n"

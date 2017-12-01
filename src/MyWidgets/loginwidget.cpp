@@ -1006,12 +1006,13 @@ void LoginWidget::on_pushButton_openvideo_clicked()
         return;
     }
     //打开选择窗口
-    int nsize = CloudDiskInterface::instance()->ResourceDialog(1,
+    int nsize = CloudDiskInterface::instance()->ResourceDialogEx(1,
                                                                "打开资源文件",
                                                                "",
                                                                ERMT_ALL,
                                                                "",
-                                                               NULL,EWF_WEB_OPEN_FLAG_DEFAULT);
+                                                               NULL,EWF_WEB_OPEN_FLAG_DEFAULT,
+                                                               "mlt;doc;docx;xls;xlsx;txt;xml;pdf;ppt;pptx;html;htm;ini;h5;weixin;weibo;Mdoc;aso;7z;img;iso;rar;;zip");
     if(nsize < ERT_TRUE)
     {
         qDebug() <<QStringLiteral("CloudDiskInterface failed");
@@ -1122,7 +1123,7 @@ void LoginWidget::on_pushButton_sendOthvideo_clicked()
     int nsize = CloudDiskInterface::instance()->ResourceDialog(3,
                                                                "发送云里资源",
                                                                "",
-                                                               ERMT_ALL,
+                                                               ERMT_Video,
                                                                "",
                                                                NULL,
                                                                EWF_WEB_OPEN_MUTI_SELECT);

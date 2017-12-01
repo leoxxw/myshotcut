@@ -25,6 +25,7 @@ void ObjectThread::runWork(QMap<QString,QString> pathList)
 
     qDebug() <<"runWork";
     QMap<QString,QString>::iterator it; //遍历map
+    int i=0;
     for ( it = pathList.begin(); it != pathList.end(); ++it )
     {
         QString sourceFile =it.key();
@@ -52,6 +53,8 @@ void ObjectThread::runWork(QMap<QString,QString> pathList)
             qDebug() <<"failed" << sourceFile;
             continue;
         }
+        i++;
+        emit signal_ProgressItem(i);
     }
     emit signal_WorkFinished(true);
 

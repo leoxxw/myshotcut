@@ -27,6 +27,12 @@ public:
                        QString lpszResourceSubTypeFilter,
                        HWND hParentWnd,
                        enWebFlag dwFlag);
+    int ResourceDialogEx(int bIsOpen, QString lpszTitle, QString lpszFileName,
+                       enResourceMajorType nResourceMajorTypeFilter,
+                       QString lpszResourceSubTypeFilter,
+                       HWND hParentWnd,
+                       enWebFlag dwFlag,
+                       QString lpszNotSub);
 
     int PreUploadResource(QString lpszResourceName, QString lpszResourceID,
                           QString lpszFile,QString lpszRelativeFile,

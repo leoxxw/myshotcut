@@ -12,6 +12,7 @@ public:
     ~ObjectThread();
 signals:
     void signal_WorkFinished(bool);
+    void signal_ProgressItem(int);
 public slots:
     void runWork(QMap<QString,QString> pathList);
 private:

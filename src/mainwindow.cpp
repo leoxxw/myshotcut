@@ -120,11 +120,12 @@ MainWindow::MainWindow()
     , m_exitCode(EXIT_SUCCESS)
     , m_navigationPosition(0)
     , m_upgradeUrl("https://www.shotcut.org/download/")
-    ,m_loginwidget(NULL)
-    ,m_nType(SF_ShotCutSave)
-    ,m_AboutWidget(NULL)
-    ,m_objThread(NULL)
-    ,m_obj(NULL)
+    , m_loginwidget(NULL)
+    , m_nType(SF_ShotCutSave)
+    , m_AboutWidget(NULL)
+    , m_objThread(NULL)
+    , m_progressDlg(NULL)
+    , m_obj(NULL)
 {
     //注册自己的变量类型
     qRegisterMetaType<QMap<QString,QString> >("QMap<QString,QString> ");
@@ -132,7 +133,7 @@ MainWindow::MainWindow()
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
     QLibrary libJack("libjack.so.0");
     if (!libJack.load()) {
-        QMessageBox::critical(this, qApp->applicationName(),
+        QMessageBox::critical(this, "VideoStudio",
             tr("Error: This program requires the JACK 1 library.\n\nPlease install it using your package manager. It may be named libjack0, jack-audio-connection-kit, jack, or similar."));
         ::exit(EXIT_FAILURE);
     } else {
@@ -140,7 +141,7 @@ MainWindow::MainWindow()
     }
     QLibrary libSDL("libSDL2-2.0.so.0");
     if (!libSDL.load()) {
-        QMessageBox::critical(this, qApp->applicationName(),
+        QMessageBox::critical(this, "VideoStudio",
             tr("Error: This program requires the SDL 2 library.\n\nPlease install it using your package manager. It may be named libsdl2-2.0-0, SDL2, or similar."));
         ::exit(EXIT_FAILURE);
     } else {
@@ -880,7 +881,7 @@ bool MainWindow::isCompatibleWithGpuMode(MltXmlChecker& checker)
     if (checker.needsGPU() && !Settings.playerGPU()) {
         LOG_INFO() << "file uses GPU but GPU not enabled";
         QMessageBox dialog(QMessageBox::Question,
-           qApp->applicationName(),
+           "VideoStudio",
            tr("The file you opened uses GPU effects, but GPU processing is not enabled.\n"
               "Do you want to enable GPU processing and restart?"),
            QMessageBox::No |
@@ -929,7 +930,7 @@ bool MainWindow::saveRepairedXmlFile(MltXmlChecker& checker, QString& fileName)
             return true;
         }
     }
-    QMessageBox::warning(this, qApp->applicationName(), tr("Repairing the project failed."));
+    QMessageBox::warning(this, "VideoStudio", tr("Repairing the project failed."));
     LOG_WARNING() << "repairing failed";
     return false;
 }
@@ -940,7 +941,7 @@ bool MainWindow::isXmlRepaired(MltXmlChecker& checker, QString& fileName)
     if (checker.isCorrected()) {
         LOG_WARNING() << fileName;
         QMessageBox dialog(QMessageBox::Question,
-           qApp->applicationName(),
+           "VideoStudio",
            tr("Shotcut noticed some problems in your project.\n"
               "Do you want Shotcut to try to repair it?\n\n"
               "If you choose Yes, Shotcut will create a copy of your project\n"
@@ -978,7 +979,7 @@ bool MainWindow::checkAutoSave(QString &url)
     // check whether autosave files exist:
     QSharedPointer<AutoSaveFile> stale(AutoSaveFile::getFile(url));
     if (stale) {
-        QMessageBox dialog(QMessageBox::Question, qApp->applicationName(),
+        QMessageBox dialog(QMessageBox::Question, "VideoStudio",
            tr("Auto-saved files exist. Do you want to recover them now?"),
            QMessageBox::No | QMessageBox::Yes, this);
         dialog.setButtonText (QMessageBox::Yes,QString("是"));
@@ -1430,7 +1431,7 @@ void MainWindow::configureVideoWidget()
 
 void MainWindow::setCurrentFile(const QString &filename)
 {
-    QString shownName = "专业视频工作站";
+    QString shownName = "VideoStudio 专业视频工作站";
     if (filename == untitledFileName())
         m_currentFile.clear();
     else
@@ -1978,13 +1979,30 @@ void MainWindow::readXML(QString strFilePath)
     connect(m_objThread,&QThread::finished,m_obj,&QObject::deleteLater);
     connect(this,SIGNAL(CopeFile(QMap<QString,QString>)), m_obj, SLOT(runWork(QMap<QString, QString>)));
     connect(m_obj,SIGNAL(signal_WorkFinished(bool)),this,SLOT(slot_WorkFinished(bool)));
+    connect(m_obj,SIGNAL(signal_ProgressItem(int)),this,SLOT(slot_Progress(int)));
     m_objThread->start();
     emit CopeFile(FilePathList);
+    if(m_progressDlg == NULL)
+    {
+        m_progressDlg = new QProgressDialog(this);
+    }
+    QFont font("ZYSong18030",12);
+    m_progressDlg->setFont(font);
+    m_progressDlg->setWindowModality(Qt::WindowModal);
+    m_progressDlg->setMinimumDuration(5);
+    m_progressDlg->setWindowTitle(tr("请耐心等待"));
+    m_progressDlg->setLabelText(tr("正在复制......      "));
+    m_progressDlg->setCancelButtonText(tr("取消"));
+    m_progressDlg->setRange(0,FilePathList.count());
     qDebug() <<"emit CopeFile";
 }
 
 void MainWindow::slot_WorkFinished(bool flag)
 {
+    if(m_progressDlg)
+    {
+        m_progressDlg->hide();
+    }
     if(m_objThread)
     {
         m_objThread->quit();
@@ -2023,6 +2041,11 @@ void MainWindow::slot_SaveProject(int ntype,QString ProjectName)
     m_nType = ntype;
     SaveVideostudioProject(ProjectName);
     readXML(m_currentFile);
+}
+
+void MainWindow::slot_Progress(int i)
+{
+    m_progressDlg->setValue(i);
 }
 
 void MainWindow::slot_SaveVideo(int ntype)
@@ -2400,7 +2423,7 @@ bool MainWindow::continueModified()
 {
     if (isWindowModified()) {
         QMessageBox dialog(QMessageBox::Warning,
-                                     qApp->applicationName(),
+                                     "VideoStudio",
                                      tr("The project has been modified.\n"
                                         "Do you want to save your changes?"),
                                      QMessageBox::No |
@@ -2430,7 +2453,7 @@ bool MainWindow::continueJobsRunning()
 {
     if (JOBS.hasIncomplete()) {
         QMessageBox dialog(QMessageBox::Warning,
-                                     qApp->applicationName(),
+                                     "VideoStudio",
                                      tr("There are incomplete jobs.\n"
                                         "Do you want to still want to exit?"),
                                      QMessageBox::No |
@@ -2443,7 +2466,7 @@ bool MainWindow::continueJobsRunning()
     }
     if (m_encodeDock->isExportInProgress()) {
         QMessageBox dialog(QMessageBox::Warning,
-                                     qApp->applicationName(),
+                                     "VideoStudio",
                                      tr("An export is in progress.\n"
                                         "Do you want to still want to exit?"),
                                      QMessageBox::No |
@@ -2866,7 +2889,7 @@ void MainWindow::onGpuNotSupported()
         ui->actionGPU->setDisabled(true);
     }
     LOG_WARNING() << "";
-    QMessageBox::critical(this, qApp->applicationName(),
+    QMessageBox::critical(this, "VideoStudio",
         tr("GPU Processing is not supported"));
 }
 
@@ -3065,7 +3088,7 @@ void MainWindow::onLanguageTriggered(QAction* action)
 {
     Settings.setLanguage(action->data().toString());
     QMessageBox dialog(QMessageBox::Information,
-                       qApp->applicationName(),
+                       "VideoStudio",
                        tr("You must restart Shotcut to switch to the new language.\n"
                           "Do you want to restart now?"),
                        QMessageBox::No | QMessageBox::Yes,
@@ -3106,7 +3129,7 @@ void MainWindow::on_actionJack_triggered(bool checked)
         if (ui->actionJack)
             ui->actionJack->setChecked(false);
         Settings.setPlayerJACK(false);
-        QMessageBox::warning(this, qApp->applicationName(),
+        QMessageBox::warning(this, "VideoStudio",
             tr("Failed to connect to JACK.\nPlease verify that JACK is installed and running."));
     }
 }
@@ -3115,7 +3138,7 @@ void MainWindow::on_actionGPU_triggered(bool checked)
 {
     Settings.setPlayerGPU(checked);
     QMessageBox dialog(QMessageBox::Information,
-                       qApp->applicationName(),
+                       "VideoStudio",
                        tr("You must restart Shotcut to switch using GPU processing.\n"
                           "Do you want to restart now?"),
                        QMessageBox::No | QMessageBox::Yes,
@@ -3376,7 +3399,7 @@ void MainWindow::onDrawingMethodTriggered(QAction *action)
 {
     Settings.setDrawMethod(action->data().toInt());
     QMessageBox dialog(QMessageBox::Information,
-                       qApp->applicationName(),
+                       "VideoStudio",
                        tr("You must restart Shotcut to change the display method.\n"
                           "Do you want to restart now?"),
                        QMessageBox::No | QMessageBox::Yes,
@@ -3397,7 +3420,7 @@ void MainWindow::on_actionApplicationLog_triggered()
 {
     TextViewerDialog dialog(this);
     QDir dir = Settings.appDataLocation();
-    QFile logFile(dir.filePath("VideoStudio-log.txt"));
+    QFile logFile(dir.filePath("Shotcut-log.txt"));
     logFile.open(QIODevice::ReadOnly | QIODevice::Text);
     dialog.setText(logFile.readAll());
     logFile.close();
@@ -3594,7 +3617,7 @@ void MainWindow::onGLWidgetImageReady()
 void MainWindow::on_actionAppDataSet_triggered()
 {
     QMessageBox dialog(QMessageBox::Information,
-                       qApp->applicationName(),
+                       "VideoStudio",
                        tr("You must restart Shotcut to change the data directory.\n"
                           "Do you want to continue?"),
                        QMessageBox::No | QMessageBox::Yes,

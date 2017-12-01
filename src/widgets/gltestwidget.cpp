@@ -46,7 +46,7 @@ void GLTestWidget::initializeGL()
             LOG_WARNING() << "OpenGL has NPOTTextures" << hasOpenGLFeature(QOpenGLFunctions::NPOTTextures);
             LOG_WARNING() << "OpenGL has Shaders" << hasOpenGLFeature(QOpenGLFunctions::Shaders);
             LOG_WARNING() << "OpenGL has Framebuffers" << hasOpenGLFeature(QOpenGLFunctions::Framebuffers);
-            QMessageBox::critical(this, qApp->applicationName(),
+            QMessageBox::critical(this, "VideoStudio",
                               tr("Error:\nThis program requires OpenGL version 2.0\nwith the framebuffer object extension."));
             ::exit(EXIT_FAILURE);
         }

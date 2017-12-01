@@ -30,6 +30,7 @@
 #include "mltxmlchecker.h"
 #include "MyWidgets/loginwidget.h"
 #include "MyWidgets/aboutwidget.h"
+#include <QProgressDialog>
 #define EXIT_RESTART (42)
 
 namespace Ui {
@@ -89,6 +90,7 @@ public:
 private slots:
     void slot_WorkFinished(bool flag);
     void slot_SaveProject(int ntype,QString ProjectName);
+    void slot_Progress(int i);
     void slot_SaveVideo(int ntype);
     void slot_OpenProject(QString ProjectPath);
     void slot_OpenVideo(QString VideoPath);
@@ -171,6 +173,7 @@ private:
 
     QThread*     m_objThread;
     ObjectThread*    m_obj;
+    QProgressDialog *m_progressDlg;
 
 #ifdef WITH_LIBLEAP
     LeapListener m_leapListener;
