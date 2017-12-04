@@ -315,6 +315,12 @@ bool LoginWidget::SaveProjectOther(QString strFilePath)
     int ret = CloudDiskInterface::instance()->UploadResource(nJobID,m_strBuffInfo,0);
     if(ret == ERT_TRUE)
     {
+        if(m_ProResourceInfo.m_bReadOnly)
+        {
+            ui->pushButton_save->setEnabled(false);
+        }else{
+            ui->pushButton_save->setEnabled(true);
+        }
         m_ProjectType = EV_YUNLI;
         qDebug() <<"save succeed";
         LOG("工程另存为 保存工程成功","INFO");
@@ -441,11 +447,10 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
             //获取资源选中窗口的信息
             CloudDiskInterface::instance()->GetResourceList(pBuff, 1024);
             QString buffInfo = QString::fromWCharArray(pBuff);
-            ResourceInfo InfoList;
-            GetListInfo(buffInfo,InfoList);
+            GetListInfo(buffInfo,m_ProResourceInfo);
             //预保存资源到云盘
-            int nJobID = CloudDiskInterface::instance()->PreUploadResource(InfoList.m_strResourceName,
-                                                                           InfoList.m_strResourceID,
+            int nJobID = CloudDiskInterface::instance()->PreUploadResource(m_ProResourceInfo.m_strResourceName,
+                                                                           m_ProResourceInfo.m_strResourceID,
                                                                            strFilePath,
                                                                            filePath,
                                                                            EREST_Other,
@@ -466,7 +471,7 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
                 qDebug() <<"save succeed";
                 LOG("发送工程 保存工程成功","INFO");
                 //云盘内资源发送
-                int t = CloudDiskInterface::instance()->LocalSend(InfoList.m_strResourceID);
+                int t = CloudDiskInterface::instance()->LocalSend(m_ProResourceInfo.m_strResourceID);
                 if(t == ERT_TRUE)
                 {
                     qDebug()<<"LocalSend successful";
@@ -518,7 +523,12 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
             }
         }
     }
-
+    if(m_ProResourceInfo.m_bReadOnly)
+    {
+        ui->pushButton_save->setEnabled(false);
+    }else{
+        ui->pushButton_save->setEnabled(true);
+    }
 }
 
 bool LoginWidget::DelDir(const QString &path)
@@ -1038,9 +1048,8 @@ void LoginWidget::on_pushButton_saveoth_clicked()
         memset(pBuff,0,1024 * sizeof(wchar_t));
         CloudDiskInterface::instance()->GetResourceList(pBuff, 1024);
         QString buffInfo = QString::fromWCharArray(pBuff);
-        ResourceInfo InfoList;
-        GetListInfo(buffInfo,InfoList);
-        emit signal_SaveProject(SF_SaveOther,InfoList.m_strResourceName);//代表另存为
+        GetListInfo(buffInfo,m_ProResourceInfo);
+        emit signal_SaveProject(SF_SaveOther,m_ProResourceInfo.m_strResourceName);//代表另存为
     }
 }
 

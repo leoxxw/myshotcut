@@ -3420,7 +3420,7 @@ void MainWindow::on_actionApplicationLog_triggered()
 {
     TextViewerDialog dialog(this);
     QDir dir = Settings.appDataLocation();
-    QFile logFile(dir.filePath("Shotcut-log.txt"));
+    QFile logFile(dir.filePath("VideoStudio-log.txt"));
     logFile.open(QIODevice::ReadOnly | QIODevice::Text);
     dialog.setText(logFile.readAll());
     logFile.close();
