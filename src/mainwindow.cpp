@@ -387,7 +387,7 @@ MainWindow::MainWindow()
     addDockWidget(Qt::RightDockWidgetArea, m_jobsDock);
     ui->menuView->addAction(m_jobsDock->toggleViewAction());
     connect(&JOBS, SIGNAL(jobAdded()), m_jobsDock, SLOT(show()));
-    connect(&JOBS, SIGNAL(jobAdded()), m_jobsDock, SLOT(raise()));
+ //   connect(&JOBS, SIGNAL(jobAdded()), m_jobsDock, SLOT(raise()));
     connect(m_jobsDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onJobsDockTriggered(bool)));
 
     tabifyDockWidget(m_propertiesDock, m_playlistDock);
@@ -398,7 +398,7 @@ MainWindow::MainWindow()
     splitDockWidget(audioMeterDock, m_recentDock, Qt::Horizontal);
     tabifyDockWidget(m_recentDock, m_historyDock);
     tabifyDockWidget(m_historyDock, m_jobsDock);
-    m_recentDock->raise();
+//    m_recentDock->raise();
 
     if (Settings.meltedEnabled()) {
         m_meltedServerDock = new MeltedServerDock(this);
@@ -1177,7 +1177,7 @@ void MainWindow::openVideo()
 #ifdef Q_OS_MAC
     path.append("/*");
 #endif
-    QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path,"工程(*.mlt);;音频(*.mp3);;图片(*.jpg *.png);;视频(*.mp4 *.avi)");
+    QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path,"所有文件(*.*);;工程(*.mlt);;音频(*.cd *.ogg *.mp3 *.asf *.wma *.wav *.rm *.real *.ape *.module *.midi *.vqf);;图片(*.bmp *.pcx *.png *.jpeg *.gif *.tiff *.dxf *.cgm *.cdr *.wmf *.eps *.emf *.pict);;视频(*.avi *.wmv *.mpeg *.mp4 *.mov *.mkv *.flv *.m4v *.rmvb *.rm *.3gp *.dat *.ts *.mts *.vob)");
    // QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path);
     if (filenames.length() > 0)
     {
@@ -1524,23 +1524,23 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     case Qt::Key_A:
         if (event->modifiers() == Qt::ShiftModifier) {
             m_playlistDock->show();
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             m_playlistDock->on_actionAppendCut_triggered();
         } else {
             m_timelineDock->show();
-            m_timelineDock->raise();
+//            m_timelineDock->raise();
             m_timelineDock->append(-1);
         }
         break;
     case Qt::Key_C:
         if (event->modifiers() == Qt::ShiftModifier) {
             m_playlistDock->show();
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             if (m_playlistDock->position() >= 0)
                 m_playlistDock->on_actionOpen_triggered();
         } else {
             m_timelineDock->show();
-            m_timelineDock->raise();
+//            m_timelineDock->raise();
             if (!m_timelineDock->selection().isEmpty())
                 m_timelineDock->copyClip(m_timelineDock->currentTrack(), m_timelineDock->selection().first());
         }
@@ -1608,29 +1608,29 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     case Qt::Key_U:
         if (event->modifiers() == Qt::ControlModifier) {
             m_timelineDock->show();
-            m_timelineDock->raise();
+//            m_timelineDock->raise();
             m_timelineDock->addAudioTrack();
         }
         break;
     case Qt::Key_V: // Avid Splice In
         if (event->modifiers() == Qt::ShiftModifier) {
             m_playlistDock->show();
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             m_playlistDock->on_actionInsertCut_triggered();
         } else {
             m_timelineDock->show();
-            m_timelineDock->raise();
+//            m_timelineDock->raise();
             m_timelineDock->insert(-1);
         }
         break;
     case Qt::Key_B: // Avid Overwrite
         if (event->modifiers() == Qt::ShiftModifier) {
             m_playlistDock->show();
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             m_playlistDock->on_actionUpdate_triggered();
         } else {
             m_timelineDock->show();
-            m_timelineDock->raise();
+//            m_timelineDock->raise();
             m_timelineDock->overwrite(-1);
         }
         break;
@@ -1653,7 +1653,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
         break;
     case Qt::Key_Up:
         if (m_playlistDock->isVisible() && event->modifiers() & Qt::AltModifier) {
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             m_playlistDock->decrementIndex();
             m_playlistDock->on_actionOpen_triggered();
         } else if (isMultitrackValid()) {
@@ -1673,7 +1673,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
             }
 
         } else if (m_playlistDock->isVisible()) {
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             if (event->modifiers() & Qt::ControlModifier)
                 m_playlistDock->moveClipUp();
             m_playlistDock->decrementIndex();
@@ -1681,7 +1681,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
         break;
     case Qt::Key_Down:
         if (m_playlistDock->isVisible() && event->modifiers() & Qt::AltModifier) {
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             m_playlistDock->incrementIndex();
             m_playlistDock->on_actionOpen_triggered();
         } else if (isMultitrackValid()) {
@@ -1701,7 +1701,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
             }
 
         } else if (m_playlistDock->isVisible()) {
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             if (event->modifiers() & Qt::ControlModifier)
                 m_playlistDock->moveClipDown();
             m_playlistDock->incrementIndex();
@@ -1717,13 +1717,13 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     case Qt::Key_8:
     case Qt::Key_9:
         if (m_playlistDock->isVisible()) {
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             m_playlistDock->setIndex(event->key() - Qt::Key_1);
         }
         break;
     case Qt::Key_0:
         if (m_playlistDock->isVisible()) {
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             m_playlistDock->setIndex(9);
         }
         else if (m_timelineDock->isVisible()) {
@@ -1733,11 +1733,11 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     case Qt::Key_X: // Avid Extract
         if (event->modifiers() == Qt::ShiftModifier) {
             m_playlistDock->show();
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             m_playlistDock->on_removeButton_clicked();
         } else {
             m_timelineDock->show();
-            m_timelineDock->raise();
+//            m_timelineDock->raise();
             m_timelineDock->removeSelection();
         }
         break;
@@ -1745,32 +1745,32 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     case Qt::Key_Delete:
         if (isMultitrackValid()) {
             m_timelineDock->show();
-            m_timelineDock->raise();
+//            m_timelineDock->raise();
             if (event->modifiers() == Qt::ShiftModifier)
                 m_timelineDock->removeSelection();
             else
                 m_timelineDock->liftSelection();
         } else {
             m_playlistDock->show();
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             m_playlistDock->on_removeButton_clicked();
         }
         break;
     case Qt::Key_Y:
         if (event->modifiers() == Qt::ControlModifier) {
             m_timelineDock->show();
-            m_timelineDock->raise();
+//            m_timelineDock->raise();
             m_timelineDock->addVideoTrack();
         }
         break;
     case Qt::Key_Z: // Avid Lift
         if (event->modifiers() == Qt::ShiftModifier) {
             m_playlistDock->show();
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             m_playlistDock->on_removeButton_clicked();
         } else if (isMultitrackValid() && event->modifiers() == Qt::NoModifier) {
             m_timelineDock->show();
-            m_timelineDock->raise();
+//            m_timelineDock->raise();
             m_timelineDock->liftSelection();
         }
         break;
@@ -1841,7 +1841,7 @@ void MainWindow::SaveVideostudioProject(QString ProjectName)
         {
             tempName.append("/新建工程");
 
-            QString current_date =current_date_time.toString("yyyyMMddhh");
+            QString current_date =current_date_time.toString("yyyyMMddhhmmss");
             tempName.append(current_date);
         }else{
             tempName.append("/");
@@ -1990,8 +1990,8 @@ void MainWindow::readXML(QString strFilePath)
     m_progressDlg->setFont(font);
     m_progressDlg->setWindowModality(Qt::WindowModal);
     m_progressDlg->setMinimumDuration(5);
-    m_progressDlg->setWindowTitle(tr("请耐心等待"));
-    m_progressDlg->setLabelText(tr("正在复制......      "));
+    m_progressDlg->setWindowTitle(tr("温馨提示"));
+    m_progressDlg->setLabelText(tr("正在复制资源文件到工程......      "));
     m_progressDlg->setCancelButtonText(tr("取消"));
     m_progressDlg->setRange(0,FilePathList.count());
     qDebug() <<"emit CopeFile";
@@ -2001,7 +2001,7 @@ void MainWindow::slot_WorkFinished(bool flag)
 {
     if(m_progressDlg)
     {
-        m_progressDlg->hide();
+        m_progressDlg->close();
     }
     if(m_objThread)
     {
@@ -2336,7 +2336,7 @@ void MainWindow::onProducerOpened()
             m_player->setIn(-1);
             m_player->setOut(-1);
             m_playlistDock->setVisible(true);
-            m_playlistDock->raise();
+//            m_playlistDock->raise();
             m_player->enableTab(Player::ProjectTabIndex);
             m_player->switchToTab(Player::ProjectTabIndex);
         }
@@ -2347,7 +2347,7 @@ void MainWindow::onProducerOpened()
             m_player->setIn(-1);
             m_player->setOut(-1);
             m_timelineDock->setVisible(true);
-            m_timelineDock->raise();
+//            m_timelineDock->raise();
             m_player->enableTab(Player::ProjectTabIndex);
             m_player->switchToTab(Player::ProjectTabIndex);
             m_timelineDock->setSelection(QList<int>() << 0);
@@ -2494,7 +2494,7 @@ void MainWindow::onEncodeTriggered(bool checked)
     }
     if (checked) {
         m_encodeDock->show();
-        m_encodeDock->raise();
+//        m_encodeDock->raise();
     }
 }
 
@@ -2511,7 +2511,7 @@ void MainWindow::onJobsDockTriggered(bool checked)
 {
     if (checked) {
         m_jobsDock->show();
-        m_jobsDock->raise();
+//        m_jobsDock->raise();
     }
 }
 
@@ -2519,7 +2519,7 @@ void MainWindow::onRecentDockTriggered(bool checked)
 {
     if (checked) {
         m_recentDock->show();
-        m_recentDock->raise();
+//        m_recentDock->raise();
     }
 }
 
@@ -2527,7 +2527,7 @@ void MainWindow::onPropertiesDockTriggered(bool checked)
 {
     if (checked) {
         m_propertiesDock->show();
-        m_propertiesDock->raise();
+//        m_propertiesDock->raise();
     }
 }
 
@@ -2535,7 +2535,7 @@ void MainWindow::onPlaylistDockTriggered(bool checked)
 {
     if (checked) {
         m_playlistDock->show();
-        m_playlistDock->raise();
+//        m_playlistDock->raise();
     }
 }
 
@@ -2543,7 +2543,7 @@ void MainWindow::onTimelineDockTriggered(bool checked)
 {
     if (checked) {
         m_timelineDock->show();
-        m_timelineDock->raise();
+//        m_timelineDock->raise();
     }
 }
 
@@ -2551,7 +2551,7 @@ void MainWindow::onHistoryDockTriggered(bool checked)
 {
     if (checked) {
         m_historyDock->show();
-        m_historyDock->raise();
+//        m_historyDock->raise();
     }
 }
 
@@ -2559,7 +2559,7 @@ void MainWindow::onFiltersDockTriggered(bool checked)
 {
     if (checked) {
         m_filtersDock->show();
-        m_filtersDock->raise();
+//        m_filtersDock->raise();
     }
 }
 
@@ -2859,7 +2859,7 @@ void MainWindow::onMeltedUnitOpened()
 void MainWindow::onMeltedUnitActivated()
 {
     m_meltedPlaylistDock->setVisible(true);
-    m_meltedPlaylistDock->raise();
+//    m_meltedPlaylistDock->raise();
 }
 
 void MainWindow::on_actionEnter_Full_Screen_triggered()
@@ -2902,7 +2902,7 @@ void MainWindow::editHTML(const QString &fileName)
     }
     m_htmlEditor->load(fileName);
     m_htmlEditor->show();
-    m_htmlEditor->raise();
+//    m_htmlEditor->raise();
     if (Settings.playerZoom() >= 1.0f) {
         m_htmlEditor->changeZoom(100 * m_player->videoSize().width() / MLT.profile().width());
         m_htmlEditor->resizeWebView(m_player->videoSize().width(), m_player->videoSize().height());
@@ -3072,7 +3072,7 @@ void MainWindow::processMultipleFiles()
     if (m_multipleFiles.length() > 0) {
         PlaylistModel* model = m_playlistDock->model();
         m_playlistDock->show();
-        m_playlistDock->raise();
+//        m_playlistDock->raise();
         QThreadPool::globalInstance()->start(new AppendTask(model, m_multipleFiles));
         foreach (QString filename, m_multipleFiles)
             m_recentDock->add(filename.toUtf8().constData());
@@ -3430,7 +3430,8 @@ void MainWindow::on_actionApplicationLog_triggered()
 
 void MainWindow::on_actionClose_triggered()
 {
-    if (MAIN.continueModified()) {
+    if (MAIN.continueModified())
+    {
         LOG_DEBUG() << "";
         if (multitrack())
             m_timelineDock->model()->close();
@@ -3438,6 +3439,11 @@ void MainWindow::on_actionClose_triggered()
             m_playlistDock->model()->close();
         else
             onMultitrackClosed();
+
+        if(m_loginwidget)
+        {
+            m_loginwidget->SetProjrctType(EV_ShotCut);
+        }
     }
 }
 
@@ -3495,14 +3501,14 @@ void MainWindow::onTimelineSelectionChanged()
 void MainWindow::on_actionCut_triggered()
 {
     m_timelineDock->show();
-    m_timelineDock->raise();
+//    m_timelineDock->raise();
     m_timelineDock->removeSelection(true);
 }
 
 void MainWindow::on_actionCopy_triggered()
 {
     m_timelineDock->show();
-    m_timelineDock->raise();
+//    m_timelineDock->raise();
     if (!m_timelineDock->selection().isEmpty())
         m_timelineDock->copyClip(m_timelineDock->currentTrack(), m_timelineDock->selection().first());
 }
@@ -3514,7 +3520,7 @@ void MainWindow::on_actionPaste_triggered()
         return;
     }
     m_timelineDock->show();
-    m_timelineDock->raise();
+//    m_timelineDock->raise();
     m_timelineDock->insert(-1);
 }
 

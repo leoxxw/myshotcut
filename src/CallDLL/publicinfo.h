@@ -141,4 +141,8 @@ struct ResourceInfo
     QString m_strParentID;
     QString m_strOwnerID;
     QString m_strOwnerType;
+    QString m_strResSysID;            //资源系统ID
+    bool	m_bReadOnly;			//是否只读
+    bool	m_bIsCopy;				//1表示复制到了系统粘贴板，可以直接粘贴，不要调用资源下载打开
+    bool    m_ResAdd;              // 资源保存是新增，还是覆盖，默认为覆盖FALSE
 };

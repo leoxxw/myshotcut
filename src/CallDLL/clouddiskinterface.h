@@ -69,6 +69,8 @@ public:
                    HWND hParentWnd,
                    DWORD dwFlag,QString lpszNotSub);
 
+    int GetTrialState(QString lpResourceID);
+
     static CloudDiskInterface* instance();
 private:
     CloudDiskInterface();

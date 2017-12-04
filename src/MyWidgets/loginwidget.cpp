@@ -189,6 +189,39 @@ bool LoginWidget::GetListInfo(QString strBuffer,ResourceInfo &InfoList)
                             {
                                 InfoList.m_strOwnerType = e.text();
                             }
+                            if (e.tagName() =="ResSysID")
+                            {
+                                InfoList.m_strResSysID = e.text();
+                            }
+                            if (e.tagName() =="ReadOnly")
+                            {
+                                if(e.text() == "0")
+                                {
+                                    InfoList.m_bReadOnly =false;
+                                }else{
+                                    InfoList.m_bReadOnly =true;
+                                }
+                            }
+                            if (e.tagName() =="IsCopy")
+                            {
+                                if(e.text() == "0")
+                                {
+                                    InfoList.m_bIsCopy =false;
+                                }else{
+                                    InfoList.m_bIsCopy =true;
+                                }
+
+                            }
+                            if (e.tagName() =="ResAdd")
+                            {
+                                if(e.text() == "0")
+                                {
+                                    InfoList.m_ResAdd =false;
+                                }else{
+                                    InfoList.m_ResAdd =true;
+                                }
+
+                            }
                         }
                         n = n.nextSibling();
                     }
@@ -382,7 +415,8 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
     qDebug() <<" filename =" << fileName;
     qDebug() <<"fileType ="<<fileType;
     //获取资源选中窗口的信息
-    if(m_ProResourceInfo.m_strResourceID == "" || m_ProjectType ==EV_ShotCut)
+    int ret = CloudDiskInterface::instance()->GetTrialState(m_ProResourceInfo.m_strResourceID);
+    if(m_ProResourceInfo.m_strResourceID == "" || m_ProjectType ==EV_ShotCut || ret == 1 || ret == 2)
     {
         //打开选择窗口
         int nsize = CloudDiskInterface::instance()->ResourceNoDialog("VideoStudio",
@@ -911,6 +945,12 @@ void LoginWidget::open_clicked()
             QString strMainFilePath = QString::fromWCharArray(FilePathBuffer);
             QString strProjectPath = strLoadPath + "/"+m_ProResourceInfo.m_strResourceID+"/"+strMainFilePath;
             emit signal_OpenProject(strProjectPath);
+            if(m_ProResourceInfo.m_bReadOnly)
+            {
+                ui->pushButton_save->setEnabled(false);
+            }else{
+                ui->pushButton_save->setEnabled(true);
+            }
         }else{
             LOG("打开工程 下载工程失败","ERROR");
         }
@@ -944,7 +984,14 @@ void LoginWidget::on_pushButton_save_clicked()
         on_pushButton_saveoth_clicked();
     }else{
         //调用直接保存函数
-        emit signal_SaveProject(SF_Save,m_ProResourceInfo.m_strResourceName);//代表默认保存
+        int ret = CloudDiskInterface::instance()->GetTrialState(m_ProResourceInfo.m_strResourceID);
+        if(ret == 1 || ret == 2)
+        {
+            //调用另存为函数
+            on_pushButton_saveoth_clicked();
+        }else{
+            emit signal_SaveProject(SF_Save,m_ProResourceInfo.m_strResourceName);//代表默认保存
+        }
     }
 
 }

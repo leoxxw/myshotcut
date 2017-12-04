@@ -237,6 +237,15 @@ int CloudDiskInterface::SearchOpenEx(int nResourceMajorTypeFilter,
                      lpszNotSub.utf16());
     return ret;
 }
+// 1审批中 2已经审核通过 0非审核 -1非法
+int CloudDiskInterface::GetTrialState(QString lpResourceID)
+{
+    typedef int (*Function)(const ushort*);
+    Function fpInit = (Function)m_lib->resolve("DoGetTrialState");
+
+    int ret = fpInit(lpResourceID.utf16());
+    return ret;
+}
 //单利对象
 CloudDiskInterface* CloudDiskInterface::instance()
 {
