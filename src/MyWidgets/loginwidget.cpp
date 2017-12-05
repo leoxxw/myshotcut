@@ -272,7 +272,14 @@ bool LoginWidget::SaveProject(QString strFilePath,int ntype)
         LOG("保存工程成功","INFO");
         if(ntype != SF_SaveSend)
         {
-            QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程保存到云里成功      "));
+          //  QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程保存到资源管理系统成功      "));
+            QMessageBox dialog(QMessageBox::NoIcon,
+                                         "成功",
+                                         tr("     工程保存到资源管理系统成功      "),
+                                         QMessageBox::Ok,
+                                         this);
+            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+            dialog.exec();
         }
         m_ProjectType = EV_YUNLI;
         return true;
@@ -324,7 +331,14 @@ bool LoginWidget::SaveProjectOther(QString strFilePath)
         m_ProjectType = EV_YUNLI;
         qDebug() <<"save succeed";
         LOG("工程另存为 保存工程成功","INFO");
-        QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程另存为到云里成功      "));
+     //   QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程另存为到资源管理系统成功      "));
+        QMessageBox dialog(QMessageBox::NoIcon,
+                                     "成功",
+                                     tr("     工程另存为到资源管理系统成功      "),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return true;
     }
     return false;
@@ -476,12 +490,26 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
                 {
                     qDebug()<<"LocalSend successful";
                     LOG("发送工程 发送成功","INFO");
-                    QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程发送成功      "));
+                 //   QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程发送成功      "));
+                    QMessageBox dialog(QMessageBox::NoIcon,
+                                                 "成功",
+                                                 tr("     工程发送成功      "),
+                                                 QMessageBox::Ok,
+                                                 this);
+                    dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+                    dialog.exec();
                 }
                 else if(t < ERT_TRUE)
                 {
                     LOG("发送工程 发送失败","INFO");
-                    QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      工程发送失败      "));
+                 //   QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      工程发送失败      "));
+                    QMessageBox dialog(QMessageBox::Critical,
+                                                 "失败",
+                                                 tr("     工程发送失败      "),
+                                                 QMessageBox::Ok,
+                                                 this);
+                    dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+                    dialog.exec();
                 }
             }
         }
@@ -514,12 +542,26 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
             {
                 qDebug()<<"LocalSend successful";
                 LOG("发送工程 发送成功","INFO");
-                QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程发送成功      "));
+            //    QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程发送成功      "));
+                QMessageBox dialog(QMessageBox::NoIcon,
+                                             "成功",
+                                             tr("     工程发送成功      "),
+                                             QMessageBox::Ok,
+                                             this);
+                dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+                dialog.exec();
             }
             else if(t < ERT_TRUE)
             {
                 LOG("发送工程 发送失败","ERROR");
-                QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      工程发送失败      "));
+             //   QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      工程发送失败      "));
+                QMessageBox dialog(QMessageBox::Critical,
+                                             "失败",
+                                             tr("     工程发送失败      "),
+                                             QMessageBox::Ok,
+                                             this);
+                dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+                dialog.exec();
             }
         }
     }
@@ -672,12 +714,26 @@ void LoginWidget::UploadVideo(QString strFilePath)
     {
         qDebug() <<"save succeed";
         LOG("上传资源 保存成功","INFO");
-        QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     视频保存到云里成功      "));
+     //   QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     视频保存到资源管理系统成功      "));
+        QMessageBox dialog(QMessageBox::NoIcon,
+                                     "成功",
+                                     tr("     视频保存到资源管理系统成功      "),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
     }
     if(ret < ERT_TRUE)
     {
         LOG("上传资源 保存失败","ERROR");
-        QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      视频保存失败      "));
+     //   QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      视频保存失败      "));
+        QMessageBox dialog(QMessageBox::Critical,
+                                     "失败",
+                                     tr("     视频保存失败      "),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
     }
 
 }
@@ -726,12 +782,26 @@ void LoginWidget::UploadSendVideo(QString strFilePath)
         {
             LOG("发送资源 发送成功","INFO");
             qDebug()<<"LocalSend successful";
-            QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     视频发送成功      "));
+         //   QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     视频发送成功      "));
+            QMessageBox dialog(QMessageBox::NoIcon,
+                                         "成功",
+                                         tr("     视频发送成功      "),
+                                         QMessageBox::Ok,
+                                         this);
+            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+            dialog.exec();
         }
         if(t < ERT_TRUE)
         {
             LOG("发送资源 发送失败","ERROR");
-            QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      视频发送失败      "));
+         //   QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      视频发送失败      "));
+            QMessageBox dialog(QMessageBox::Critical,
+                                         "失败",
+                                         tr("     视频发送失败      "),
+                                         QMessageBox::Ok,
+                                         this);
+            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+            dialog.exec();
         }
     }else{
          LOG("发送资源 保存失败","ERROR");
@@ -833,7 +903,14 @@ void LoginWidget::on_pushButton_exit_clicked()
     LOG("点击注销按钮","CLICK");
     if(m_bIsworking)
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+       // QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     QMessageBox dialog(QMessageBox::Warning,
@@ -843,7 +920,7 @@ void LoginWidget::on_pushButton_exit_clicked()
                                  QMessageBox::Yes,
                                  this);
     dialog.setButtonText (QMessageBox::Yes,QString("是"));
-    dialog.setButtonText (QMessageBox::Cancel,QString("否"));
+    dialog.setButtonText (QMessageBox::No,QString("否"));
 
     int r = dialog.exec();
     if (r == QMessageBox::No )
@@ -885,7 +962,14 @@ void LoginWidget::on_pushButton_open_clicked()
     LOG("点击打开工程按钮","CLICK");
     if(m_bIsworking)
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        //QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     emit Signal_CloseProject();
@@ -979,12 +1063,26 @@ void LoginWidget::on_pushButton_save_clicked()
     LOG("点击保存工程按钮","CLICK");
     if(m_bIsworking)
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+      //  QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     if (!MLT.producer())
     {
-        QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+       // QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "警告",
+                                     tr("没有资源数据，请先添加资源文件！"),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return ;
     }
     //获取资源选中窗口的信息
@@ -1012,12 +1110,26 @@ void LoginWidget::on_pushButton_saveoth_clicked()
     LOG("点击工程另存为按钮","CLICK");
     if(m_bIsworking)
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+      //  QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     if (!MLT.producer())
     {
-        QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+       // QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "警告",
+                                     tr("没有资源数据，请先添加资源文件！"),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return ;
     }
     QDateTime current_date_time =QDateTime::currentDateTime();
@@ -1058,7 +1170,14 @@ void LoginWidget::on_pushButton_openvideo_clicked()
     LOG("点击打开资源按钮","CLICK");
     if(m_bIsworking)
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+      //  QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     //打开选择窗口
@@ -1068,7 +1187,7 @@ void LoginWidget::on_pushButton_openvideo_clicked()
                                                                ERMT_ALL,
                                                                "",
                                                                NULL,EWF_WEB_OPEN_FLAG_DEFAULT,
-                                                               "mlt;doc;docx;xls;xlsx;txt;xml;pdf;ppt;pptx;html;htm;ini;h5;weixin;weibo;Mdoc;aso;7z;img;iso;rar;;zip");
+                                                               "mlt;doc;docx;xls;xlsx;txt;xml;pdf;ppt;pptx;html;htm;ini;h5;weixin;weibo;Mdoc;aso;7z;img;iso;rar;zip");
     if(nsize < ERT_TRUE)
     {
         qDebug() <<QStringLiteral("CloudDiskInterface failed");
@@ -1127,7 +1246,14 @@ void LoginWidget::on_pushButton_openvideo_clicked()
             emit signal_OpenVideo(strVideoPath);
         }else{
             LOG("打开资源 下载资源失败","ERROR");
-            QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("     下载资源失败      "));
+          //  QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("     下载资源失败      "));
+            QMessageBox dialog(QMessageBox::Critical,
+                                         "失败",
+                                         tr("     下载资源失败      "),
+                                         QMessageBox::Ok,
+                                         this);
+            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+            dialog.exec();
         }
     }
 }
@@ -1139,12 +1265,26 @@ void LoginWidget::on_pushButton_savevideo_clicked()
     LOG("点击保存资源按钮","CLICK");
     if(m_bIsworking)
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        //QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     if (!MLT.producer())
     {
-        QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+       // QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "警告",
+                                     tr("没有资源数据，请先添加资源文件！"),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return ;
     }
     emit signal_SaveVideo(SF_SaveOther);//代表自己选择路径保存
@@ -1155,12 +1295,26 @@ void LoginWidget::on_pushButton_sendvideo_clicked()
     LOG("点击发送资源按钮","CLICK");
     if(m_bIsworking)
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+      //  QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     if (!MLT.producer())
     {
-        QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+      //  QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "警告",
+                                     tr("没有资源数据，请先添加资源文件！"),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return ;
     }
     //发送视频前先默认保存视频
@@ -1172,12 +1326,19 @@ void LoginWidget::on_pushButton_sendOthvideo_clicked()
     LOG("点击发送其他资源按钮","CLICK");
     if(m_bIsworking)
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+     //   QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     //打开选择窗口
     int nsize = CloudDiskInterface::instance()->ResourceDialog(3,
-                                                               "发送云里资源",
+                                                               "发送资源管理系统资源",
                                                                "",
                                                                ERMT_Video,
                                                                "",
@@ -1217,12 +1378,26 @@ void LoginWidget::on_pushButton_sendOthvideo_clicked()
         {
             qDebug()<<"LocalSend successful";
             LOG("发送其他资源 发送成功","INFO");
-            QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     视频发送成功      "));
+         //   QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     视频发送成功      "));
+            QMessageBox dialog(QMessageBox::NoIcon,
+                                         "成功",
+                                         tr("     视频发送成功      "),
+                                         QMessageBox::Ok,
+                                         this);
+            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+            dialog.exec();
         }
         if(t < ERT_TRUE)
         {
             LOG("发送其他资源 发送失败","ERROR");
-            QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      视频发送失败      "));
+         //   QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      视频发送失败      "));
+            QMessageBox dialog(QMessageBox::Critical,
+                                         "失败",
+                                         tr("     视频发送失败      "),
+                                         QMessageBox::Ok,
+                                         this);
+            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+            dialog.exec();
         }
     }
 }
@@ -1232,12 +1407,26 @@ void LoginWidget::on_pushButton_send_clicked()
     LOG("点击发送工程按钮","CLICK");
     if(m_bIsworking)
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+    //    QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     if (!MLT.producer())
     {
-        QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+    //    QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "警告",
+                                     tr("没有资源数据，请先添加资源文件！"),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return ;
     }
     emit signal_SaveProject(SF_SaveSend,m_ProResourceInfo.m_strResourceName);
@@ -1248,7 +1437,14 @@ void LoginWidget::on_pushButton_search_clicked()
     LOG("点击搜索按钮","CLICK");
     if(m_bIsworking)
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+     //   QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     int nsize = CloudDiskInterface::instance()->SearchOpenEx(ERMT_ALL,
@@ -1303,7 +1499,14 @@ void LoginWidget::on_pushButton_search_clicked()
             emit signal_OpenVideo(strVideoPath);
         }else{
              LOG("搜索 下载资源失败","ERROR");
-            QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      下载资源失败      "));
+        //    QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      下载资源失败      "));
+             QMessageBox dialog(QMessageBox::Critical,
+                                          "失败",
+                                          tr("      下载资源失败      "),
+                                          QMessageBox::Ok,
+                                          this);
+             dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+             dialog.exec();
         }
     }
 }

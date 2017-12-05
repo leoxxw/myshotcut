@@ -1019,13 +1019,27 @@ void EncodeDock::on_encodeButton_clicked()
     QString fileName = ui->lineEdit->text();
     if(fileName == "")
     {
-        QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("输出文件名为空！"));
+     //   QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("输出文件名为空！"));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "警告",
+                                     tr("输出文件名为空！"),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     int pos = fileName.indexOf(QRegExp("[\*\&\?\\\|\/\>\<\"\:]"));
     if(pos != -1)
     {
-        QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("文件名不允许出现特殊字符！"));
+      //  QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("文件名不允许出现特殊字符\(\* \& \? \\ \| \/ \> \< \" \:\)！"));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "警告",
+                                     tr("文件名不允许出现特殊字符\(\* \& \? \\ \| \/ \> \< \" \:\)！"),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     if (!m_extension.isEmpty()) {
@@ -1113,13 +1127,27 @@ void EncodeDock::on_encodeButton_clicked()
         QString fileName = ui->lineEdit->text();
         if(fileName == "")
         {
-            QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("输出文件名为空！"));
+          //  QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("输出文件名为空！"));
+            QMessageBox dialog(QMessageBox::Warning,
+                                         "警告",
+                                         tr("输出文件名为空！"),
+                                         QMessageBox::Ok,
+                                         this);
+            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+            dialog.exec();
             return;
         }
         int pos = fileName.indexOf(QRegExp("[\*\&\?\\\|\/\>\<\"\:]"));
         if(pos != -1)
         {
-            QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("文件名不允许出现特殊字符！"));
+        //    QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("文件名不允许出现特殊字符！"));
+            QMessageBox dialog(QMessageBox::Warning,
+                                         "警告",
+                                         tr("文件名不允许出现特殊字符\(\* \& \? \\ \| \/ \> \< \" \:\)！"),
+                                         QMessageBox::Ok,
+                                         this);
+            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+            dialog.exec();
             return;
         }
         QString tempPath =QCoreApplication::applicationDirPath()+"/Temp/";
@@ -1137,8 +1165,15 @@ void EncodeDock::on_encodeButton_clicked()
             if (m_extension.isEmpty()) {
                 if (fi.suffix().isEmpty())
                 {
-                   QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("     无法确定输出格式！      "));
-                   return;
+              //     QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("     无法确定输出格式！      "));
+                    QMessageBox dialog(QMessageBox::Warning,
+                                                 "警告",
+                                                 tr("无法确定输出格式！"),
+                                                 QMessageBox::Ok,
+                                                 this);
+                    dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+                    dialog.exec();
+                    return;
                 }
             }
             m_outputFilename += '.';
@@ -1273,6 +1308,9 @@ void EncodeDock::on_streamButton_clicked()
     dialog.setLabelText(tr("Enter the network protocol scheme, address, port, and parameters as an URL:"));
     dialog.setTextValue("udp://224.224.224.224:1234?pkt_size=1316&reuse=1");
     dialog.setWindowModality(QmlApplication::dialogModality());
+    dialog.setOkButtonText("确定");
+    dialog.setCancelButtonText("取消");
+
     int r = dialog.exec();
     QString url = dialog.textValue();
     if (r == QDialog::Accepted && !url.isEmpty()) {

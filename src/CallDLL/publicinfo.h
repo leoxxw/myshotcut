@@ -123,15 +123,15 @@ enum enResourceType
 enum SaveFileType
 {
     SF_ShotCutSave  = 0,//本地保存
-    SF_YUNLI        = 1,//云里保存
-    SF_Save         = 2,//云里系统默认保存
-    SF_SaveOther    = 3,//云里系统另存为
-    SF_SaveSend     = 4,//云里系统默认保存并发送
+    SF_YUNLI        = 1,//资源管理系统保存
+    SF_Save         = 2,//资源管理系统系统默认保存
+    SF_SaveOther    = 3,//资源管理系统系统另存为
+    SF_SaveSend     = 4,//资源管理系统系统默认保存并发送
 };
 enum EncodeVideoType
 {
     EV_ShotCut  = 0,//本地输出
-    EV_YUNLI    = 1,//云里输出
+    EV_YUNLI    = 1,//资源管理系统输出
 };
 
 struct ResourceInfo

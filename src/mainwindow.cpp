@@ -133,16 +133,30 @@ MainWindow::MainWindow()
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
     QLibrary libJack("libjack.so.0");
     if (!libJack.load()) {
-        QMessageBox::critical(this, "VideoStudio",
-            tr("Error: This program requires the JACK 1 library.\n\nPlease install it using your package manager. It may be named libjack0, jack-audio-connection-kit, jack, or similar."));
+     //   QMessageBox::critical(this, "VideoStudio",
+     //       tr("Error: This program requires the JACK 1 library.\n\nPlease install it using your package manager. It may be named libjack0, jack-audio-connection-kit, jack, or similar."));
+        QMessageBox dialog(QMessageBox::Critical,
+                                     "VideoStudio",
+                                     tr("Error: This program requires the JACK 1 library.\n\nPlease install it using your package manager. It may be named libjack0, jack-audio-connection-kit, jack, or similar."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         ::exit(EXIT_FAILURE);
     } else {
         libJack.unload();
     }
     QLibrary libSDL("libSDL2-2.0.so.0");
     if (!libSDL.load()) {
-        QMessageBox::critical(this, "VideoStudio",
-            tr("Error: This program requires the SDL 2 library.\n\nPlease install it using your package manager. It may be named libsdl2-2.0-0, SDL2, or similar."));
+    //    QMessageBox::critical(this, "VideoStudio",
+    //        tr("Error: This program requires the SDL 2 library.\n\nPlease install it using your package manager. It may be named libsdl2-2.0-0, SDL2, or similar."));
+        QMessageBox dialog(QMessageBox::Critical,
+                                     "VideoStudio",
+                                     tr("Error: This program requires the SDL 2 library.\n\nPlease install it using your package manager. It may be named libsdl2-2.0-0, SDL2, or similar."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         ::exit(EXIT_FAILURE);
     } else {
         libSDL.unload();
@@ -470,7 +484,7 @@ MainWindow::MainWindow()
     connect(&m_network, SIGNAL(finished(QNetworkReply*)), SLOT(onUpgradeCheckFinished(QNetworkReply*)));
 
     m_timelineDock->setFocusPolicy(Qt::StrongFocus);
-    //开始云里系统相关任务
+    //开始资源管理系统系统相关任务
     //展示登录窗口
     m_loginwidget = new LoginWidget(this);
     m_loginwidget->hide();
@@ -482,10 +496,6 @@ MainWindow::MainWindow()
     connect(m_loginwidget,&LoginWidget::Signal_CloseProject,this,&MainWindow::slot_CloseProject);
     connect(this,&MainWindow::Signal_open_clicked,m_loginwidget,&LoginWidget::open_clicked);
 
-//    QRect rect = this->geometry();
-//    m_loginwidget->move(QPoint(rect.width()/10 *9,rect.height()/5 *1));
-//    m_loginwidget->setWindowFlags(Qt::WindowStaysOnTopHint);
-//    m_loginwidget->show();
     LOG_DEBUG() << "end";
 }
 
@@ -930,7 +940,14 @@ bool MainWindow::saveRepairedXmlFile(MltXmlChecker& checker, QString& fileName)
             return true;
         }
     }
-    QMessageBox::warning(this, "VideoStudio", tr("Repairing the project failed."));
+  //  QMessageBox::warning(this, "VideoStudio", tr("Repairing the project failed."));
+    QMessageBox dialog(QMessageBox::Warning,
+                                 "VideoStudio",
+                                 tr("Repairing the project failed."),
+                                 QMessageBox::Ok,
+                                 this);
+    dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+    dialog.exec();
     LOG_WARNING() << "repairing failed";
     return false;
 }
@@ -2027,7 +2044,14 @@ void MainWindow::slot_WorkFinished(bool flag)
         }
     }else{
         LOG("保存工程失败","ERROR");
-        QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      保存工程失败      "));
+    //    QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      保存工程失败      "));
+        QMessageBox dialog(QMessageBox::Critical,
+                                     "失败",
+                                     tr("保存工程失败"),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
     }
 
 }
@@ -2052,7 +2076,14 @@ void MainWindow::slot_SaveVideo(int ntype)
 {
     if(m_encodeDock->IsWorking())
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+      //  QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         m_loginwidget->SetIsWorking(false);
         return;
     }
@@ -2392,7 +2423,14 @@ bool MainWindow::on_actionSave_As_triggered()
 {
     if (!MLT.producer())
     {
-        QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+     //   QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "警告",
+                                     tr("没有资源数据，请先添加资源文件！"),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return false;
     }
     QString path = Settings.savePath();
@@ -2489,7 +2527,14 @@ void MainWindow::onEncodeTriggered(bool checked)
 {
     if(m_loginwidget && m_loginwidget->IsWoking())
     {
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+     //   QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("     有任务正在进行请等待...     "),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
         return;
     }
     if (checked) {
@@ -2889,8 +2934,14 @@ void MainWindow::onGpuNotSupported()
         ui->actionGPU->setDisabled(true);
     }
     LOG_WARNING() << "";
-    QMessageBox::critical(this, "VideoStudio",
-        tr("GPU Processing is not supported"));
+   // QMessageBox::critical(this, "VideoStudio",tr("GPU Processing is not supported"));
+    QMessageBox dialog(QMessageBox::Critical,
+                                 "VideoStudio",
+                                 tr("GPU Processing is not supported"),
+                                 QMessageBox::Ok,
+                                 this);
+    dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+    dialog.exec();
 }
 
 void MainWindow::editHTML(const QString &fileName)
@@ -3129,8 +3180,15 @@ void MainWindow::on_actionJack_triggered(bool checked)
         if (ui->actionJack)
             ui->actionJack->setChecked(false);
         Settings.setPlayerJACK(false);
-        QMessageBox::warning(this, "VideoStudio",
-            tr("Failed to connect to JACK.\nPlease verify that JACK is installed and running."));
+    //    QMessageBox::warning(this, "VideoStudio",
+    //        tr("Failed to connect to JACK.\nPlease verify that JACK is installed and running."));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "VideoStudio",
+                                     tr("Failed to connect to JACK.\nPlease verify that JACK is installed and running."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
     }
 }
 

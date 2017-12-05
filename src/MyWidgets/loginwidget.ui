@@ -191,7 +191,7 @@ font-size:12px;
 color:#FFFFFF</string>
               </property>
               <property name="text">
-               <string>云里</string>
+               <string>资源管理系统</string>
               </property>
              </widget>
             </item>
@@ -835,7 +835,7 @@ QPushButton#pushButton_sendvideo:disabled{border-image: url(:/Resource/PNG/icon_
                </size>
               </property>
               <property name="toolTip">
-               <string>发送云里资源</string>
+               <string>发送资源管理系统资源</string>
               </property>
               <property name="styleSheet">
                <string notr="true">QPushButton#pushButton_sendOthvideo{border-image: url(:/Resource/PNG/sendoth01.png);}

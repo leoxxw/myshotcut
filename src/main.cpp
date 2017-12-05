@@ -250,6 +250,9 @@ int main(int argc, char **argv)
     {
         a.sendMessage("message from other instance.");
         QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("\r\n VideoStudio已经在运行了！\r\n"));
+        a.mainWindow = &MAIN;
+        a.mainWindow->hide();
+        a.mainWindow->close();
         return 0;
     }
 
