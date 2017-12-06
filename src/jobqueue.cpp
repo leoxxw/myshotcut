@@ -156,4 +156,5 @@ void JobQueue::remove(const QModelIndex& index)
         m_jobs.at(i)->setModelIndex(modelIndex);
     }
     m_mutex.unlock();
+    emit signal_Finished(false);
 }

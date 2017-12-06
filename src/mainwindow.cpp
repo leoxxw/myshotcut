@@ -494,6 +494,7 @@ MainWindow::MainWindow()
     connect(m_loginwidget, &LoginWidget::signal_OpenVideo, this,&MainWindow::slot_OpenVideo);
     connect(m_loginwidget,&LoginWidget::Signal_UploadVideo,this,&MainWindow::slot_UploadVideo);
     connect(m_loginwidget,&LoginWidget::Signal_CloseProject,this,&MainWindow::slot_CloseProject);
+    connect(m_loginwidget,&LoginWidget::Signal_SysName,this,&MainWindow::slot_SysName);
     connect(this,&MainWindow::Signal_open_clicked,m_loginwidget,&LoginWidget::open_clicked);
 
     LOG_DEBUG() << "end";
@@ -2208,6 +2209,14 @@ void MainWindow::slot_CloseProject()
     {
         emit Signal_open_clicked();
     }
+}
+
+void MainWindow::slot_SysName(QString strName)
+{
+    QString info = "打开" + strName;
+    ui->actionFullscreen->setText(strName);
+     ui->actionFullscreen->setIconText(strName);
+    ui->actionFullscreen->setToolTip(info);
 }
 
 //void MainWindow::setShowfilepropertycheck(bool)

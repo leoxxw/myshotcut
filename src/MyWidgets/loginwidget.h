@@ -80,6 +80,7 @@ signals:
     void signal_SendVideo();
     void Signal_UploadVideo(bool);
     void Signal_CloseProject();
+    void Signal_SysName(QString strName);
 
 private:
     Ui::LoginWidget *ui;
@@ -95,6 +96,7 @@ private:
     bool            m_bIsworking;
     int             m_nSearch;//搜索按钮配置
     int             m_ProjectType;//工程类型
+    QString         m_sysName;
 };
 
 #endif // LOGINWIDGET_H

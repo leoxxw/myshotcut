@@ -98,6 +98,7 @@ private slots:
     void slot_GetVideoPath(QString VideoPath);
     void slot_FinisheUploadVideo(QString VideoPath,bool bFinished);
     void slot_CloseProject();
+    void slot_SysName(QString strName);
 
 
 signals:

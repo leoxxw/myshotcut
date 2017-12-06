@@ -134,6 +134,17 @@ void LoginWidget::SetLoginSucceed(wchar_t *pUserID, wchar_t *pszUserToken)
         CloudDiskInterface::instance()->Init(m_strSysID,m_strUrl,m_userID,m_strJoincode);
         CloudDiskInterface::instance()->SetLogType(ELT_ALL);
         CloudDiskInterface::instance()->SetToken(m_Ticket,m_UserToken);
+
+        wchar_t pSysName[256];
+        memset(pSysName,0,256 * sizeof(wchar_t));
+        int nSize =256;
+        CloudDiskInterface::instance()->GetSysShortName(pSysName,nSize);
+        m_sysName = QString::fromWCharArray(pSysName);
+        ui->label->setText(m_sysName);
+        QString info = "发送" + m_sysName + "资源";
+        ui->pushButton_sendOthvideo->setToolTip(info);
+        emit Signal_SysName(m_sysName);
+
     }else{
         qDebug() << QStringLiteral("GetConfigCenterAddr failed");
         LOG("获取配置中心地址失败","ERROR");
@@ -273,9 +284,11 @@ bool LoginWidget::SaveProject(QString strFilePath,int ntype)
         if(ntype != SF_SaveSend)
         {
           //  QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程保存到资源管理系统成功      "));
+
+            QString info = "工程保存到" +m_sysName +"成功";
             QMessageBox dialog(QMessageBox::NoIcon,
                                          "成功",
-                                         tr("     工程保存到资源管理系统成功      "),
+                                         info,
                                          QMessageBox::Ok,
                                          this);
             dialog.setButtonText (QMessageBox::Ok,QString("确定"));
@@ -332,9 +345,10 @@ bool LoginWidget::SaveProjectOther(QString strFilePath)
         qDebug() <<"save succeed";
         LOG("工程另存为 保存工程成功","INFO");
      //   QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程另存为到资源管理系统成功      "));
+        QString info = "工程另存为到" +m_sysName +"成功";
         QMessageBox dialog(QMessageBox::NoIcon,
                                      "成功",
-                                     tr("     工程另存为到资源管理系统成功      "),
+                                     info,
                                      QMessageBox::Ok,
                                      this);
         dialog.setButtonText (QMessageBox::Ok,QString("确定"));
@@ -715,9 +729,10 @@ void LoginWidget::UploadVideo(QString strFilePath)
         qDebug() <<"save succeed";
         LOG("上传资源 保存成功","INFO");
      //   QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     视频保存到资源管理系统成功      "));
+        QString info = "视频保存到" +m_sysName +"成功";
         QMessageBox dialog(QMessageBox::NoIcon,
                                      "成功",
-                                     tr("     视频保存到资源管理系统成功      "),
+                                     info,
                                      QMessageBox::Ok,
                                      this);
         dialog.setButtonText (QMessageBox::Ok,QString("确定"));
@@ -1337,8 +1352,9 @@ void LoginWidget::on_pushButton_sendOthvideo_clicked()
         return;
     }
     //打开选择窗口
+    QString info = "发送" +m_sysName +"资源";
     int nsize = CloudDiskInterface::instance()->ResourceDialog(3,
-                                                               "发送资源管理系统资源",
+                                                               info,
                                                                "",
                                                                ERMT_Video,
                                                                "",

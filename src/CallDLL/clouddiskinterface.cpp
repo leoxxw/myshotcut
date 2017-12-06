@@ -246,6 +246,15 @@ int CloudDiskInterface::GetTrialState(QString lpResourceID)
     int ret = fpInit(lpResourceID.utf16());
     return ret;
 }
+
+int CloudDiskInterface::GetSysShortName(wchar_t *szBuffer, int nSize)
+{
+    typedef int (*Function)(wchar_t *, int );
+    Function fpInit = (Function)m_lib->resolve("DoGetSysShortName");
+
+    int ret = fpInit(szBuffer,nSize);
+    return ret;
+}
 //单利对象
 CloudDiskInterface* CloudDiskInterface::instance()
 {

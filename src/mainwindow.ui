@@ -431,13 +431,13 @@
      <selectedon>:/Resource/PNG/CloudInDown.png</selectedon>:/Resource/PNG/CloudInDisable.png</iconset>
    </property>
    <property name="text">
-    <string>资源管理系统</string>
+    <string>云里</string>
    </property>
    <property name="iconText">
-    <string notr="true">资源管理系统</string>
+    <string notr="true">云里</string>
    </property>
    <property name="toolTip">
-    <string notr="true">打开资源管理系统</string>
+    <string notr="true">打开云里</string>
    </property>
   </action>
   <action name="actionRealtime">

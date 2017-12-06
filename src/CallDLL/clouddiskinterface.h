@@ -71,6 +71,8 @@ public:
 
     int GetTrialState(QString lpResourceID);
 
+    int GetSysShortName(wchar_t* szBuffer, int nSize);
+
     static CloudDiskInterface* instance();
 private:
     CloudDiskInterface();
