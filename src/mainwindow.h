@@ -108,6 +108,7 @@ signals:
     void openFailed(QString);
     void aboutToShutDown();
     void Signal_open_clicked();
+    void Signal_raiseLoginwidget();
 
 
 protected:

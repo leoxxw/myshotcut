@@ -1066,6 +1066,11 @@ void LoginWidget::open_clicked()
     }
 }
 
+void LoginWidget::slot_raise()
+{
+    this->raise();
+}
+
 void LoginWidget::mouseMoveEvent(QMouseEvent *event)
 {
     this->raise();

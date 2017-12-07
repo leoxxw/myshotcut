@@ -42,6 +42,8 @@ public:
     bool IsWoking();
     void SetProjrctType(int nType);
     void open_clicked();
+public slots:
+    void slot_raise();
 protected:
     // Event handlers
     void mouseMoveEvent(QMouseEvent *event);
