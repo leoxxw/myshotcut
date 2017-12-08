@@ -119,7 +119,7 @@ MainWindow::MainWindow()
     , m_isPlaylistLoaded(false)
     , m_exitCode(EXIT_SUCCESS)
     , m_navigationPosition(0)
-    , m_upgradeUrl("https://www.shotcut.org/download/")
+    , m_upgradeUrl("http://www.hzlh.com")
     , m_loginwidget(NULL)
     , m_nType(SF_ShotCutSave)
     , m_AboutWidget(NULL)
@@ -263,7 +263,7 @@ MainWindow::MainWindow()
     if (audioMeterDock) {
         connect(ui->actionAudioMeter, SIGNAL(triggered()), audioMeterDock->toggleViewAction(), SLOT(trigger()));
     }
-
+    //设置属性窗口
     m_propertiesDock = new QDockWidget(tr("Properties"), this);
     m_propertiesDock->hide();
     m_propertiesDock->setObjectName("propertiesDock");
@@ -278,6 +278,7 @@ MainWindow::MainWindow()
     connect(m_propertiesDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onPropertiesDockTriggered(bool)));
     connect(ui->actionProperties, SIGNAL(triggered()), this, SLOT(onPropertiesDockTriggered()));
 
+    //设置最近使用窗口
     m_recentDock = new RecentDock(this);
     m_recentDock->hide();
     addDockWidget(Qt::RightDockWidgetArea, m_recentDock);
@@ -287,6 +288,7 @@ MainWindow::MainWindow()
     connect(ui->actionRecent, SIGNAL(triggered()), this, SLOT(onRecentDockTriggered()));
     connect(this, SIGNAL(openFailed(QString)), m_recentDock, SLOT(remove(QString)));
 
+    //设置播放列表窗口
     m_playlistDock = new PlaylistDock(this);
     m_playlistDock->hide();
     addDockWidget(Qt::LeftDockWidgetArea, m_playlistDock);
@@ -307,6 +309,7 @@ MainWindow::MainWindow()
     if (!Settings.playerGPU())
         connect(m_playlistDock->model(), SIGNAL(loaded()), this, SLOT(updateThumbnails()));
 
+    //设置时间线窗口
     m_timelineDock = new TimelineDock(this);
     m_timelineDock->hide();
     addDockWidget(Qt::BottomDockWidgetArea, m_timelineDock);
@@ -333,6 +336,7 @@ MainWindow::MainWindow()
     connect(m_player, SIGNAL(previousSought()), m_timelineDock, SLOT(seekPreviousEdit()));
     connect(m_player, SIGNAL(nextSought()), m_timelineDock, SLOT(seekNextEdit()));
 
+    //设置滤镜窗口
     m_filterController = new FilterController(this);
     m_filtersDock = new FiltersDock(m_filterController->metadataModel(), m_filterController->attachedModel(), this);
     m_filtersDock->hide();
@@ -351,6 +355,7 @@ MainWindow::MainWindow()
     connect(m_timelineDock, SIGNAL(fadeOutChanged(int)), m_filtersDock, SLOT(setFadeOutDuration(int)));
     connect(m_timelineDock, SIGNAL(selected(Mlt::Producer*)), m_filterController, SLOT(setProducer(Mlt::Producer*)));
 
+    //设置历史记录窗口
     m_historyDock = new QDockWidget(tr("History"), this);
     m_historyDock->hide();
     m_historyDock->setObjectName("historyDock");
@@ -369,6 +374,7 @@ MainWindow::MainWindow()
     ui->actionUndo->setDisabled(true);
     ui->actionRedo->setDisabled(true);
 
+    //设置输出窗口
     m_encodeDock = new EncodeDock(this);
     m_encodeDock->hide();
     addDockWidget(Qt::LeftDockWidgetArea, m_encodeDock);
@@ -396,12 +402,16 @@ MainWindow::MainWindow()
   //  connect(m_encodeDock,SIGNAL(visibilityChanged(bool)),this,SLOT(setShowfilepropertycheck(bool)));
     m_encodeDock->onProfileChanged();
 
+    //设置任务窗口
     m_jobsDock = new JobsDock(this);
     m_jobsDock->hide();
     addDockWidget(Qt::RightDockWidgetArea, m_jobsDock);
     ui->menuView->addAction(m_jobsDock->toggleViewAction());
     connect(&JOBS, SIGNAL(jobAdded()), m_jobsDock, SLOT(show()));
-    connect(&JOBS, SIGNAL(jobAdded()), m_jobsDock, SLOT(raise()));
+    //修改弹窗
+   // connect(&JOBS, SIGNAL(jobAdded()), m_jobsDock, SLOT(raise()));
+    connect(&JOBS, SIGNAL(jobAdded()), this, SLOT(slot_JboRaise()));
+
     connect(m_jobsDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onJobsDockTriggered(bool)));
 
     tabifyDockWidget(m_propertiesDock, m_playlistDock);
@@ -496,6 +506,7 @@ MainWindow::MainWindow()
     connect(m_loginwidget,&LoginWidget::Signal_CloseProject,this,&MainWindow::slot_CloseProject);
     connect(m_loginwidget,&LoginWidget::Signal_SysName,this,&MainWindow::slot_SysName);
     connect(this,&MainWindow::Signal_open_clicked,m_loginwidget,&LoginWidget::open_clicked);
+    connect(this,&MainWindow::Signal_open_clicked_t,m_loginwidget,&LoginWidget::open_clicked_t);
     connect(this,&MainWindow::Signal_raiseLoginwidget,m_loginwidget,&LoginWidget::slot_raise);
 
     LOG_DEBUG() << "end";
@@ -1198,6 +1209,17 @@ void MainWindow::openVideo()
 #endif
     QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path,"所有文件(*.*);;工程(*.mlt);;音频(*.cd *.ogg *.mp3 *.asf *.wma *.wav *.rm *.real *.ape *.module *.midi *.vqf);;图片(*.bmp *.pcx *.png *.jpeg *.gif *.tiff *.dxf *.cgm *.cdr *.wmf *.eps *.emf *.pict);;视频(*.avi *.wmv *.mpeg *.mp4 *.mov *.mkv *.flv *.m4v *.rmvb *.rm *.3gp *.dat *.ts *.mts *.vob)");
    // QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path);
+
+
+    //本地打开工程文件则将工程类型设置为EV_ShotCut
+    int n = filenames.lastIndexOf(".mlt");
+    if( n != -1 || m_currentFile == "VideoStudio 专业视频工作站")
+    {
+        if(m_loginwidget)
+        {
+            m_loginwidget->SetProjrctType(EV_ShotCut);
+        }
+    }
     if (filenames.length() > 0)
     {
         Settings.setOpenPath(QFileInfo(filenames.first()).path());
@@ -1207,15 +1229,7 @@ void MainWindow::openVideo()
             m_multipleFiles = filenames;
         }
         open(filenames.first());
-        //本地打开工程文件则将工程类型设置为EV_ShotCut
-        int n = filenames.lastIndexOf(".mlt");
-        if( n != -1)
-        {
-            if(m_loginwidget)
-            {
-                m_loginwidget->SetProjrctType(EV_ShotCut);
-            }
-        }
+
     }
     else {
         // If file invalid, then on some platforms the dialog messes up SDL.
@@ -2227,12 +2241,42 @@ void MainWindow::slot_FinisheUploadVideo(QString VideoPath,bool bFinished)
     }
 }
 
-void MainWindow::slot_CloseProject()
+void MainWindow::slot_CloseProject(int nType)
 {
-    if(continueModified())
-    {
-        emit Signal_open_clicked();
+    if (isWindowModified()) {
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "VideoStudio",
+                                     tr("The project has been modified.\n"
+                                        "Do you want to save your changes?"),
+                                     QMessageBox::No |
+                                     QMessageBox::Cancel |
+                                     QMessageBox::Yes,
+                                     this);
+        dialog.setButtonText (QMessageBox::Yes,QString("保存"));
+        dialog.setButtonText (QMessageBox::No,QString("不保存"));
+        dialog.setButtonText (QMessageBox::Cancel,QString("取消"));
+        dialog.setWindowModality(QmlApplication::dialogModality());
+        dialog.setDefaultButton(QMessageBox::Yes);
+        dialog.setEscapeButton(QMessageBox::Cancel);
+        int r = dialog.exec();
+        if (r == QMessageBox::Yes || r == QMessageBox::No)
+        {
+            QMutexLocker locker(&m_autosaveMutex);
+            m_autosaveFile.reset();
+            if (r == QMessageBox::Yes)
+            {
+                if(nType == EV_YUNLI)
+                {
+                    slot_SaveProject(SF_Save,m_currentFile);
+                    emit Signal_open_clicked_t();
+                    return;
+                }else{
+                    on_actionSave_triggered();
+                }
+            }
+        }
     }
+    emit Signal_open_clicked();
 }
 
 void MainWindow::slot_SysName(QString strName)
@@ -2240,7 +2284,13 @@ void MainWindow::slot_SysName(QString strName)
     QString info = "打开" + strName;
     ui->actionFullscreen->setText(strName);
      ui->actionFullscreen->setIconText(strName);
-    ui->actionFullscreen->setToolTip(info);
+     ui->actionFullscreen->setToolTip(info);
+}
+
+void MainWindow::slot_JboRaise()
+{
+    m_jobsDock->raise();
+    emit Signal_raiseLoginwidget();
 }
 
 //void MainWindow::setShowfilepropertycheck(bool)
@@ -2513,8 +2563,9 @@ bool MainWindow::continueModified()
         if (r == QMessageBox::Yes || r == QMessageBox::No) {
             QMutexLocker locker(&m_autosaveMutex);
             m_autosaveFile.reset();
-            if (r == QMessageBox::Yes)
+            if (r == QMessageBox::Yes){
                 return on_actionSave_triggered();
+            }
         } else if (r == QMessageBox::Cancel) {
             return false;
         }

@@ -15,7 +15,8 @@ LoginWidget::LoginWidget(QWidget *parent) :
     ui(new Ui::LoginWidget),
     m_bIsworking(false),
     m_nSearch(0),
-    m_ProjectType(EV_ShotCut)
+    m_ProjectType(EV_ShotCut),
+    m_bOpenProject(false)
 {
     ui->setupUi(this);
     // this->setWindowFlags(Qt::FramelessWindowHint);//去掉标题栏
@@ -295,6 +296,12 @@ bool LoginWidget::SaveProject(QString strFilePath,int ntype)
             dialog.exec();
         }
         m_ProjectType = EV_YUNLI;
+
+        if(m_bOpenProject)
+        {
+            open_clicked();
+            m_bOpenProject = false;
+        }
         return true;
     }else{
         qDebug() <<"save failed";
@@ -859,7 +866,16 @@ bool LoginWidget::IsWoking()
 
 void LoginWidget::SetProjrctType(int nType)
 {
+    if(nType == EV_ShotCut)
+    {
+        m_ProResourceInfo.m_strOwnerID = "";
+        m_ProResourceInfo.m_strResourceName = "";
+        m_ProResourceInfo.m_strOwnerID = "";
+        m_ProResourceInfo.m_strOwnerType = "";
+        m_ProResourceInfo.m_strParentID = "";
+    }
     m_ProjectType = nType;
+
 }
 
 void LoginWidget::on_pushButton_login_clicked()
@@ -987,7 +1003,7 @@ void LoginWidget::on_pushButton_open_clicked()
         dialog.exec();
         return;
     }
-    emit Signal_CloseProject();
+    emit Signal_CloseProject(m_ProjectType);
 }
 void LoginWidget::open_clicked()
 {
@@ -1019,13 +1035,26 @@ void LoginWidget::open_clicked()
         CloudDiskInterface::instance()->GetResourceList(pBuff,nsize);
         m_strBuffInfo = QString::fromWCharArray(pBuff);
         qDebug() << m_strBuffInfo;
-        if(!GetListInfo(m_strBuffInfo,m_ProResourceInfo))
+        ResourceInfo ProResourceInfo;
+        if(!GetListInfo(m_strBuffInfo,ProResourceInfo))
         {
             qDebug()<<"获取工程信息失败";
             LOG("打开工程 获取工程信息失败","ERROR");
             return;
         }
-
+        //判断本地是否已经打开该工程
+        if(m_ProResourceInfo.m_strResourceID == ProResourceInfo.m_strResourceID)
+        {
+            QMessageBox dialog(QMessageBox::Warning,
+                                         "提示",
+                                         tr("工程已经打开！"),
+                                         QMessageBox::Ok,
+                                         this);
+            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+            dialog.exec();
+            return;
+        }
+        m_ProResourceInfo = ProResourceInfo;
         //下载资源
         QString strLoadPath = QCoreApplication::applicationDirPath()+"/DownLoad";
         wchar_t FileListBuffer[1024 *5];
@@ -1064,6 +1093,11 @@ void LoginWidget::open_clicked()
             LOG("打开工程 下载工程失败","ERROR");
         }
     }
+}
+
+void LoginWidget::open_clicked_t()
+{
+   m_bOpenProject = true;
 }
 
 void LoginWidget::slot_raise()

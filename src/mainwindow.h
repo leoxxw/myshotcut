@@ -97,8 +97,9 @@ private slots:
     void slot_UploadVideo(bool);
     void slot_GetVideoPath(QString VideoPath);
     void slot_FinisheUploadVideo(QString VideoPath,bool bFinished);
-    void slot_CloseProject();
+    void slot_CloseProject(int nType);
     void slot_SysName(QString strName);
+    void slot_JboRaise();
 
 
 signals:
@@ -108,7 +109,9 @@ signals:
     void openFailed(QString);
     void aboutToShutDown();
     void Signal_open_clicked();
+    void Signal_open_clicked_t();
     void Signal_raiseLoginwidget();
+
 
 
 protected:

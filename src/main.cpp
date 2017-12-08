@@ -246,10 +246,22 @@ protected:
 int main(int argc, char **argv)
 {
     Application a(argc, argv, "some unique key string");
+    //唯一实例判断
     if (a.isRunning())
     {
         a.sendMessage("message from other instance.");
-        QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("\r\n VideoStudio已经在运行了！\r\n"));
+       // QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("\r\n VideoStudio已经在运行了！\r\n"));
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     QStringLiteral("\r\n VideoStudio已经在运行了！\r\n"),
+                                     QMessageBox::Ok,
+                                     NULL);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
+
+        a.setProperty("system-style", a.style()->objectName());
+        MainWindow::changeTheme(Settings.theme());
+
         a.mainWindow = &MAIN;
         a.mainWindow->hide();
         a.mainWindow->close();

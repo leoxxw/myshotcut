@@ -28,21 +28,34 @@ public:
     bool SaveProjectOther(QString strFilePath);
     //保存视频资源
     void SaveVideo(QString strFilePath);
+    //发送视频资源
     void SendVideoNoDlg(QString strFilePath);
+    //发送工程
     void SendProjectNoDlg(QString strFilePath);
+    //删除临时目录
     bool DelDir(const QString &path);
+    //保存工程到云里时添加文件
     void AddFile(QString filePath,int JobID,QString fatherPath,int type);
+    //获取文件类型
     enResourceType GetFileType(QString fileName);
-
+    //上传视频资源
     void UploadVideo(QString strFilePath);
+    //上传发送的视频资源
     void UploadSendVideo(QString strFilePath);
-
+    //获取配置文件信息
     void GetInitFileInfo();
+    //设置任务进行状态
     void SetIsWorking(bool bIsWorking);
+    //获取是否在任务中
     bool IsWoking();
+    //这种工程的类型（本地的还是云里的）
     void SetProjrctType(int nType);
+    //打开工程
     void open_clicked();
+    //打开工程
+    void open_clicked_t();
 public slots:
+    //置顶窗口
     void slot_raise();
 protected:
     // Event handlers
@@ -81,7 +94,7 @@ signals:
     void signal_SendProject();
     void signal_SendVideo();
     void Signal_UploadVideo(bool);
-    void Signal_CloseProject();
+    void Signal_CloseProject(int ntype);
     void Signal_SysName(QString strName);
 
 private:
@@ -95,10 +108,11 @@ private:
     enReturnType    m_loginType;//登录类型（是否需要注销）
     ResourceInfo    m_ProResourceInfo;//解析的资源信息
     QString         m_strBuffInfo;//获得的资源信息
-    bool            m_bIsworking;
+    bool            m_bIsworking;//工作状态
     int             m_nSearch;//搜索按钮配置
     int             m_ProjectType;//工程类型
-    QString         m_sysName;
+    QString         m_sysName;//系统名称
+    bool            m_bOpenProject;//保存工程后打开云里工程
 };
 
 #endif // LOGINWIDGET_H

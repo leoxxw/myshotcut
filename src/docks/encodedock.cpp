@@ -1029,13 +1029,13 @@ void EncodeDock::on_encodeButton_clicked()
         dialog.exec();
         return;
     }
-    int pos = fileName.indexOf(QRegExp("[\*\&\?\\\|\/\>\<\"\:]"));
+    int pos = fileName.indexOf(QRegExp("[\*\?\\\|\/\>\<\"\:]"));
     if(pos != -1)
     {
       //  QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("文件名不允许出现特殊字符\(\* \& \? \\ \| \/ \> \< \" \:\)！"));
         QMessageBox dialog(QMessageBox::Warning,
                                      "警告",
-                                     tr("文件名不允许出现特殊字符\(\* \& \? \\ \| \/ \> \< \" \:\)！"),
+                                     tr("文件名不允许出现特殊字符\(\* \? \\ \| \/ \> \< \" \:\)！"),
                                      QMessageBox::Ok,
                                      this);
         dialog.setButtonText (QMessageBox::Ok,QString("确定"));
@@ -1137,13 +1137,13 @@ void EncodeDock::on_encodeButton_clicked()
             dialog.exec();
             return;
         }
-        int pos = fileName.indexOf(QRegExp("[\*\&\?\\\|\/\>\<\"\:]"));
+        int pos = fileName.indexOf(QRegExp("[\*\?\\\|\/\>\<\"\:]"));
         if(pos != -1)
         {
         //    QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("文件名不允许出现特殊字符！"));
             QMessageBox dialog(QMessageBox::Warning,
                                          "警告",
-                                         tr("文件名不允许出现特殊字符\(\* \& \? \\ \| \/ \> \< \" \:\)！"),
+                                         tr("文件名不允许出现特殊字符\(\* \? \\ \| \/ \> \< \" \:\)！"),
                                          QMessageBox::Ok,
                                          this);
             dialog.setButtonText (QMessageBox::Ok,QString("确定"));
