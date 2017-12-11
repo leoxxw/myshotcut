@@ -92,7 +92,7 @@ private slots:
     void slot_SaveProject(int ntype,QString ProjectName);
     void slot_Progress(int i);
     void slot_SaveVideo(int ntype);
-    void slot_OpenProject(QString ProjectPath);
+    void slot_OpenProject(QString ProjectPath,QString ProjectName);
     void slot_OpenVideo(QString VideoPath);
     void slot_UploadVideo(bool);
     void slot_GetVideoPath(QString VideoPath);
@@ -175,6 +175,8 @@ private:
     LoginWidget *m_loginwidget;
     int m_nType;//保存类型
     AboutWidget* m_AboutWidget;
+    //云里工程别名
+    QString     m_ProjectName;
 
     QThread*     m_objThread;
     ObjectThread*    m_obj;

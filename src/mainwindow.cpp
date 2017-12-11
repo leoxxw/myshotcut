@@ -508,6 +508,7 @@ MainWindow::MainWindow()
     connect(this,&MainWindow::Signal_open_clicked,m_loginwidget,&LoginWidget::open_clicked);
     connect(this,&MainWindow::Signal_open_clicked_t,m_loginwidget,&LoginWidget::open_clicked_t);
     connect(this,&MainWindow::Signal_raiseLoginwidget,m_loginwidget,&LoginWidget::slot_raise);
+    connect(this, SIGNAL(openFailed(QString)), m_loginwidget, SLOT(slot_openFailed(QString)));
 
     LOG_DEBUG() << "end";
 }
@@ -1210,13 +1211,14 @@ void MainWindow::openVideo()
     QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path,"所有文件(*.*);;工程(*.mlt);;音频(*.cd *.ogg *.mp3 *.asf *.wma *.wav *.rm *.real *.ape *.module *.midi *.vqf);;图片(*.bmp *.pcx *.png *.jpeg *.gif *.tiff *.dxf *.cgm *.cdr *.wmf *.eps *.emf *.pict);;视频(*.avi *.wmv *.mpeg *.mp4 *.mov *.mkv *.flv *.m4v *.rmvb *.rm *.3gp *.dat *.ts *.mts *.vob)");
    // QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path);
 
-
+    LOG_DEBUG()<<filenames;
     //本地打开工程文件则将工程类型设置为EV_ShotCut
     int n = filenames.lastIndexOf(".mlt");
     if( n != -1 || m_currentFile == "VideoStudio 专业视频工作站")
     {
         if(m_loginwidget)
         {
+            m_ProjectName = "";
             m_loginwidget->SetProjrctType(EV_ShotCut);
         }
     }
@@ -1470,7 +1472,13 @@ void MainWindow::setCurrentFile(const QString &filename)
     else
         m_currentFile = filename;
     if (!m_currentFile.isEmpty())
+    {
         shownName = QFileInfo(m_currentFile).fileName();
+    }
+    if(m_ProjectName != "")
+    {
+        shownName = m_ProjectName;
+    }
     int n = shownName.lastIndexOf(".");
     shownName = shownName.mid(0,n);
     setWindowTitle(tr("%1[*]").arg(shownName));
@@ -2140,12 +2148,13 @@ void MainWindow::slot_SaveVideo(int ntype)
     m_encodeDock->SetSaveType(SF_YUNLI);
 }
 
-void MainWindow::slot_OpenProject(QString ProjectPath)
+void MainWindow::slot_OpenProject(QString ProjectPath,QString ProjectName)
 {
     QStringList filenames;
     filenames.append(ProjectPath);
     if (filenames.length() > 0)
     {
+        m_ProjectName = ProjectName;
         Settings.setOpenPath(QFileInfo(filenames.first()).path());
         activateWindow();
         if (filenames.length() > 1)
@@ -3585,8 +3594,11 @@ void MainWindow::on_actionApplicationLog_triggered()
 
 void MainWindow::on_actionClose_triggered()
 {
+    qDebug()<<"on_actionClose_triggered";
     if (MAIN.continueModified())
     {
+        //工程别名置位空
+        m_ProjectName = "";
         LOG_DEBUG() << "";
         if (multitrack())
             m_timelineDock->model()->close();
@@ -3598,6 +3610,7 @@ void MainWindow::on_actionClose_triggered()
         if(m_loginwidget)
         {
             m_loginwidget->SetProjrctType(EV_ShotCut);
+            qDebug()<<"SetProjrctType  EV_ShotCut";
         }
     }
 }

@@ -870,12 +870,12 @@ void LoginWidget::SetProjrctType(int nType)
     {
         m_ProResourceInfo.m_strOwnerID = "";
         m_ProResourceInfo.m_strResourceName = "";
+        m_ProResourceInfo.m_strResourceID = "";
         m_ProResourceInfo.m_strOwnerID = "";
         m_ProResourceInfo.m_strOwnerType = "";
         m_ProResourceInfo.m_strParentID = "";
     }
     m_ProjectType = nType;
-
 }
 
 void LoginWidget::on_pushButton_login_clicked()
@@ -981,6 +981,7 @@ void LoginWidget::on_pushButton_exit_clicked()
     m_loginType = ERT_FALSE;
     m_ProResourceInfo.m_strOwnerID = "";
     m_ProResourceInfo.m_strResourceName = "";
+    m_ProResourceInfo.m_strResourceID = "";
     m_ProResourceInfo.m_strOwnerID = "";
     m_ProResourceInfo.m_strOwnerType = "";
     m_ProResourceInfo.m_strParentID = "";
@@ -1042,6 +1043,8 @@ void LoginWidget::open_clicked()
             LOG("打开工程 获取工程信息失败","ERROR");
             return;
         }
+        qDebug()<<m_ProResourceInfo.m_strResourceID;
+        qDebug()<<ProResourceInfo.m_strResourceID;
         //判断本地是否已经打开该工程
         if(m_ProResourceInfo.m_strResourceID == ProResourceInfo.m_strResourceID)
         {
@@ -1054,13 +1057,12 @@ void LoginWidget::open_clicked()
             dialog.exec();
             return;
         }
-        m_ProResourceInfo = ProResourceInfo;
         //下载资源
         QString strLoadPath = QCoreApplication::applicationDirPath()+"/DownLoad";
         wchar_t FileListBuffer[1024 *5];
         memset(FileListBuffer,0,1024 *5 * sizeof(wchar_t));
         int nbufferSize = 1024 *5;
-        int t = CloudDiskInterface::instance()->DownloadResource(m_ProResourceInfo.m_strResourceID,
+        int t = CloudDiskInterface::instance()->DownloadResource(ProResourceInfo.m_strResourceID,
                                                                  strLoadPath,
                                                                  FileListBuffer,
                                                                  nbufferSize,
@@ -1068,6 +1070,7 @@ void LoginWidget::open_clicked()
                                                                  EDFalg_PROMPT);
         if(t == ERT_TRUE)
         {
+            m_ProResourceInfo = ProResourceInfo;
             qDebug()<<"DownloadResource successful";
             LOG("打开工程 下载工程成功","INFO");
             //加载到工程
@@ -1081,8 +1084,9 @@ void LoginWidget::open_clicked()
                 LOG("打开工程 获取主工程文件名失败","ERROR");
             }
             QString strMainFilePath = QString::fromWCharArray(FilePathBuffer);
+            LOG(strMainFilePath,"INFO");
             QString strProjectPath = strLoadPath + "/"+m_ProResourceInfo.m_strResourceID+"/"+strMainFilePath;
-            emit signal_OpenProject(strProjectPath);
+            emit signal_OpenProject(strProjectPath,m_ProResourceInfo.m_strResourceName);
             if(m_ProResourceInfo.m_bReadOnly)
             {
                 ui->pushButton_save->setEnabled(false);
@@ -1103,6 +1107,19 @@ void LoginWidget::open_clicked_t()
 void LoginWidget::slot_raise()
 {
     this->raise();
+}
+
+void LoginWidget::slot_openFailed(QString)
+{
+    if(m_ProjectType == EV_YUNLI)
+    {
+        m_ProResourceInfo.m_strOwnerID = "";
+        m_ProResourceInfo.m_strResourceName = "";
+        m_ProResourceInfo.m_strResourceID = "";
+        m_ProResourceInfo.m_strOwnerID = "";
+        m_ProResourceInfo.m_strOwnerType = "";
+        m_ProResourceInfo.m_strParentID = "";
+    }
 }
 
 void LoginWidget::mouseMoveEvent(QMouseEvent *event)

@@ -57,6 +57,7 @@ public:
 public slots:
     //置顶窗口
     void slot_raise();
+    void slot_openFailed(QString);
 protected:
     // Event handlers
     void mouseMoveEvent(QMouseEvent *event);
@@ -89,7 +90,7 @@ private slots:
 signals:
     void signal_SaveProject(int ntype,QString ProjectName);
     void signal_SaveVideo(int ntype);
-    void signal_OpenProject(QString ProjectPath);
+    void signal_OpenProject(QString ProjectPath,QString ProjectName);
     void signal_OpenVideo(QString VideoPath);
     void signal_SendProject();
     void signal_SendVideo();

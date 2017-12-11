@@ -1017,6 +1017,7 @@ void EncodeDock::on_encodeButton_clicked()
     }
     //修改输出路径
     QString fileName = ui->lineEdit->text();
+    ui->lineEdit->setText("");
     if(fileName == "")
     {
      //   QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("输出文件名为空！"));
@@ -1124,32 +1125,6 @@ void EncodeDock::on_encodeButton_clicked()
     if(m_SaveType == SF_YUNLI)
     {
         //修改输出路径
-        QString fileName = ui->lineEdit->text();
-        if(fileName == "")
-        {
-          //  QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("输出文件名为空！"));
-            QMessageBox dialog(QMessageBox::Warning,
-                                         "警告",
-                                         tr("输出文件名为空！"),
-                                         QMessageBox::Ok,
-                                         this);
-            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
-            dialog.exec();
-            return;
-        }
-        int pos = fileName.indexOf(QRegExp("[\*\?\\\|\/\>\<\"\:]"));
-        if(pos != -1)
-        {
-        //    QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("文件名不允许出现特殊字符！"));
-            QMessageBox dialog(QMessageBox::Warning,
-                                         "警告",
-                                         tr("文件名不允许出现特殊字符\(\* \? \\ \| \/ \> \< \" \:\)！"),
-                                         QMessageBox::Ok,
-                                         this);
-            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
-            dialog.exec();
-            return;
-        }
         QString tempPath =QCoreApplication::applicationDirPath()+"/Temp/";
         QDir dir(tempPath);
         if(!dir.exists())
