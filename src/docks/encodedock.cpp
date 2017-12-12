@@ -82,9 +82,14 @@ EncodeDock::EncodeDock(QWidget *parent) :
 
     Mlt::Properties* p = new Mlt::Properties(c.get_data("f"));
     ui->formatCombo->blockSignals(true);
-    for (int i = 0; i < p->count(); i++) {
+    qDebug()<<"avformat";
+    for (int i = 0; i < p->count(); i++)
+    {
         if (ui->formatCombo->findText(p->get(i)) == -1)
+        {
             ui->formatCombo->addItem(p->get(i));
+            qDebug()<<p->get(i);
+        }
     }
     delete p;
     ui->formatCombo->model()->sort(0);
@@ -421,7 +426,117 @@ void EncodeDock::loadPresets()
                 QStandardItem* item = new QStandardItem(name);
                 item->setData(QString(m_presets->get_name(j)));
                 if (preset.get("meta.preset.note"))
-                    item->setToolTip(QString("<p>%1</p>").arg(QString::fromUtf8(preset.get("meta.preset.note"))));
+                {
+                    QString ToolTipName = QString::fromUtf8(preset.get("meta.preset.note"));
+                    if(ToolTipName=="audio only")
+                    {
+                        ToolTipName = "仅音频";
+                    }
+                    if(ToolTipName=="A lightly compressed intermediate codec developed by Avid also known as SMPTE VC-3")
+                    {
+                        ToolTipName = "一种压缩的中间编码器，由Avid开发，也称为SMPTE VC-3";
+                    }
+                    if(ToolTipName=="Intra-frame only, 50 Mb/s MPEG-2 also known as Sony IMX or SMPTE 365M")
+                    {
+                        ToolTipName = "仅帧内，50 Mb/s MPEG-2，也称为索尼IMX或SMPTE 365M";
+                    }
+                    if(ToolTipName=="The popular standard definition camcorder digital video format")
+                    {
+                        ToolTipName = "流行的标准定义的摄像录像机数字视频格式";
+                    }
+                    if(ToolTipName=="Double the amount of chroma as normal DV")
+                    {
+                        ToolTipName = "跟普通DV一样使色度加倍";
+                    }
+                    if(ToolTipName=="Process the output with a DVD authoring tool such as dvdauthor.")
+                    {
+                        ToolTipName = "借助DVD授权工具处理输出，例如DVDAuthor.";
+                    }
+                    if(ToolTipName=="This is the old Sorenson H.263-based codec. Most people use H.264 with Flash now.")
+                    {
+                        ToolTipName = "这是旧的Sorenson H.263编码器，如今基本上使用H.264";
+                    }
+                    if(ToolTipName=="HD MPEG-2 camcorder format")
+                    {
+                        ToolTipName = "HD MPEG-2摄像录像机格式";
+                    }
+                    if(ToolTipName=="not lossless, but still high quality")
+                    {
+                        ToolTipName = "有损，但仍保证了高质量";
+                    }
+                    if(ToolTipName=="a little lossy, but intra-frame only with AC-3 audio")
+                    {
+                        ToolTipName = "有损，仅帧内，音频格式为AC-3";
+                    }
+                    if(ToolTipName=="somewhat lossy, intra-frame only MPEG-4, with uncompressed audio")
+                    {
+                        ToolTipName = "有损，仅帧内，音频无压缩";
+                    }
+                    if(ToolTipName=="Designed by Apple in California. Set vprofile=1 for LT or =3 for HQ.")
+                    {
+                        ToolTipName = "由加利福尼亚的苹果公司设计。若是LT，设置成vprofile=1；若是HQ，则设置为3。";
+                    }
+                    if(ToolTipName=="Use this one for interlaced output. Set vprofile=1 for LT or =3 for HQ.")
+                    {
+                        ToolTipName = "用于隔行输出。若是LT，设置成vprofile=1；若是HQ，则设置为3";
+                    }
+                    if(ToolTipName=="FFmpeg video codec 1 with FLAC audio in Matroska container")
+                    {
+                        ToolTipName = "FFmpeg视频编码1， 音频为FLAC，封装在Matroska容器中";
+                    }
+                    if(ToolTipName=="Intra-frame only, lossless compressed MPEG-4 AVC with AAC audio")
+                    {
+                        ToolTipName = "仅帧内，无损压缩MPEG-4 AVC， 音频为AAC";
+                    }
+                    if(ToolTipName=="with FLAC audio in Matroska container")
+                    {
+                        ToolTipName = "音频格式为FLAC，封装在Matroska容器中";
+                    }
+                    if(ToolTipName=="a general purpose MPEG-2 preset")
+                    {
+                        ToolTipName = "MPEG-2预设";
+                    }
+                    if(ToolTipName=="Part 2 Simple Profile")
+                    {
+                        ToolTipName = "第2部分简单概要";
+                    }
+                    if(ToolTipName=="Part 2 Advanced Simple Profile")
+                    {
+                        ToolTipName = "第2部分高级简单概要";
+                    }
+                    if(ToolTipName=="for Sony PlayStation Portable")
+                    {
+                        ToolTipName = "适用于Sony PlayStation Portable";
+                    }
+                    if(ToolTipName=="VP9 video with Opus audio in Matroska container: \"Don't be evil\"")
+                    {
+                        ToolTipName = "视频格式为VP9，音频格式为Opus，封装在Matroska容器中";
+                    }
+                    if(ToolTipName=="VP8 video with Ogg Vorbis audio in Matroska container: \"Don't be evil\"")
+                    {
+                        ToolTipName = "视频格式为VP8，音频格式为Ogg Vorbis，封装在Matroska容器中";
+                    }
+                    if(ToolTipName=="Windows Media Audio")
+                    {
+                        ToolTipName = "Windows Media Audio";
+                    }
+                    if(ToolTipName=="Windows Media Video (Windows Media Player 8 and up)")
+                    {
+                        ToolTipName = "Windows Media Video（Windows Media Player 8及以上版本）";
+                    }
+                    if(ToolTipName=="Sony \"workflow innovation\"")
+                    {
+                        ToolTipName = "索尼（“工作量创新”）";
+                    }
+                    if(ToolTipName=="H.264/AAC MP4 for YouTube")
+                    {
+                        ToolTipName = "适用于YouTube的H.264/AAC MP4 ";
+                    }
+
+                    QString info = QString("<p>%1</p>").arg(ToolTipName);
+                    qDebug()<<"setToolTip"<<info;
+                    item->setToolTip(info);
+                }
                 parentItem->appendRow(item);
             }
         }
@@ -1354,9 +1469,11 @@ void EncodeDock::on_addPresetButton_clicked()
             loadPresets();
             QModelIndex parentIndex = m_presetsModel.index(0, 0);
             int n = m_presetsModel.rowCount(parentIndex);
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < n; i++)
+            {
                 QModelIndex index = m_presetsModel.index(i, 0, parentIndex);
-                if (m_presetsModel.data(index).toString() == preset) {
+                if (m_presetsModel.data(index).toString() == preset)
+                {
                     ui->presetsTree->setCurrentIndex(index);
                     break;
                 }
@@ -1376,6 +1493,8 @@ void EncodeDock::on_removePresetButton_clicked()
                        this);
     dialog.setDefaultButton(QMessageBox::Yes);
     dialog.setEscapeButton(QMessageBox::No);
+    dialog.setButtonText (QMessageBox::Yes,QString("是"));
+    dialog.setButtonText (QMessageBox::No,QString("否"));
     dialog.setWindowModality(QmlApplication::dialogModality());
     int result = dialog.exec();
     if (result == QMessageBox::Yes) {
@@ -1551,6 +1670,13 @@ void EncodeDock::on_formatCombo_currentIndexChanged(int index)
     Q_UNUSED(index);
     m_extension.clear();
     m_extension = ui->formatCombo->itemText(index);
+    //限定视频输编码格式与音频编码格式
+    //todo
+    if(m_extension == "mp4")
+    {
+//        ui->videoCodecCombo->clear();
+//        ui->videoCodecCombo->addItem();
+    }
 }
 
 void EncodeDock::on_videoBufferDurationChanged()
