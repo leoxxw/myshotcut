@@ -16,7 +16,8 @@ LoginWidget::LoginWidget(QWidget *parent) :
     m_bIsworking(false),
     m_nSearch(0),
     m_ProjectType(EV_ShotCut),
-    m_bOpenProject(false)
+    m_bOpenProject(false),
+    m_loginType(ERT_FALSE)
 {
     ui->setupUi(this);
     // this->setWindowFlags(Qt::FramelessWindowHint);//去掉标题栏
@@ -284,14 +285,14 @@ bool LoginWidget::SaveProject(QString strFilePath,int ntype)
         LOG("保存工程成功","INFO");
         if(ntype != SF_SaveSend)
         {
-          //  QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程保存到资源管理系统成功      "));
+            //  QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程保存到资源管理系统成功      "));
 
             QString info = "工程保存到" +m_sysName +"成功";
             QMessageBox dialog(QMessageBox::NoIcon,
-                                         "成功",
-                                         info,
-                                         QMessageBox::Ok,
-                                         this);
+                               "成功",
+                               info,
+                               QMessageBox::Ok,
+                               this);
             dialog.setButtonText (QMessageBox::Ok,QString("确定"));
             dialog.exec();
         }
@@ -360,6 +361,11 @@ bool LoginWidget::SaveProjectOther(QString strFilePath)
                                      this);
         dialog.setButtonText (QMessageBox::Ok,QString("确定"));
         dialog.exec();
+        if(m_bOpenProject)
+        {
+            open_clicked();
+            m_bOpenProject = false;
+        }
         return true;
     }
     return false;
@@ -874,6 +880,12 @@ void LoginWidget::SetProjrctType(int nType)
         m_ProResourceInfo.m_strOwnerID = "";
         m_ProResourceInfo.m_strOwnerType = "";
         m_ProResourceInfo.m_strParentID = "";
+        m_ProResourceInfo.m_bReadOnly = false;
+        if(m_loginType == ERT_TRUE || m_loginType == ERT_NewTGT)
+        {
+            ui->pushButton_save->setEnabled(true);
+        }
+
     }
     m_ProjectType = nType;
 }
@@ -1102,6 +1114,47 @@ void LoginWidget::open_clicked()
 void LoginWidget::open_clicked_t()
 {
    m_bOpenProject = true;
+   on_pushButton_save_clicked();
+}
+
+void LoginWidget::getProjectName(QString ProjectName)
+{
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    QString strTimeName = current_date_time.toString("新建工程yyyyMMddhhmmss");
+    if(ProjectName !="")
+    {
+       strTimeName =  ProjectName;
+    }
+
+    //打开选择窗口
+    int nsize = CloudDiskInterface::instance()->ResourceDialog(0,
+                                                               "工程文件另存为",
+                                                               strTimeName,
+                                                               ERMT_Other,
+                                                               "mlt",
+                                                               NULL,EWF_WEB_SAVE_COVER_PROMPT);
+    if(nsize < ERT_TRUE)
+    {
+        qDebug() <<QStringLiteral("CloudDiskInterface failed");
+        LOG("工程另存为 打开选择窗口失败","ERROR");
+        return ;
+    }
+    if(nsize == ERT_CANCEL)
+    {
+        qDebug() <<QStringLiteral("cancle");
+        LOG("工程另存为 打开选择窗口取消了操作","INFO");
+        return ;
+    }
+    if(nsize > ERT_CANCEL)
+    {
+        //获取资源选中窗口的信息
+        wchar_t pBuff[1024];
+        memset(pBuff,0,1024 * sizeof(wchar_t));
+        CloudDiskInterface::instance()->GetResourceList(pBuff, 1024);
+        QString buffInfo = QString::fromWCharArray(pBuff);
+        GetListInfo(buffInfo,m_ProResourceInfo);
+        emit signal_SaveProject(SF_SaveOther,m_ProResourceInfo.m_strResourceName);//代表另存为
+    }
 }
 
 void LoginWidget::slot_raise()
@@ -1119,6 +1172,11 @@ void LoginWidget::slot_openFailed(QString)
         m_ProResourceInfo.m_strOwnerID = "";
         m_ProResourceInfo.m_strOwnerType = "";
         m_ProResourceInfo.m_strParentID = "";
+        m_ProResourceInfo.m_bReadOnly = false;
+        if(m_loginType == ERT_TRUE || m_loginType == ERT_NewTGT)
+        {
+            ui->pushButton_save->setEnabled(true);
+        }
     }
 }
 
@@ -1146,7 +1204,6 @@ void LoginWidget::on_pushButton_save_clicked()
     }
     if (!MLT.producer())
     {
-       // QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
         QMessageBox dialog(QMessageBox::Warning,
                                      "警告",
                                      tr("没有资源数据，请先添加资源文件！"),
@@ -1170,6 +1227,8 @@ void LoginWidget::on_pushButton_save_clicked()
             on_pushButton_saveoth_clicked();
         }else{
             emit signal_SaveProject(SF_Save,m_ProResourceInfo.m_strResourceName);//代表默认保存
+            qDebug()<<"保存的工程名"<<m_ProResourceInfo.m_strResourceName;
+            LOG(m_ProResourceInfo.m_strResourceName,"INFO");
         }
     }
 
@@ -1203,37 +1262,8 @@ void LoginWidget::on_pushButton_saveoth_clicked()
         dialog.exec();
         return ;
     }
-    QDateTime current_date_time =QDateTime::currentDateTime();
-    QString strTimeName = current_date_time.toString("新建工程yyyyMMddhhmmss");
-    //打开选择窗口
-    int nsize = CloudDiskInterface::instance()->ResourceDialog(0,
-                                                               "工程文件另存为",
-                                                               strTimeName,
-                                                               ERMT_Other,
-                                                               "mlt",
-                                                               NULL,EWF_WEB_SAVE_COVER_PROMPT);
-    if(nsize < ERT_TRUE)
-    {
-        qDebug() <<QStringLiteral("CloudDiskInterface failed");
-        LOG("工程另存为 打开选择窗口失败","ERROR");
-        return ;
-    }
-    if(nsize == ERT_CANCEL)
-    {
-        qDebug() <<QStringLiteral("cancle");
-        LOG("工程另存为 打开选择窗口取消了操作","INFO");
-        return ;
-    }
-    if(nsize > ERT_CANCEL)
-    {
-        //获取资源选中窗口的信息
-        wchar_t pBuff[1024];
-        memset(pBuff,0,1024 * sizeof(wchar_t));
-        CloudDiskInterface::instance()->GetResourceList(pBuff, 1024);
-        QString buffInfo = QString::fromWCharArray(pBuff);
-        GetListInfo(buffInfo,m_ProResourceInfo);
-        emit signal_SaveProject(SF_SaveOther,m_ProResourceInfo.m_strResourceName);//代表另存为
-    }
+    //获取本地工程名
+    emit Signal_GetProjectName();
 }
 
 void LoginWidget::on_pushButton_openvideo_clicked()

@@ -157,12 +157,26 @@ bool HtmlEditor::maybeSave()
     if (!isWindowModified())
         return true;
 
-    QMessageBox::StandardButton ret;
-    ret = QMessageBox::warning(this, tr("HTML Editor"),
-                               tr("The document has been modified.\n"
-                                  "Do you want to save your changes?"),
-                               QMessageBox::Save | QMessageBox::Discard
-                               | QMessageBox::Cancel);
+//    QMessageBox::StandardButton ret;
+//    ret = QMessageBox::warning(this, tr("HTML Editor"),
+//                               tr("The document has been modified.\n"
+//                                  "Do you want to save your changes?"),
+//                               QMessageBox::Save | QMessageBox::Discard
+//                               | QMessageBox::Cancel);
+    QMessageBox dialog(QMessageBox::Warning,
+        tr("HTML Editor"),
+        tr("The document has been modified.\n"
+                          "Do you want to save your changes?"),
+                       QMessageBox::Save | QMessageBox::Discard
+                       | QMessageBox::Cancel,this);
+    dialog.setButtonText (QMessageBox::Save,QString("保存"));
+    dialog.setButtonText (QMessageBox::Discard,QString("放弃"));
+    dialog.setButtonText (QMessageBox::Cancel,QString("取消"));
+    dialog.setDefaultButton(QMessageBox::Save);
+    dialog.setEscapeButton(QMessageBox::Discard);
+    dialog.setEscapeButton(QMessageBox::Cancel);
+    int ret = dialog.exec();
+
     if (ret == QMessageBox::Save)
         return fileSave();
     else if (ret == QMessageBox::Cancel)
@@ -634,9 +648,17 @@ void HtmlEditor::changeTab(int index)
 void HtmlEditor::openLink(const QUrl &url)
 {
     QString msg = QString(tr("Open %1 ?")).arg(url.toString());
-    if (QMessageBox::question(this, tr("Open link"), msg,
-                              QMessageBox::Open | QMessageBox::Cancel) ==
-            QMessageBox::Open)
+
+    QMessageBox dialog(QMessageBox::Question,
+        tr("Open link"),
+        msg, QMessageBox::Open | QMessageBox::Cancel,this);
+    dialog.setButtonText (QMessageBox::Open,QString("打开"));
+    dialog.setButtonText (QMessageBox::Cancel,QString("取消"));
+    dialog.setDefaultButton(QMessageBox::Open);
+    dialog.setEscapeButton(QMessageBox::Cancel);
+    int ret = dialog.exec();
+
+    if (ret == QMessageBox::Open)
         QDesktopServices::openUrl(url);
 }
 

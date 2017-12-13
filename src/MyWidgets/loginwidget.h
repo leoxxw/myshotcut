@@ -54,6 +54,7 @@ public:
     void open_clicked();
     //打开工程
     void open_clicked_t();
+    void getProjectName(QString ProjectName);
 public slots:
     //置顶窗口
     void slot_raise();
@@ -97,6 +98,7 @@ signals:
     void Signal_UploadVideo(bool);
     void Signal_CloseProject(int ntype);
     void Signal_SysName(QString strName);
+    void Signal_GetProjectName();
 
 private:
     Ui::LoginWidget *ui;

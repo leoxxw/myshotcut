@@ -509,6 +509,7 @@ MainWindow::MainWindow()
     connect(this,&MainWindow::Signal_open_clicked_t,m_loginwidget,&LoginWidget::open_clicked_t);
     connect(this,&MainWindow::Signal_raiseLoginwidget,m_loginwidget,&LoginWidget::slot_raise);
     connect(this, SIGNAL(openFailed(QString)), m_loginwidget, SLOT(slot_openFailed(QString)));
+    connect(m_loginwidget,&LoginWidget::Signal_GetProjectName,this,&MainWindow::slot_GetProjectName);
 
     LOG_DEBUG() << "end";
 }
@@ -1213,17 +1214,18 @@ void MainWindow::openVideo()
 
     LOG_DEBUG()<<filenames;
     //本地打开工程文件则将工程类型设置为EV_ShotCut
-    int n = filenames.lastIndexOf(".mlt");
-    if( n != -1 || m_currentFile == "VideoStudio 专业视频工作站")
-    {
-        if(m_loginwidget)
-        {
-            m_ProjectName = "";
-            m_loginwidget->SetProjrctType(EV_ShotCut);
-        }
-    }
     if (filenames.length() > 0)
     {
+        int n = filenames.first().lastIndexOf(".mlt");
+        if( n != -1 || m_currentFile == "VideoStudio 专业视频工作站")
+        {
+            if(m_loginwidget)
+            {
+                m_ProjectName = "";
+                m_loginwidget->SetProjrctType(EV_ShotCut);
+                LOG_DEBUG()<<m_ProjectName;
+            }
+        }
         Settings.setOpenPath(QFileInfo(filenames.first()).path());
         activateWindow();
         if (filenames.length() > 1)
@@ -1477,6 +1479,7 @@ void MainWindow::setCurrentFile(const QString &filename)
     }
     if(m_ProjectName != "")
     {
+        qDebug()<<"工程名"<<m_ProjectName;
         shownName = m_ProjectName;
     }
     int n = shownName.lastIndexOf(".");
@@ -2109,6 +2112,7 @@ void MainWindow::slot_SaveProject(int ntype,QString ProjectName)
         MLT.pause();
     }
     m_nType = ntype;
+    m_ProjectName = ProjectName;
     SaveVideostudioProject(ProjectName);
     readXML(m_currentFile);
 }
@@ -2276,13 +2280,33 @@ void MainWindow::slot_CloseProject(int nType)
             {
                 if(nType == EV_YUNLI)
                 {
-                    slot_SaveProject(SF_Save,m_currentFile);
                     emit Signal_open_clicked_t();
                     return;
                 }else{
                     on_actionSave_triggered();
                 }
             }
+            if (r == QMessageBox::No)
+            {
+                //工程别名置位空
+                m_ProjectName = "";
+                LOG_DEBUG() << "";
+                if (multitrack())
+                    m_timelineDock->model()->close();
+                if (playlist())
+                    m_playlistDock->model()->close();
+                else
+                    onMultitrackClosed();
+
+                if(m_loginwidget)
+                {
+                    m_loginwidget->SetProjrctType(EV_ShotCut);
+                    qDebug()<<"SetProjrctType  EV_ShotCut";
+                }
+            }
+
+        }else{
+            return;
         }
     }
     emit Signal_open_clicked();
@@ -2300,6 +2324,22 @@ void MainWindow::slot_JboRaise()
 {
     m_jobsDock->raise();
     emit Signal_raiseLoginwidget();
+}
+
+void MainWindow::slot_GetProjectName()
+{
+    if(m_loginwidget)
+    {
+        if(m_ProjectName == "")
+        {
+            QString  shownName = QFileInfo(m_currentFile).fileName();
+            int n = shownName.lastIndexOf(".");
+            shownName = shownName.mid(0,n);
+            m_loginwidget->getProjectName(shownName);
+        }else{
+           m_loginwidget->getProjectName(m_ProjectName);
+        }
+    }
 }
 
 //void MainWindow::setShowfilepropertycheck(bool)
@@ -2595,6 +2635,8 @@ bool MainWindow::continueJobsRunning()
         dialog.setWindowModality(QmlApplication::dialogModality());
         dialog.setDefaultButton(QMessageBox::Yes);
         dialog.setEscapeButton(QMessageBox::No);
+        dialog.setButtonText (QMessageBox::Yes,QString("是"));
+        dialog.setButtonText (QMessageBox::No,QString("否"));
         return (dialog.exec() == QMessageBox::Yes);
     }
     if (m_encodeDock->isExportInProgress()) {
@@ -2608,6 +2650,8 @@ bool MainWindow::continueJobsRunning()
         dialog.setWindowModality(QmlApplication::dialogModality());
         dialog.setDefaultButton(QMessageBox::Yes);
         dialog.setEscapeButton(QMessageBox::No);
+        dialog.setButtonText (QMessageBox::Yes,QString("是"));
+        dialog.setButtonText (QMessageBox::No,QString("否"));
         return (dialog.exec() == QMessageBox::Yes);
     }
     return true;
@@ -3252,6 +3296,8 @@ void MainWindow::onLanguageTriggered(QAction* action)
                        this);
     dialog.setDefaultButton(QMessageBox::Yes);
     dialog.setEscapeButton(QMessageBox::No);
+    dialog.setButtonText (QMessageBox::Yes,QString("是"));
+    dialog.setButtonText (QMessageBox::No,QString("否"));
     dialog.setWindowModality(QmlApplication::dialogModality());
     if (dialog.exec() == QMessageBox::Yes) {
         m_exitCode = EXIT_RESTART;

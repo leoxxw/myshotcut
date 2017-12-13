@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2012-2016 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -138,6 +138,8 @@ void ServicePresetWidget::on_deletePresetButton_clicked()
                        this);
     dialog.setDefaultButton(QMessageBox::Yes);
     dialog.setEscapeButton(QMessageBox::No);
+    dialog.setButtonText (QMessageBox::Yes,QString("是"));
+    dialog.setButtonText (QMessageBox::No,QString("否"));
     dialog.setWindowModality(QmlApplication::dialogModality());
     int result = dialog.exec();
     if (result == QMessageBox::Yes) {

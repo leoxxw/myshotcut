@@ -100,6 +100,7 @@ private slots:
     void slot_CloseProject(int nType);
     void slot_SysName(QString strName);
     void slot_JboRaise();
+    void slot_GetProjectName();
 
 
 signals:
