@@ -104,6 +104,11 @@ void LoginWidget::Init()
         }
         SetLoginSucceed(pUserID,pszUserToken);
     }
+    if(ret == ERT_AVOID_LOGIN_FALSE)
+    {
+        LOG("自动登录失败需要重新跳转登录窗口","INFO");
+        on_pushButton_login_clicked();
+    }
 
 }
 
@@ -907,14 +912,14 @@ void LoginWidget::on_pushButton_login_clicked()
     if(ret != ERT_TRUE)
     {
         qDebug() << ret <<"登录失败";
-         LOG("登录 登录失败","ERROR");
+        LOG("登录 登录失败","ERROR");
         wchar_t pError[256];
         memset(pError,0,256 * sizeof(wchar_t));
         int nSize =256;
         ret = CallUnifyLoginSrv::instance()->GetLastError(pError,&nSize);
         qDebug() << pError << nSize;
         QString info;
-        info.append("登录 获取错误信息:%1").arg(QString::fromWCharArray(pError));
+        info.append(QString("登录 获取错误信息:%1").arg(QString::fromWCharArray(pError)));
         LOG(info,"ERROR");
         return;
     }
@@ -1004,6 +1009,13 @@ void LoginWidget::on_pushButton_exit_clicked()
 void LoginWidget::on_pushButton_open_clicked()
 {
     LOG("点击打开工程按钮","CLICK");
+    int retLog = CallUnifyLoginSrv::instance()->ValidateTGT(m_UserToken);
+    if(retLog != ERT_TRUE)
+    {
+        LOG("登录信息失效，重新登录","INFO");
+        on_pushButton_login_clicked();
+        return;
+    }
     if(m_bIsworking)
     {
         //QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
@@ -1190,6 +1202,13 @@ void LoginWidget::mouseMoveEvent(QMouseEvent *event)
 void LoginWidget::on_pushButton_save_clicked()
 {
     LOG("点击保存工程按钮","CLICK");
+    int retLog = CallUnifyLoginSrv::instance()->ValidateTGT(m_UserToken);
+    if(retLog != ERT_TRUE)
+    {
+        LOG("登录信息失效，重新登录","INFO");
+        on_pushButton_login_clicked();
+        return;
+    }
     if(m_bIsworking)
     {
       //  QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
@@ -1238,6 +1257,13 @@ void LoginWidget::on_pushButton_save_clicked()
 void LoginWidget::on_pushButton_saveoth_clicked()
 {
     LOG("点击工程另存为按钮","CLICK");
+    int retLog = CallUnifyLoginSrv::instance()->ValidateTGT(m_UserToken);
+    if(retLog != ERT_TRUE)
+    {
+        LOG("登录信息失效，重新登录","INFO");
+        on_pushButton_login_clicked();
+        return;
+    }
     if(m_bIsworking)
     {
       //  QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
@@ -1269,6 +1295,13 @@ void LoginWidget::on_pushButton_saveoth_clicked()
 void LoginWidget::on_pushButton_openvideo_clicked()
 {
     LOG("点击打开资源按钮","CLICK");
+    int retLog = CallUnifyLoginSrv::instance()->ValidateTGT(m_UserToken);
+    if(retLog != ERT_TRUE)
+    {
+        LOG("登录信息失效，重新登录","INFO");
+        on_pushButton_login_clicked();
+        return;
+    }
     if(m_bIsworking)
     {
       //  QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
@@ -1364,6 +1397,13 @@ void LoginWidget::on_pushButton_openvideo_clicked()
 void LoginWidget::on_pushButton_savevideo_clicked()
 {
     LOG("点击保存资源按钮","CLICK");
+    int retLog = CallUnifyLoginSrv::instance()->ValidateTGT(m_UserToken);
+    if(retLog != ERT_TRUE)
+    {
+        LOG("登录信息失效，重新登录","INFO");
+        on_pushButton_login_clicked();
+        return;
+    }
     if(m_bIsworking)
     {
         //QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
@@ -1394,6 +1434,13 @@ void LoginWidget::on_pushButton_savevideo_clicked()
 void LoginWidget::on_pushButton_sendvideo_clicked()
 {
     LOG("点击发送资源按钮","CLICK");
+    int retLog = CallUnifyLoginSrv::instance()->ValidateTGT(m_UserToken);
+    if(retLog != ERT_TRUE)
+    {
+        LOG("登录信息失效，重新登录","INFO");
+        on_pushButton_login_clicked();
+        return;
+    }
     if(m_bIsworking)
     {
       //  QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
@@ -1425,6 +1472,13 @@ void LoginWidget::on_pushButton_sendvideo_clicked()
 void LoginWidget::on_pushButton_sendOthvideo_clicked()
 {
     LOG("点击发送其他资源按钮","CLICK");
+    int retLog = CallUnifyLoginSrv::instance()->ValidateTGT(m_UserToken);
+    if(retLog != ERT_TRUE)
+    {
+        LOG("登录信息失效，重新登录","INFO");
+        on_pushButton_login_clicked();
+        return;
+    }
     if(m_bIsworking)
     {
      //   QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
@@ -1507,6 +1561,13 @@ void LoginWidget::on_pushButton_sendOthvideo_clicked()
 void LoginWidget::on_pushButton_send_clicked()
 {
     LOG("点击发送工程按钮","CLICK");
+    int retLog = CallUnifyLoginSrv::instance()->ValidateTGT(m_UserToken);
+    if(retLog != ERT_TRUE)
+    {
+        LOG("登录信息失效，重新登录","INFO");
+        on_pushButton_login_clicked();
+        return;
+    }
     if(m_bIsworking)
     {
     //    QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
@@ -1537,6 +1598,13 @@ void LoginWidget::on_pushButton_send_clicked()
 void LoginWidget::on_pushButton_search_clicked()
 {
     LOG("点击搜索按钮","CLICK");
+    int retLog = CallUnifyLoginSrv::instance()->ValidateTGT(m_UserToken);
+    if(retLog != ERT_TRUE)
+    {
+        LOG("登录信息失效，重新登录","INFO");
+        on_pushButton_login_clicked();
+        return;
+    }
     if(m_bIsworking)
     {
      //   QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));

@@ -2060,6 +2060,7 @@ void MainWindow::readXML(QString strFilePath)
     m_progressDlg->setLabelText(tr("正在复制资源文件到工程......      "));
     m_progressDlg->setCancelButtonText(tr("取消"));
     m_progressDlg->setRange(0,FilePathList.count());
+    m_progressDlg->show();
     qDebug() <<"emit CopeFile";
 }
 
@@ -2093,7 +2094,6 @@ void MainWindow::slot_WorkFinished(bool flag)
         }
     }else{
         LOG("保存工程失败","ERROR");
-    //    QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      保存工程失败      "));
         QMessageBox dialog(QMessageBox::Critical,
                                      "失败",
                                      tr("保存工程失败"),
@@ -2126,7 +2126,6 @@ void MainWindow::slot_SaveVideo(int ntype)
 {
     if(m_encodeDock->IsWorking())
     {
-      //  QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         QMessageBox dialog(QMessageBox::Warning,
                                      "提示",
                                      tr("有任务正在进行请等待..."),
@@ -2342,15 +2341,6 @@ void MainWindow::slot_GetProjectName()
     }
 }
 
-//void MainWindow::setShowfilepropertycheck(bool)
-//{
-//    if(m_encodeDock->isHidden()==true)
-//    {
-//        m_encodeDock->SetSaveType(SF_ShotCutSave);
-//        m_encodeDock->setFloating(false);
-//        qDebug()<<"关闭m_encodeDock窗口";
-//    }
-//}
 
 // Drag-n-drop events
 
@@ -2557,7 +2547,6 @@ bool MainWindow::on_actionSave_As_triggered()
 {
     if (!MLT.producer())
     {
-     //   QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
         QMessageBox dialog(QMessageBox::Warning,
                                      "警告",
                                      tr("没有资源数据，请先添加资源文件！"),
@@ -2666,7 +2655,6 @@ void MainWindow::onEncodeTriggered(bool checked)
 {
     if(m_loginwidget && m_loginwidget->IsWoking())
     {
-     //   QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         QMessageBox dialog(QMessageBox::Warning,
                                      "提示",
                                      tr("     有任务正在进行请等待...     "),

@@ -21,6 +21,7 @@ public:
     int GetTicket(wchar_t *pTicket, int *nSize);    // 返回票据
     int Logout();
     int GetConfigCenterAddr(wchar_t *pUrl, int *nSize);
+    int ValidateTGT(QString pszUserToken);
     static CallUnifyLoginSrv* instance();
 private:
     CallUnifyLoginSrv();

@@ -131,6 +131,15 @@ int CallUnifyLoginSrv::GetConfigCenterAddr(wchar_t *pUrl, int *nSize)
     return ret;
 }
 
+int CallUnifyLoginSrv::ValidateTGT(QString pszUserToken)
+{
+    typedef int (*Function)(const ushort*);
+    Function fpInit = (Function)m_lib->resolve("DoValidateTGT");
+
+    int ret = fpInit(pszUserToken.utf16());
+    return ret;
+}
+
 CallUnifyLoginSrv* CallUnifyLoginSrv::instance()
 {
     if (m_pInstance==NULL)

@@ -73,44 +73,45 @@ EncodeDock::EncodeDock(QWidget *parent) :
     loadPresets();
 
     // populate the combos
-    Mlt::Consumer c(MLT.profile(), "avformat");
-    c.set("f", "list");
-    c.set("acodec", "list");
-    c.set("vcodec", "list");
-    c.start();
-    c.stop();
+    populateCombos();
+//    Mlt::Consumer c(MLT.profile(), "avformat");
+//    c.set("f", "list");
+//    c.set("acodec", "list");
+//    c.set("vcodec", "list");
+//    c.start();
+//    c.stop();
 
-    Mlt::Properties* p = new Mlt::Properties(c.get_data("f"));
-    ui->formatCombo->blockSignals(true);
-    qDebug()<<"avformat";
-    for (int i = 0; i < p->count(); i++)
-    {
-        if (ui->formatCombo->findText(p->get(i)) == -1)
-        {
-            ui->formatCombo->addItem(p->get(i));
-            qDebug()<<p->get(i);
-        }
-    }
-    delete p;
-    ui->formatCombo->model()->sort(0);
-    ui->formatCombo->insertItem(0, tr("Automatic from extension"));
-    ui->formatCombo->blockSignals(false);
+//    Mlt::Properties* p = new Mlt::Properties(c.get_data("f"));
+//    ui->formatCombo->blockSignals(true);
+//    qDebug()<<"avformat";
+//    for (int i = 0; i < p->count(); i++)
+//    {
+//        if (ui->formatCombo->findText(p->get(i)) == -1)
+//        {
+//            ui->formatCombo->addItem(p->get(i));
+//            qDebug()<<p->get(i);
+//        }
+//    }
+//    delete p;
+//    ui->formatCombo->model()->sort(0);
+//    ui->formatCombo->insertItem(0, tr("Automatic from extension"));
+//    ui->formatCombo->blockSignals(false);
 
-    p = new Mlt::Properties(c.get_data("acodec"));
-    for (int i = 0; i < p->count(); i++)
-        ui->audioCodecCombo->addItem(p->get(i));
-    delete p;
-    ui->audioCodecCombo->model()->sort(0);
-    ui->audioCodecCombo->insertItem(0, tr("Default for format"));
+//    p = new Mlt::Properties(c.get_data("acodec"));
+//    for (int i = 0; i < p->count(); i++)
+//        ui->audioCodecCombo->addItem(p->get(i));
+//    delete p;
+//    ui->audioCodecCombo->model()->sort(0);
+//    ui->audioCodecCombo->insertItem(0, tr("Default for format"));
 
-    p = new Mlt::Properties(c.get_data("vcodec"));
-    for (int i = 0; i < p->count(); i++) {
-        if (qstrcmp("nvenc", p->get(i)))
-            ui->videoCodecCombo->addItem(p->get(i));
-    }
-    delete p;
-    ui->videoCodecCombo->model()->sort(0);
-    ui->videoCodecCombo->insertItem(0, tr("Default for format"));
+//    p = new Mlt::Properties(c.get_data("vcodec"));
+//    for (int i = 0; i < p->count(); i++) {
+//        if (qstrcmp("nvenc", p->get(i)))
+//            ui->videoCodecCombo->addItem(p->get(i));
+//    }
+//    delete p;
+//    ui->videoCodecCombo->model()->sort(0);
+//    ui->videoCodecCombo->insertItem(0, tr("Default for format"));
 
     on_resetButton_clicked();
 
@@ -412,11 +413,12 @@ void EncodeDock::loadPresets()
                 if (preset.get("meta.preset.name"))
                     name = QString::fromUtf8(preset.get("meta.preset.name"));
                 else {
-                    // use relative path and filename
+                    // use relative path and filename 使用相对路径和文件名
                     name.remove(0, prefix.length());
                     QStringList textParts = name.split('/');
                     if (textParts.count() > 1) {
                         // if the path is a profile name, then change it to "preset (profile)"
+                        //如果路径是一个概要文件名，那么将它改为“预置(概要文件”)
                         QString profile = textParts.at(0);
                         textParts.removeFirst();
                         if (m_profiles->get_data(profile.toLatin1().constData()))
@@ -428,111 +430,6 @@ void EncodeDock::loadPresets()
                 if (preset.get("meta.preset.note"))
                 {
                     QString ToolTipName = QString::fromUtf8(preset.get("meta.preset.note"));
-                    if(ToolTipName=="audio only")
-                    {
-                        ToolTipName = "仅音频";
-                    }
-                    if(ToolTipName=="A lightly compressed intermediate codec developed by Avid also known as SMPTE VC-3")
-                    {
-                        ToolTipName = "一种压缩的中间编码器，由Avid开发，也称为SMPTE VC-3";
-                    }
-                    if(ToolTipName=="Intra-frame only, 50 Mb/s MPEG-2 also known as Sony IMX or SMPTE 365M")
-                    {
-                        ToolTipName = "仅帧内，50 Mb/s MPEG-2，也称为索尼IMX或SMPTE 365M";
-                    }
-                    if(ToolTipName=="The popular standard definition camcorder digital video format")
-                    {
-                        ToolTipName = "流行的标准定义的摄像录像机数字视频格式";
-                    }
-                    if(ToolTipName=="Double the amount of chroma as normal DV")
-                    {
-                        ToolTipName = "跟普通DV一样使色度加倍";
-                    }
-                    if(ToolTipName=="Process the output with a DVD authoring tool such as dvdauthor.")
-                    {
-                        ToolTipName = "借助DVD授权工具处理输出，例如DVDAuthor.";
-                    }
-                    if(ToolTipName=="This is the old Sorenson H.263-based codec. Most people use H.264 with Flash now.")
-                    {
-                        ToolTipName = "这是旧的Sorenson H.263编码器，如今基本上使用H.264";
-                    }
-                    if(ToolTipName=="HD MPEG-2 camcorder format")
-                    {
-                        ToolTipName = "HD MPEG-2摄像录像机格式";
-                    }
-                    if(ToolTipName=="not lossless, but still high quality")
-                    {
-                        ToolTipName = "有损，但仍保证了高质量";
-                    }
-                    if(ToolTipName=="a little lossy, but intra-frame only with AC-3 audio")
-                    {
-                        ToolTipName = "有损，仅帧内，音频格式为AC-3";
-                    }
-                    if(ToolTipName=="somewhat lossy, intra-frame only MPEG-4, with uncompressed audio")
-                    {
-                        ToolTipName = "有损，仅帧内，音频无压缩";
-                    }
-                    if(ToolTipName=="Designed by Apple in California. Set vprofile=1 for LT or =3 for HQ.")
-                    {
-                        ToolTipName = "由加利福尼亚的苹果公司设计。若是LT，设置成vprofile=1；若是HQ，则设置为3。";
-                    }
-                    if(ToolTipName=="Use this one for interlaced output. Set vprofile=1 for LT or =3 for HQ.")
-                    {
-                        ToolTipName = "用于隔行输出。若是LT，设置成vprofile=1；若是HQ，则设置为3";
-                    }
-                    if(ToolTipName=="FFmpeg video codec 1 with FLAC audio in Matroska container")
-                    {
-                        ToolTipName = "FFmpeg视频编码1， 音频为FLAC，封装在Matroska容器中";
-                    }
-                    if(ToolTipName=="Intra-frame only, lossless compressed MPEG-4 AVC with AAC audio")
-                    {
-                        ToolTipName = "仅帧内，无损压缩MPEG-4 AVC， 音频为AAC";
-                    }
-                    if(ToolTipName=="with FLAC audio in Matroska container")
-                    {
-                        ToolTipName = "音频格式为FLAC，封装在Matroska容器中";
-                    }
-                    if(ToolTipName=="a general purpose MPEG-2 preset")
-                    {
-                        ToolTipName = "MPEG-2预设";
-                    }
-                    if(ToolTipName=="Part 2 Simple Profile")
-                    {
-                        ToolTipName = "第2部分简单概要";
-                    }
-                    if(ToolTipName=="Part 2 Advanced Simple Profile")
-                    {
-                        ToolTipName = "第2部分高级简单概要";
-                    }
-                    if(ToolTipName=="for Sony PlayStation Portable")
-                    {
-                        ToolTipName = "适用于Sony PlayStation Portable";
-                    }
-                    if(ToolTipName=="VP9 video with Opus audio in Matroska container: \"Don't be evil\"")
-                    {
-                        ToolTipName = "视频格式为VP9，音频格式为Opus，封装在Matroska容器中";
-                    }
-                    if(ToolTipName=="VP8 video with Ogg Vorbis audio in Matroska container: \"Don't be evil\"")
-                    {
-                        ToolTipName = "视频格式为VP8，音频格式为Ogg Vorbis，封装在Matroska容器中";
-                    }
-                    if(ToolTipName=="Windows Media Audio")
-                    {
-                        ToolTipName = "Windows Media Audio";
-                    }
-                    if(ToolTipName=="Windows Media Video (Windows Media Player 8 and up)")
-                    {
-                        ToolTipName = "Windows Media Video（Windows Media Player 8及以上版本）";
-                    }
-                    if(ToolTipName=="Sony \"workflow innovation\"")
-                    {
-                        ToolTipName = "索尼（“工作量创新”）";
-                    }
-                    if(ToolTipName=="H.264/AAC MP4 for YouTube")
-                    {
-                        ToolTipName = "适用于YouTube的H.264/AAC MP4 ";
-                    }
-
                     QString info = QString("<p>%1</p>").arg(ToolTipName);
                     qDebug()<<"setToolTip"<<info;
                     item->setToolTip(info);
@@ -541,6 +438,46 @@ void EncodeDock::loadPresets()
             }
         }
     }
+    //我创建的格式
+    parentItem = new QStandardItem(tr("常用格式"));
+    sourceModel->invisibleRootItem()->appendRow(parentItem);
+    QString strprefix("common/avformat/");
+    if (m_presets && m_presets->is_valid()) {
+        for (int j = 0; j < m_presets->count(); j++) {
+            QString name(m_presets->get_name(j));
+            if (name.startsWith(strprefix)) {
+                Mlt::Properties preset((mlt_properties) m_presets->get_data(name.toLatin1().constData()));
+                if (preset.get_int("meta.preset.hidden"))
+                    continue;
+                if (preset.get("meta.preset.name"))
+                    name = QString::fromUtf8(preset.get("meta.preset.name"));
+                else {
+                    // use relative path and filename 使用相对路径和文件名
+                    name.remove(0, strprefix.length());
+                    QStringList textParts = name.split('/');
+                    if (textParts.count() > 1) {
+                        // if the path is a profile name, then change it to "preset (profile)"
+                        //如果路径是一个概要文件名，那么将它改为“预置(概要文件”)
+                        QString profile = textParts.at(0);
+                        textParts.removeFirst();
+                        if (m_profiles->get_data(profile.toLatin1().constData()))
+                            name = QString("%1 (%2)").arg(textParts.join("/")).arg(profile);
+                    }
+                }
+                QStandardItem* item = new QStandardItem(name);
+                item->setData(QString(m_presets->get_name(j)));
+                if (preset.get("meta.preset.note"))
+                {
+                    QString ToolTipName = QString::fromUtf8(preset.get("meta.preset.note"));
+                    QString info = QString("<p>%1</p>").arg(ToolTipName);
+                    qDebug()<<"setToolTip"<<info;
+                    item->setToolTip(info);
+                }
+                parentItem->appendRow(item);
+            }
+        }
+    }
+
     m_presetsModel.sort(0);
     ui->presetsTree->expandAll();
 }
@@ -1135,7 +1072,6 @@ void EncodeDock::on_encodeButton_clicked()
     ui->lineEdit->setText("");
     if(fileName == "")
     {
-     //   QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("输出文件名为空！"));
         QMessageBox dialog(QMessageBox::Warning,
                                      "警告",
                                      tr("输出文件名为空！"),
@@ -1148,7 +1084,6 @@ void EncodeDock::on_encodeButton_clicked()
     int pos = fileName.indexOf(QRegExp("[\*\?\\\|\/\>\<\"\:]"));
     if(pos != -1)
     {
-      //  QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("文件名不允许出现特殊字符\(\* \& \? \\ \| \/ \> \< \" \:\)！"));
         QMessageBox dialog(QMessageBox::Warning,
                                      "警告",
                                      tr("文件名不允许出现特殊字符\(\* \? \\ \| \/ \> \< \" \:\)！"),
@@ -1255,7 +1190,6 @@ void EncodeDock::on_encodeButton_clicked()
             if (m_extension.isEmpty()) {
                 if (fi.suffix().isEmpty())
                 {
-              //     QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("     无法确定输出格式！      "));
                     QMessageBox dialog(QMessageBox::Warning,
                                                  "警告",
                                                  tr("无法确定输出格式！"),
@@ -1328,6 +1262,63 @@ void EncodeDock::encodeVideo()
 bool EncodeDock::IsWorking()
 {
     return m_bIsWorking;
+}
+
+void EncodeDock::populateCombos()
+{
+    //todo
+    Mlt::Consumer c(MLT.profile(), "avformat");
+    c.set("f", "list");
+    c.set("acodec", "list");
+    c.set("vcodec", "list");
+    c.start();
+    c.stop();
+
+    if(ui->formatCombo->count()<=0)
+    {
+        Mlt::Properties* p = new Mlt::Properties(c.get_data("f"));
+        ui->formatCombo->blockSignals(true);
+        qDebug()<<"avformat";
+        for (int i = 0; i < p->count(); i++)
+        {
+            if (ui->formatCombo->findText(p->get(i)) == -1)
+            {
+                ui->formatCombo->addItem(p->get(i));
+                qDebug()<<p->get(i);
+            }
+        }
+        delete p;
+    }
+    if(m_extension == "mp4")
+    {
+        ui->audioCodecCombo->clear();
+        Mlt::Properties* p = new Mlt::Properties(c.get_data("acodec"));
+        for (int i = 0; i < p->count(); i++)
+        {
+            if(0 == qstrcmp("aac", p->get(i))||0 == qstrcmp("mp2", p->get(i)) ||0 == qstrncmp( p->get(i),"pcm",3))
+            {
+                ui->audioCodecCombo->addItem(p->get(i));
+            }
+        }
+        delete p;
+        ui->audioCodecCombo->model()->sort(0);
+        ui->audioCodecCombo->insertItem(0, tr("Default for format"));
+
+        ui->videoCodecCombo->clear();
+        p = new Mlt::Properties(c.get_data("vcodec"));
+        for (int i = 0; i < p->count(); i++) {
+            if (qstrcmp("nvenc", p->get(i)))
+            {
+                if(0 == qstrcmp("libx264", p->get(i))||0 == qstrcmp("libx265", p->get(i))||0 ==  qstrcmp("mpeg4", p->get(i)))
+                {
+                    ui->videoCodecCombo->addItem(p->get(i));
+                }
+            }
+        }
+        delete p;
+        ui->videoCodecCombo->model()->sort(0);
+        ui->videoCodecCombo->insertItem(0, tr("Default for format"));
+    }
 }
 
 void EncodeDock::closeEvent(QCloseEvent *event)
@@ -1658,6 +1649,7 @@ void EncodeDock::on_resetButton_clicked()
     m_isDefaultSettings = true;
     resetOptions();
     onProfileChanged();
+    populateCombos();
 }
 
 void EncodeDock::openCaptureFile()
@@ -1671,12 +1663,7 @@ void EncodeDock::on_formatCombo_currentIndexChanged(int index)
     m_extension.clear();
     m_extension = ui->formatCombo->itemText(index);
     //限定视频输编码格式与音频编码格式
-    //todo
-    if(m_extension == "mp4")
-    {
-//        ui->videoCodecCombo->clear();
-//        ui->videoCodecCombo->addItem();
-    }
+    populateCombos();
 }
 
 void EncodeDock::on_videoBufferDurationChanged()

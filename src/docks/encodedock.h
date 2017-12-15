@@ -57,6 +57,7 @@ public:
     void SetSaveType(int nType);
     void encodeVideo();
     bool IsWorking();
+    void populateCombos();
 
 signals:
     void captureStateChanged(bool);

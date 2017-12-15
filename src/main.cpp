@@ -250,7 +250,6 @@ int main(int argc, char **argv)
     if (a.isRunning())
     {
         a.sendMessage("message from other instance.");
-       // QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("\r\n VideoStudio已经在运行了！\r\n"));
         QMessageBox dialog(QMessageBox::Warning,
                                      "提示",
                                      QStringLiteral("\r\n VideoStudio已经在运行了！\r\n"),
