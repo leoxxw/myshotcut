@@ -510,6 +510,7 @@ MainWindow::MainWindow()
     connect(this,&MainWindow::Signal_raiseLoginwidget,m_loginwidget,&LoginWidget::slot_raise);
     connect(this, SIGNAL(openFailed(QString)), m_loginwidget, SLOT(slot_openFailed(QString)));
     connect(m_loginwidget,&LoginWidget::Signal_GetProjectName,this,&MainWindow::slot_GetProjectName);
+    connect(m_loginwidget,&LoginWidget::Signal_CloseWidget,this,&MainWindow::close);
 
     LOG_DEBUG() << "end";
 }
@@ -1210,7 +1211,6 @@ void MainWindow::openVideo()
     path.append("/*");
 #endif
     QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path,"所有文件(*.*);;工程(*.mlt);;音频(*.cd *.ogg *.mp3 *.asf *.wma *.wav *.rm *.real *.ape *.module *.midi *.vqf);;图片(*.bmp *.pcx *.png *.jpeg *.gif *.tiff *.dxf *.cgm *.cdr *.wmf *.eps *.emf *.pict);;视频(*.avi *.wmv *.mpeg *.mp4 *.mov *.mkv *.flv *.m4v *.rmvb *.rm *.3gp *.dat *.ts *.mts *.vob)");
-   // QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path);
 
     LOG_DEBUG()<<filenames;
     //本地打开工程文件则将工程类型设置为EV_ShotCut
@@ -2315,8 +2315,8 @@ void MainWindow::slot_SysName(QString strName)
 {
     QString info = "打开" + strName;
     ui->actionFullscreen->setText(strName);
-     ui->actionFullscreen->setIconText(strName);
-     ui->actionFullscreen->setToolTip(info);
+    ui->actionFullscreen->setIconText(strName);
+    ui->actionFullscreen->setToolTip(info);
 }
 
 void MainWindow::slot_JboRaise()
@@ -2601,8 +2601,16 @@ bool MainWindow::continueModified()
         if (r == QMessageBox::Yes || r == QMessageBox::No) {
             QMutexLocker locker(&m_autosaveMutex);
             m_autosaveFile.reset();
-            if (r == QMessageBox::Yes){
-                return on_actionSave_triggered();
+            if (r == QMessageBox::Yes)
+            {
+                if(m_loginwidget && m_loginwidget->GetProjectType() == EV_YUNLI)
+                {
+                    m_loginwidget->on_pushButton_SaveProject();
+                    return false;
+                }
+                else{
+                    return on_actionSave_triggered();
+                }
             }
         } else if (r == QMessageBox::Cancel) {
             return false;

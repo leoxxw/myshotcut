@@ -17,7 +17,8 @@ LoginWidget::LoginWidget(QWidget *parent) :
     m_nSearch(0),
     m_ProjectType(EV_ShotCut),
     m_bOpenProject(false),
-    m_loginType(ERT_FALSE)
+    m_loginType(ERT_FALSE),
+    m_bCloseProject(false)
 {
     ui->setupUi(this);
     // this->setWindowFlags(Qt::FramelessWindowHint);//去掉标题栏
@@ -308,6 +309,11 @@ bool LoginWidget::SaveProject(QString strFilePath,int ntype)
             open_clicked();
             m_bOpenProject = false;
         }
+        if(m_bCloseProject)
+        {
+            emit Signal_CloseWidget();
+            m_bCloseProject = false;
+        }
         return true;
     }else{
         qDebug() <<"save failed";
@@ -492,8 +498,8 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
             LOG("发送工程 打开选择窗口成功","INFO");
             //获取资源选中窗口的信息
             CloudDiskInterface::instance()->GetResourceList(pBuff, 1024);
-            QString buffInfo = QString::fromWCharArray(pBuff);
-            GetListInfo(buffInfo,m_ProResourceInfo);
+            m_strBuffInfo = QString::fromWCharArray(pBuff);
+            GetListInfo(m_strBuffInfo,m_ProResourceInfo);
             //预保存资源到云盘
             int nJobID = CloudDiskInterface::instance()->PreUploadResource(m_ProResourceInfo.m_strResourceName,
                                                                            m_ProResourceInfo.m_strResourceID,
@@ -510,7 +516,7 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
                 return;
             }
             AddFile(strFilePath,nJobID,"",1);
-            int ret = CloudDiskInterface::instance()->UploadResource(nJobID,buffInfo,0);
+            int ret = CloudDiskInterface::instance()->UploadResource(nJobID,m_strBuffInfo,0);
             if(ret == ERT_TRUE)
             {
                 m_ProjectType = EV_YUNLI;
@@ -522,7 +528,6 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
                 {
                     qDebug()<<"LocalSend successful";
                     LOG("发送工程 发送成功","INFO");
-                 //   QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程发送成功      "));
                     QMessageBox dialog(QMessageBox::NoIcon,
                                                  "成功",
                                                  tr("     工程发送成功      "),
@@ -534,7 +539,6 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
                 else if(t < ERT_TRUE)
                 {
                     LOG("发送工程 发送失败","INFO");
-                 //   QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      工程发送失败      "));
                     QMessageBox dialog(QMessageBox::Critical,
                                                  "失败",
                                                  tr("     工程发送失败      "),
@@ -574,7 +578,6 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
             {
                 qDebug()<<"LocalSend successful";
                 LOG("发送工程 发送成功","INFO");
-            //    QMessageBox::about(NULL, QStringLiteral("成功"), QStringLiteral("     工程发送成功      "));
                 QMessageBox dialog(QMessageBox::NoIcon,
                                              "成功",
                                              tr("     工程发送成功      "),
@@ -586,7 +589,6 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
             else if(t < ERT_TRUE)
             {
                 LOG("发送工程 发送失败","ERROR");
-             //   QMessageBox::critical(NULL, QStringLiteral("失败"), QStringLiteral("      工程发送失败      "));
                 QMessageBox dialog(QMessageBox::Critical,
                                              "失败",
                                              tr("     工程发送失败      "),
@@ -895,6 +897,11 @@ void LoginWidget::SetProjrctType(int nType)
     m_ProjectType = nType;
 }
 
+int LoginWidget::GetProjectType()
+{
+    return m_ProjectType;
+}
+
 void LoginWidget::on_pushButton_login_clicked()
 {
      LOG("点击登录按钮","CLICK");
@@ -1167,6 +1174,13 @@ void LoginWidget::getProjectName(QString ProjectName)
         GetListInfo(buffInfo,m_ProResourceInfo);
         emit signal_SaveProject(SF_SaveOther,m_ProResourceInfo.m_strResourceName);//代表另存为
     }
+}
+
+void LoginWidget::on_pushButton_SaveProject()
+{
+    m_bCloseProject = true;
+    on_pushButton_save_clicked();
+
 }
 
 void LoginWidget::slot_raise()
@@ -1591,6 +1605,39 @@ void LoginWidget::on_pushButton_send_clicked()
         dialog.setButtonText (QMessageBox::Ok,QString("确定"));
         dialog.exec();
         return ;
+    }
+    //获取资源选中窗口的信息
+    int ret = CloudDiskInterface::instance()->GetTrialState(m_ProResourceInfo.m_strResourceID);
+    if(ret == 1 || ret == 2)
+    {
+        //打开选择窗口
+        int nsize = CloudDiskInterface::instance()->ResourceNoDialog("VideoStudio",
+                                                                     "视频编辑站临时目录",
+                                                                     m_ProResourceInfo.m_strResourceName,
+                                                                     "mlt");
+        if(nsize < ERT_TRUE)
+        {
+            qDebug() <<QStringLiteral("CloudDiskInterface failed");
+            LOG("发送工程 打开选择窗口失败","ERROR");
+            return;
+        }
+        if(nsize == ERT_CANCEL)
+        {
+            qDebug() <<QStringLiteral("cancle");
+            LOG("发送工程 打开选择窗口取消了操作","INFO");
+            return;
+        }
+        if(nsize > ERT_CANCEL)
+        {
+            LOG("发送工程 打开选择窗口成功","INFO");
+            //获取资源选中窗口的信息
+            wchar_t pBuff[1024];
+            memset(pBuff,0,1024 * sizeof(wchar_t));
+            CloudDiskInterface::instance()->GetResourceList(pBuff, 1024);
+            m_strBuffInfo = QString::fromWCharArray(pBuff);
+            GetListInfo(m_strBuffInfo,m_ProResourceInfo);
+            qDebug()<<"1025845781"<<m_ProResourceInfo.m_strResourceName;
+        }
     }
     emit signal_SaveProject(SF_SaveSend,m_ProResourceInfo.m_strResourceName);
 }

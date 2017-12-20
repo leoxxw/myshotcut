@@ -50,14 +50,18 @@ public:
     bool IsWoking();
     //这种工程的类型（本地的还是云里的）
     void SetProjrctType(int nType);
+    int GetProjectType();
     //打开工程
     void open_clicked();
     //打开工程
     void open_clicked_t();
     void getProjectName(QString ProjectName);
+
+    void on_pushButton_SaveProject();
 public slots:
     //置顶窗口
     void slot_raise();
+    //打开工程失败
     void slot_openFailed(QString);
 protected:
     // Event handlers
@@ -99,6 +103,7 @@ signals:
     void Signal_CloseProject(int ntype);
     void Signal_SysName(QString strName);
     void Signal_GetProjectName();
+    void Signal_CloseWidget();
 
 private:
     Ui::LoginWidget *ui;
@@ -116,6 +121,7 @@ private:
     int             m_ProjectType;//工程类型
     QString         m_sysName;//系统名称
     bool            m_bOpenProject;//保存工程后打开云里工程
+    bool            m_bCloseProject;//保存工程后关闭程序
 };
 
 #endif // LOGINWIDGET_H
