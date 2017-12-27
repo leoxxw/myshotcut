@@ -2222,6 +2222,10 @@ void MainWindow::slot_GetVideoPath(QString VideoPath)
     {
         m_loginwidget->SendVideoNoDlg(VideoPath);
     }
+    if(m_nType == SF_SaveAudit)
+    {
+        m_loginwidget->SendVideoNoDlg(VideoPath);
+    }
     if(m_nType == SF_SaveOther)
     {
         m_loginwidget->SaveVideo(VideoPath);
@@ -2250,6 +2254,11 @@ void MainWindow::slot_FinisheUploadVideo(QString VideoPath,bool bFinished)
     {
         m_loginwidget->UploadSendVideo(VideoPath);
         qDebug()<<"SF_SaveSend";
+    }
+    if(m_nType == SF_SaveAudit)
+    {
+        m_loginwidget->UploadSendAudit(VideoPath);
+        qDebug()<<"SF_SaveAudit";
     }
 }
 

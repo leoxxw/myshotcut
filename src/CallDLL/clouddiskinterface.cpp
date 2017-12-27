@@ -255,6 +255,15 @@ int CloudDiskInterface::GetSysShortName(wchar_t *szBuffer, int nSize)
     int ret = fpInit(szBuffer,nSize);
     return ret;
 }
+
+int CloudDiskInterface::SendTrial(QString lpResourceID, QString lpResourceName, QString lpResourceExt, const int nResourceType)
+{
+    typedef int (*Function)(const ushort* ,const ushort*,const ushort*,const int);
+    Function fpInit = (Function)m_lib->resolve("DoSendTrial");
+
+    int ret = fpInit(lpResourceID.utf16(),lpResourceName.utf16(),lpResourceExt.utf16(),nResourceType);
+    return ret;
+}
 //单利对象
 CloudDiskInterface* CloudDiskInterface::instance()
 {

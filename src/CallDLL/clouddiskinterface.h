@@ -73,6 +73,11 @@ public:
 
     int GetSysShortName(wchar_t* szBuffer, int nSize);
 
+    int SendTrial(QString lpResourceID,
+                  QString lpResourceName,
+                  QString lpResourceExt,
+                  const int nResourceType);
+
     static CloudDiskInterface* instance();
 private:
     CloudDiskInterface();

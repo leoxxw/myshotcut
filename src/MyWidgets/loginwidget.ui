@@ -872,7 +872,7 @@ QPushButton#pushButton_sendOthvideo:disabled{border-image: url(:/Resource/PNG/se
             </property>
             <property name="geometry">
              <rect>
-              <x>10</x>
+              <x>58</x>
               <y>4</y>
               <width>32</width>
               <height>32</height>
@@ -892,6 +892,44 @@ QPushButton#pushButton_sendOthvideo:disabled{border-image: url(:/Resource/PNG/se
             </property>
             <property name="toolTip">
              <string>搜索资源</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton#pushButton_search{border-image: url(:/Resource/PNG/icon_search01.png);}
+QPushButton#pushButton_search:hover{border-image: url(:/Resource/PNG/icon_search02.png);}
+QPushButton#pushButton_search:pressed{border-image: url(:/Resource/PNG/icon_search02.png);}
+QPushButton#pushButton_search:disabled{border-image: url(:/Resource/PNG/icon_search04.png);}
+</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButton_audit">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>4</y>
+              <width>32</width>
+              <height>32</height>
+             </rect>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>发审资源</string>
             </property>
             <property name="styleSheet">
              <string notr="true">QPushButton#pushButton_search{border-image: url(:/Resource/PNG/icon_search01.png);}

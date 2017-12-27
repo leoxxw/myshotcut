@@ -127,6 +127,7 @@ enum SaveFileType
     SF_Save         = 2,//资源管理系统系统默认保存
     SF_SaveOther    = 3,//资源管理系统系统另存为
     SF_SaveSend     = 4,//资源管理系统系统默认保存并发送
+    SF_SaveAudit    = 5,//资源管理系统系统默认保存并发审
 };
 enum EncodeVideoType
 {

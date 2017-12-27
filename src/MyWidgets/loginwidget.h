@@ -42,6 +42,8 @@ public:
     void UploadVideo(QString strFilePath);
     //上传发送的视频资源
     void UploadSendVideo(QString strFilePath);
+    //发审资源
+    void UploadSendAudit(QString strFilePath);
     //获取配置文件信息
     void GetInitFileInfo();
     //设置任务进行状态
@@ -91,6 +93,7 @@ private slots:
 
     void on_pushButton_search_clicked();
 
+    void on_pushButton_audit_clicked();
 
 signals:
     void signal_SaveProject(int ntype,QString ProjectName);
