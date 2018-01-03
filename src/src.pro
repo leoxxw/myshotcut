@@ -121,7 +121,7 @@ SOURCES += main.cpp\
     MyWidgets/aboutwidget.cpp \
     videostudiolog.cpp \
     objectthread.cpp \
-    singleapplication.cpp
+    singleapplication.cpp \
 
 
 HEADERS  += mainwindow.h \
@@ -240,7 +240,7 @@ HEADERS  += mainwindow.h \
     version.h \
     videostudiolog.h \
     objectthread.h \
-    singleapplication.h
+    singleapplication.h \
 
 FORMS    += mainwindow.ui \
     openotherdialog.ui \
@@ -284,7 +284,7 @@ FORMS    += mainwindow.ui \
     widgets/timelinepropertieswidget.ui \
     dialogs/unlinkedfilesdialog.ui \
     MyWidgets/loginwidget.ui \
-    MyWidgets/aboutwidget.ui
+    MyWidgets/aboutwidget.ui \
 
 RESOURCES += \
     ../icons/resources.qrc \

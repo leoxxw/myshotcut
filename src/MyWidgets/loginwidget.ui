@@ -602,6 +602,12 @@ QPushButton#pushButton_saveoth:disabled{border-image: url(:/Resource/PNG/icon_sa
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>32</width>
+                   <height>32</height>
+                  </size>
+                 </property>
                  <property name="maximumSize">
                   <size>
                    <width>32</width>
@@ -612,11 +618,10 @@ QPushButton#pushButton_saveoth:disabled{border-image: url(:/Resource/PNG/icon_sa
                   <string>发审工程</string>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">QPushButton#pushButton_save{border-image: url(:/Resource/PNG/icon_save01.png);}
-QPushButton#pushButton_save:hover{border-image: url(:/Resource/PNG/icon_save02.png);}
-QPushButton#pushButton_save:pressed{border-image: url(:/Resource/PNG/icon_save02.png);}
-QPushButton#pushButton_save:disabled{border-image: url(:/Resource/PNG/icon_save04.png);}
-</string>
+                  <string notr="true">QPushButton#pushButton_audit{border-image: url(:/Resource/PNG/icon_fashen01.png);}
+QPushButton#pushButton_audit:hover{border-image: url(:/Resource/PNG/icon_fashen02.png);}
+QPushButton#pushButton_audit:pressed{border-image: url(:/Resource/PNG/icon_fashen02.png);}
+QPushButton#pushButton_audit:disabled{border-image: url(:/Resource/PNG/icon_fashen03.png);}</string>
                  </property>
                  <property name="text">
                   <string/>
@@ -1001,10 +1006,10 @@ QPushButton#pushButton_search:disabled{border-image: url(:/Resource/PNG/icon_sea
              <string>发审资源</string>
             </property>
             <property name="styleSheet">
-             <string notr="true">QPushButton#pushButton_search{border-image: url(:/Resource/PNG/icon_search01.png);}
-QPushButton#pushButton_search:hover{border-image: url(:/Resource/PNG/icon_search02.png);}
-QPushButton#pushButton_search:pressed{border-image: url(:/Resource/PNG/icon_search02.png);}
-QPushButton#pushButton_search:disabled{border-image: url(:/Resource/PNG/icon_search04.png);}
+             <string notr="true">QPushButton#pushButton_videoaudit{border-image: url(:/Resource/PNG/icon_fashen01.png);}
+QPushButton#pushButton_videoaudit:hover{border-image: url(:/Resource/PNG/icon_fashen02.png);}
+QPushButton#pushButton_videoaudit:pressed{border-image: url(:/Resource/PNG/icon_fashen02.png);}
+QPushButton#pushButton_videoaudit:disabled{border-image: url(:/Resource/PNG/icon_fashen03.png);}
 </string>
             </property>
             <property name="text">
