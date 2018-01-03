@@ -2091,6 +2091,10 @@ void MainWindow::slot_WorkFinished(bool flag)
             {
                 m_loginwidget->SendProjectNoDlg(m_currentFile);
             }
+            if(m_nType == SF_SaveAudit)
+            {
+                m_loginwidget->AuditProjectNoDlg(m_currentFile);
+            }
         }
     }else{
         LOG("保存工程失败","ERROR");
