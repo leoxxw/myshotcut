@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>100</width>
-    <height>340</height>
+    <height>380</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -305,7 +305,7 @@ QPushButton#pushButton_exit:disabled{border-image: url(:/Resource/PNG/icon_exit0
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>130</height>
+          <height>145</height>
          </size>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -566,6 +566,75 @@ QPushButton#pushButton_saveoth:disabled{border-image: url(:/Resource/PNG/icon_sa
                   <string/>
                  </property>
                 </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget_16" native="true">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>40</height>
+               </size>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_10">
+               <property name="leftMargin">
+                <number>10</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QPushButton" name="pushButton_audit">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>32</width>
+                   <height>32</height>
+                  </size>
+                 </property>
+                 <property name="toolTip">
+                  <string>发审工程</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton#pushButton_save{border-image: url(:/Resource/PNG/icon_save01.png);}
+QPushButton#pushButton_save:hover{border-image: url(:/Resource/PNG/icon_save02.png);}
+QPushButton#pushButton_save:pressed{border-image: url(:/Resource/PNG/icon_save02.png);}
+QPushButton#pushButton_save:disabled{border-image: url(:/Resource/PNG/icon_save04.png);}
+</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_4">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>49</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </widget>
@@ -904,7 +973,7 @@ QPushButton#pushButton_search:disabled{border-image: url(:/Resource/PNG/icon_sea
              <string/>
             </property>
            </widget>
-           <widget class="QPushButton" name="pushButton_audit">
+           <widget class="QPushButton" name="pushButton_videoaudit">
             <property name="enabled">
              <bool>false</bool>
             </property>

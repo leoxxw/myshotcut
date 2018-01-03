@@ -52,7 +52,11 @@ void LoginWidget::Init()
     if(m_nSearch == 0)
     {
         ui->pushButton_search->hide();
-        //this->resize(100,300);
+    }
+    if(m_nProjectAudit == 0)
+    {
+        ui->widget_16->hide();
+        this->resize(100,340);
     }
     //删除临时文件
     QString strLoadPath = QCoreApplication::applicationDirPath()+"/Temp";
@@ -129,6 +133,7 @@ void LoginWidget::SetLoginSucceed(wchar_t *pUserID, wchar_t *pszUserToken)
     ui->pushButton_sendOthvideo->setEnabled(true);
     ui->pushButton_search->setEnabled(true);
     ui->pushButton_audit->setEnabled(true);
+    ui->pushButton_videoaudit->setEnabled(true);
     //获取新的地址
     wchar_t pUrl[256];
     memset(pUrl,0,256 * sizeof(wchar_t));
@@ -605,6 +610,151 @@ void LoginWidget::SendProjectNoDlg(QString strFilePath)
     }
 }
 
+void LoginWidget::AuditProjectNoDlg(QString strFilePath)
+{
+    QString info;
+    info.append(QString("发审工程%1").arg(strFilePath));
+    LOG(info,"INFO");
+    wchar_t pBuff[1024];
+    memset(pBuff,0,1024 * sizeof(wchar_t));
+    int npoint= strFilePath.lastIndexOf(QRegExp("/"));
+    int n= strFilePath.lastIndexOf('.');
+    QString filePath = strFilePath.mid(npoint+1,strFilePath.length()-npoint);
+    QString fileType =strFilePath.mid(n+1,strFilePath.length()-n);
+    QString fileName = strFilePath.mid(npoint+1,n-npoint-1);
+    qDebug() <<" filename =" << fileName;
+    qDebug() <<"fileType ="<<fileType;
+    //获取资源选中窗口的信息
+    int ret = CloudDiskInterface::instance()->GetTrialState(m_ProResourceInfo.m_strResourceID);
+    if(m_ProResourceInfo.m_strResourceID == "" || m_ProjectType ==EV_ShotCut || ret == 1 || ret == 2)
+    {
+        //打开选择窗口
+        int nsize = CloudDiskInterface::instance()->ResourceNoDialog("VideoStudio",
+                                                                     "视频编辑站临时目录",
+                                                                     fileName,
+                                                                     fileType);
+        if(nsize < ERT_TRUE)
+        {
+            qDebug() <<QStringLiteral("CloudDiskInterface failed");
+            LOG("发审工程 打开选择窗口失败","ERROR");
+            return;
+        }
+        if(nsize == ERT_CANCEL)
+        {
+            qDebug() <<QStringLiteral("cancle");
+            LOG("发审工程 打开选择窗口取消了操作","INFO");
+            return;
+        }
+        if(nsize > ERT_CANCEL)
+        {
+            LOG("发审工程 打开选择窗口成功","INFO");
+            //获取资源选中窗口的信息
+            CloudDiskInterface::instance()->GetResourceList(pBuff, 1024);
+            m_strBuffInfo = QString::fromWCharArray(pBuff);
+            GetListInfo(m_strBuffInfo,m_ProResourceInfo);
+            //预保存资源到云盘
+            int nJobID = CloudDiskInterface::instance()->PreUploadResource(m_ProResourceInfo.m_strResourceName,
+                                                                           m_ProResourceInfo.m_strResourceID,
+                                                                           strFilePath,
+                                                                           filePath,
+                                                                           EREST_Other,
+                                                                           "mlt",
+                                                                           NULL,
+                                                                           EWF_WEB_SAVE_COVER_PROMPT);
+            if(nJobID <= 0)
+            {
+                qDebug() <<"save failed";
+                LOG("发审工程 预保存工程失败","ERROR");
+                return;
+            }
+            AddFile(strFilePath,nJobID,"",1);
+            int ret = CloudDiskInterface::instance()->UploadResource(nJobID,m_strBuffInfo,0);
+            if(ret == ERT_TRUE)
+            {
+                m_ProjectType = EV_YUNLI;
+                qDebug() <<"save succeed";
+                LOG("发审工程 保存工程成功","INFO");
+                //云盘内资源发送
+                int t = CloudDiskInterface::instance()->SendTrial(m_ProResourceInfo.m_strResourceID,m_ProResourceInfo.m_strResourceName,fileType,EREST_Other);
+                if(t == ERT_TRUE)
+                {
+                    qDebug()<<"LocalSend successful";
+                    LOG("发审工程 发审成功","INFO");
+                    QMessageBox dialog(QMessageBox::NoIcon,
+                                                 "成功",
+                                                 tr("     工程发审成功      "),
+                                                 QMessageBox::Ok,
+                                                 this);
+                    dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+                    dialog.exec();
+                }
+                else if(t < ERT_TRUE)
+                {
+                    LOG("发审工程 发审失败","INFO");
+                    QMessageBox dialog(QMessageBox::Critical,
+                                                 "失败",
+                                                 tr("     工程发审失败      "),
+                                                 QMessageBox::Ok,
+                                                 this);
+                    dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+                    dialog.exec();
+                }
+            }
+        }
+    }else{
+        //预保存资源到云盘
+        int nJobID = CloudDiskInterface::instance()->PreUploadResource(m_ProResourceInfo.m_strResourceName,
+                                                                       m_ProResourceInfo.m_strResourceID,
+                                                                       strFilePath,
+                                                                       filePath,
+                                                                       EREST_Other,
+                                                                       "mlt",
+                                                                       NULL,
+                                                                       EWF_WEB_SAVE_COVER_PROMPT);
+        if(nJobID <= 0)
+        {
+            qDebug() <<"save failed";
+            LOG("发送工程 预保存工程失败","ERROR");
+            return;
+        }
+        AddFile(strFilePath,nJobID,"",1);
+        int ret = CloudDiskInterface::instance()->UploadResource(nJobID,m_strBuffInfo,0);
+        if(ret == ERT_TRUE)
+        {
+            m_ProjectType = EV_YUNLI;
+            qDebug() <<"save succeed";
+            LOG("发送工程 保存工程成功","INFO");
+            //云盘内资源发送
+            int t = CloudDiskInterface::instance()->SendTrial(m_ProResourceInfo.m_strResourceID,m_ProResourceInfo.m_strResourceName,fileType,EREST_Other);
+            if(t == ERT_TRUE)
+            {
+                qDebug()<<"LocalSend successful";
+                LOG("发审工程 发审成功","INFO");
+                QMessageBox dialog(QMessageBox::NoIcon,
+                                             "成功",
+                                             tr("     工审发送成功      "),
+                                             QMessageBox::Ok,
+                                             this);
+                dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+                dialog.exec();
+            }
+            else if(t < ERT_TRUE)
+            {
+                LOG("发审工程 发审失败","ERROR");
+                QMessageBox dialog(QMessageBox::Critical,
+                                             "失败",
+                                             tr("     工程发审失败      "),
+                                             QMessageBox::Ok,
+                                             this);
+                dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+                dialog.exec();
+            }
+        }
+    }
+    ui->pushButton_save->setEnabled(false);
+
+}
+
 bool LoginWidget::DelDir(const QString &path)
 {
     if (path.isEmpty()){
@@ -877,7 +1027,7 @@ void LoginWidget::UploadSendAudit(QString strFilePath)
         qDebug() <<"save succeed";
         LOG("发审资源 保存成功","INFO");
         //云盘内资源发审
-        int t = CloudDiskInterface::instance()->SendTrial(infoList.m_strResourceID,infoList.m_strResourceName,fileType,EREST_Video);
+        int t = CloudDiskInterface::instance()->SendTrial(infoList.m_strResourceID,infoList.m_strResourceName,fileType,nType);
         if(t == ERT_TRUE)
         {
             LOG("发审资源 发送成功","INFO");
@@ -919,6 +1069,7 @@ void LoginWidget::GetInitFileInfo()
         return ;
     }
     m_nSearch = configIniRead->value("/SETTING/search").toInt();
+    m_nProjectAudit = configIniRead->value("/SETTING/ProjectAudit").toInt();
     m_strSysID =  configIniRead->value("/SETTING/sysID").toString();//系统ID
     m_strJoincode =  configIniRead->value("/SETTING/joinCode").toString();//验证码
     m_strUrl =  configIniRead->value("/SETTING/url").toString();//配置中心地址
@@ -1061,6 +1212,7 @@ void LoginWidget::on_pushButton_exit_clicked()
     ui->pushButton_sendOthvideo->setEnabled(false);
     ui->pushButton_search->setEnabled(false);
     ui->pushButton_audit->setEnabled(false);
+    ui->pushButton_videoaudit->setEnabled(false);
     m_userID = "";
     m_UserToken = "";
     m_Ticket = "";
@@ -1637,7 +1789,6 @@ void LoginWidget::on_pushButton_send_clicked()
     }
     if(m_bIsworking)
     {
-    //    QMessageBox::warning(NULL, QStringLiteral("提示"), QStringLiteral("有任务正在进行请等待..."));
         QMessageBox dialog(QMessageBox::Warning,
                                      "提示",
                                      tr("有任务正在进行请等待..."),
@@ -1649,7 +1800,6 @@ void LoginWidget::on_pushButton_send_clicked()
     }
     if (!MLT.producer())
     {
-    //    QMessageBox::warning(NULL, QStringLiteral("警告"), QStringLiteral("没有资源数据，请先添加资源文件！"));
         QMessageBox dialog(QMessageBox::Warning,
                                      "警告",
                                      tr("没有资源数据，请先添加资源文件！"),
@@ -1783,6 +1933,74 @@ void LoginWidget::on_pushButton_search_clicked()
 
 
 void LoginWidget::on_pushButton_audit_clicked()
+{
+    LOG("点击发送工程按钮","CLICK");
+    int retLog = CallUnifyLoginSrv::instance()->ValidateTGT(m_UserToken);
+    if(retLog != ERT_TRUE)
+    {
+        LOG("登录信息失效，重新登录","INFO");
+        on_pushButton_login_clicked();
+        return;
+    }
+    if(m_bIsworking)
+    {
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "提示",
+                                     tr("有任务正在进行请等待..."),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
+        return;
+    }
+    if (!MLT.producer())
+    {
+        QMessageBox dialog(QMessageBox::Warning,
+                                     "警告",
+                                     tr("没有资源数据，请先添加资源文件！"),
+                                     QMessageBox::Ok,
+                                     this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
+        return ;
+    }
+    //获取资源选中窗口的信息
+    int ret = CloudDiskInterface::instance()->GetTrialState(m_ProResourceInfo.m_strResourceID);
+    if(ret == 1 || ret == 2)
+    {
+        //打开选择窗口
+        int nsize = CloudDiskInterface::instance()->ResourceNoDialog("VideoStudio",
+                                                                     "视频编辑站临时目录",
+                                                                     m_ProResourceInfo.m_strResourceName,
+                                                                     "mlt");
+        if(nsize < ERT_TRUE)
+        {
+            qDebug() <<QStringLiteral("CloudDiskInterface failed");
+            LOG("发送工程 打开选择窗口失败","ERROR");
+            return;
+        }
+        if(nsize == ERT_CANCEL)
+        {
+            qDebug() <<QStringLiteral("cancle");
+            LOG("发送工程 打开选择窗口取消了操作","INFO");
+            return;
+        }
+        if(nsize > ERT_CANCEL)
+        {
+            LOG("发送工程 打开选择窗口成功","INFO");
+            //获取资源选中窗口的信息
+            wchar_t pBuff[1024];
+            memset(pBuff,0,1024 * sizeof(wchar_t));
+            CloudDiskInterface::instance()->GetResourceList(pBuff, 1024);
+            m_strBuffInfo = QString::fromWCharArray(pBuff);
+            GetListInfo(m_strBuffInfo,m_ProResourceInfo);
+            qDebug()<<"1025845781"<<m_ProResourceInfo.m_strResourceName;
+        }
+    }
+    emit signal_SaveProject(SF_SaveAudit,m_ProResourceInfo.m_strResourceName);
+}
+
+void LoginWidget::on_pushButton_videoaudit_clicked()
 {
     LOG("点击发审资源按钮","CLICK");
     int retLog = CallUnifyLoginSrv::instance()->ValidateTGT(m_UserToken);

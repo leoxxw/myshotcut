@@ -32,6 +32,8 @@ public:
     void SendVideoNoDlg(QString strFilePath);
     //发送工程
     void SendProjectNoDlg(QString strFilePath);
+    //发审工程
+    void AuditProjectNoDlg(QString strFilePath);
     //删除临时目录
     bool DelDir(const QString &path);
     //保存工程到云里时添加文件
@@ -95,6 +97,8 @@ private slots:
 
     void on_pushButton_audit_clicked();
 
+    void on_pushButton_videoaudit_clicked();
+
 signals:
     void signal_SaveProject(int ntype,QString ProjectName);
     void signal_SaveVideo(int ntype);
@@ -121,6 +125,7 @@ private:
     QString         m_strBuffInfo;//获得的资源信息
     bool            m_bIsworking;//工作状态
     int             m_nSearch;//搜索按钮配置
+    int             m_nProjectAudit;//工程发审配置
     int             m_ProjectType;//工程类型
     QString         m_sysName;//系统名称
     bool            m_bOpenProject;//保存工程后打开云里工程
