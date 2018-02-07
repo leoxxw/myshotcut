@@ -29,6 +29,8 @@
 #include <framework/mlt_log.h>
 #include "singleapplication.h"
 #include <QMessageBox>
+#include <MyWidgets/dogcheckwidget.h>
+
 #ifdef Q_OS_WIN
 #ifdef QT_DEBUG
 #   include <exchndl.h>
@@ -40,6 +42,7 @@ extern "C"
     __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
+
 
 static void mlt_log_handler(void *service, int mlt_level, const char *format, va_list args)
 {
@@ -245,8 +248,8 @@ protected:
 
 int main(int argc, char **argv)
 {
-    Application a(argc, argv, "some unique key string");
     //唯一实例判断
+    Application a(argc, argv, "some unique key string");
     if (a.isRunning())
     {
         a.sendMessage("message from other instance.");
@@ -288,14 +291,16 @@ int main(int argc, char **argv)
 
     if (!a.appDirArg.isEmpty())
         a.mainWindow->hideSetDataDirectory();
-    a.mainWindow->show();
-    a.mainWindow->setFullScreen(a.isFullScreen);
+    a.mainWindow->hide();
+    a.mainWindow->setFullScreen_t(a.isFullScreen);
 //    splash.finish(a.mainWindow);
 
     if (!a.resourceArg.isEmpty())
-        a.mainWindow->open(a.resourceArg);
+        a.mainWindow->setResourceArg(a.resourceArg);
     else
-        a.mainWindow->open(a.mainWindow->untitledFileName());
+        a.mainWindow->setResourceArg(a.mainWindow->untitledFileName());
+
+    a.mainWindow->Dogcheck();
 
     int result = a.exec();
 

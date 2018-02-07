@@ -126,6 +126,7 @@ private:
     bool            m_bIsworking;//工作状态
     int             m_nSearch;//搜索按钮配置
     int             m_nProjectAudit;//工程发审配置
+    int             m_nVideoAudit;//资源发审配置
     int             m_ProjectType;//工程类型
     QString         m_sysName;//系统名称
     bool            m_bOpenProject;//保存工程后打开云里工程

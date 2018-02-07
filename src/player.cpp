@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2012-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -757,10 +757,12 @@ void Player::setStatusLabel(const QString &text, int timeoutSeconds, QAction* ac
                     m_scrubber->width() - m_tabs->width() - 30));
     m_statusLabel->setText(s);
     m_statusLabel->setToolTip(text);
-    if (action)
-        connect(m_statusLabel, SIGNAL(clicked(bool)), action, SIGNAL(triggered(bool)));
-    else
-        disconnect(m_statusLabel, SIGNAL(clicked(bool)));
+    m_statusLabel->show();
+    connect(m_statusLabel, SIGNAL(clicked(bool)), this, SLOT(hideLabel(bool)));
+//    if (action)
+//        connect(m_statusLabel, SIGNAL(clicked(bool)), action, SIGNAL(triggered(bool)));
+//    else
+//        disconnect(m_statusLabel, SIGNAL(clicked(bool)));
 
     // Cancel the fade out.
     if (m_statusFadeOut->state() == QAbstractAnimation::Running) {
@@ -781,6 +783,11 @@ void Player::setStatusLabel(const QString &text, int timeoutSeconds, QAction* ac
             m_statusTimer.start(timeoutSeconds * 1000);
         }
     }
+}
+
+void Player::hideLabel(bool)
+{
+    m_statusLabel->hide();
 }
 
 void Player::onFadeOutFinished()

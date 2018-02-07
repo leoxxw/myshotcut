@@ -31,6 +31,7 @@
 #include "MyWidgets/loginwidget.h"
 #include "MyWidgets/aboutwidget.h"
 #include <QProgressDialog>
+#include <QProcess>
 #define EXIT_RESTART (42)
 
 namespace Ui {
@@ -305,6 +306,20 @@ private slots:
     void on_actionAppDataSet_triggered();
     void on_actionAppDataShow_triggered();
     void on_actionNew_triggered();
+
+
+public:
+    void Dogcheck();
+    void setFullScreen_t(bool isFullScreen);
+    void setResourceArg(QString resourceArg);
+public slots:
+    void readFromClient();
+private:
+    QProcess *m_pro;
+    bool bDogCheck;
+    bool    m_isFullScreen;
+    QString m_resourceArg;
+
 };
 
 #define MAIN MainWindow::singleton()

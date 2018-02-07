@@ -122,6 +122,7 @@ SOURCES += main.cpp\
     videostudiolog.cpp \
     objectthread.cpp \
     singleapplication.cpp \
+    MyWidgets/dogcheckwidget.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -241,6 +242,7 @@ HEADERS  += mainwindow.h \
     videostudiolog.h \
     objectthread.h \
     singleapplication.h \
+    MyWidgets/dogcheckwidget.h
 
 FORMS    += mainwindow.ui \
     openotherdialog.ui \
@@ -285,6 +287,7 @@ FORMS    += mainwindow.ui \
     dialogs/unlinkedfilesdialog.ui \
     MyWidgets/loginwidget.ui \
     MyWidgets/aboutwidget.ui \
+    MyWidgets/dogcheckwidget.ui
 
 RESOURCES += \
     ../icons/resources.qrc \

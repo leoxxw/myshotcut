@@ -618,10 +618,10 @@ QPushButton#pushButton_saveoth:disabled{border-image: url(:/Resource/PNG/icon_sa
                   <string>发审工程</string>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">QPushButton#pushButton_audit{border-image: url(:/Resource/PNG/icon_fashen01.png);}
-QPushButton#pushButton_audit:hover{border-image: url(:/Resource/PNG/icon_fashen02.png);}
-QPushButton#pushButton_audit:pressed{border-image: url(:/Resource/PNG/icon_fashen02.png);}
-QPushButton#pushButton_audit:disabled{border-image: url(:/Resource/PNG/icon_fashen03.png);}</string>
+                  <string notr="true">QPushButton#pushButton_audit{border-image: url(:/Resource/PNG/icon_fashenaso01.png);}
+QPushButton#pushButton_audit:hover{border-image: url(:/Resource/PNG/icon_fashenaso02.png);}
+QPushButton#pushButton_audit:pressed{border-image: url(:/Resource/PNG/icon_fashenaso02.png);}
+QPushButton#pushButton_audit:disabled{border-image: url(:/Resource/PNG/icon_fashenaso03.png);}</string>
                  </property>
                  <property name="text">
                   <string/>

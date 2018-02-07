@@ -56,7 +56,20 @@ void LoginWidget::Init()
     if(m_nProjectAudit == 0)
     {
         ui->widget_16->hide();
-        this->resize(100,340);
+        this->resize(100,this->height()-40);
+    }
+    if(m_nVideoAudit == 0)
+    {
+        ui->pushButton_videoaudit->hide();
+    }
+    if(m_nVideoAudit ==0 && m_nSearch == 0)
+    {
+        ui->widget_15->hide();
+        this->resize(100,this->height()-40);
+    }
+    if(m_nVideoAudit ==0 && m_nSearch != 0)
+    {
+        ui->pushButton_search->move(10,4);
     }
     //删除临时文件
     QString strLoadPath = QCoreApplication::applicationDirPath()+"/Temp";
@@ -687,6 +700,7 @@ void LoginWidget::AuditProjectNoDlg(QString strFilePath)
                                                  this);
                     dialog.setButtonText (QMessageBox::Ok,QString("确定"));
                     dialog.exec();
+                    ui->pushButton_save->setEnabled(false);
                 }
                 else if(t < ERT_TRUE)
                 {
@@ -714,7 +728,7 @@ void LoginWidget::AuditProjectNoDlg(QString strFilePath)
         if(nJobID <= 0)
         {
             qDebug() <<"save failed";
-            LOG("发送工程 预保存工程失败","ERROR");
+            LOG("发审工程 预保存工程失败","ERROR");
             return;
         }
         AddFile(strFilePath,nJobID,"",1);
@@ -723,7 +737,7 @@ void LoginWidget::AuditProjectNoDlg(QString strFilePath)
         {
             m_ProjectType = EV_YUNLI;
             qDebug() <<"save succeed";
-            LOG("发送工程 保存工程成功","INFO");
+            LOG("发审工程 保存工程成功","INFO");
             //云盘内资源发送
             int t = CloudDiskInterface::instance()->SendTrial(m_ProResourceInfo.m_strResourceID,m_ProResourceInfo.m_strResourceName,fileType,EREST_Other);
             if(t == ERT_TRUE)
@@ -732,11 +746,12 @@ void LoginWidget::AuditProjectNoDlg(QString strFilePath)
                 LOG("发审工程 发审成功","INFO");
                 QMessageBox dialog(QMessageBox::NoIcon,
                                              "成功",
-                                             tr("     工审发送成功      "),
+                                             tr("     工程发审成功      "),
                                              QMessageBox::Ok,
                                              this);
                 dialog.setButtonText (QMessageBox::Ok,QString("确定"));
                 dialog.exec();
+                ui->pushButton_save->setEnabled(false);
             }
             else if(t < ERT_TRUE)
             {
@@ -750,9 +765,7 @@ void LoginWidget::AuditProjectNoDlg(QString strFilePath)
                 dialog.exec();
             }
         }
-    }
-    ui->pushButton_save->setEnabled(false);
-
+    } 
 }
 
 bool LoginWidget::DelDir(const QString &path)
@@ -1068,8 +1081,9 @@ void LoginWidget::GetInitFileInfo()
         qDebug() <<"read ServerStatus.ini false";
         return ;
     }
-    m_nSearch = configIniRead->value("/SETTING/search").toInt();
-    m_nProjectAudit = configIniRead->value("/SETTING/ProjectAudit").toInt();
+    m_nSearch = configIniRead->value("/SETTING/search").toInt();//搜索配置
+    m_nProjectAudit = configIniRead->value("/SETTING/ProjectAudit").toInt();//工程发审配置
+    m_nVideoAudit = configIniRead->value("/SETTING/VideoAudit").toInt();//资源发审配置
     m_strSysID =  configIniRead->value("/SETTING/sysID").toString();//系统ID
     m_strJoincode =  configIniRead->value("/SETTING/joinCode").toString();//验证码
     m_strUrl =  configIniRead->value("/SETTING/url").toString();//配置中心地址
