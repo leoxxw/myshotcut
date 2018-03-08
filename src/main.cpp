@@ -29,7 +29,6 @@
 #include <framework/mlt_log.h>
 #include "singleapplication.h"
 #include <QMessageBox>
-#include <MyWidgets/dogcheckwidget.h>
 
 #ifdef Q_OS_WIN
 #ifdef QT_DEBUG

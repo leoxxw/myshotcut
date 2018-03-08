@@ -312,8 +312,10 @@ public:
     void Dogcheck();
     void setFullScreen_t(bool isFullScreen);
     void setResourceArg(QString resourceArg);
+    void writeToDogCheck();
 public slots:
     void readFromClient();
+    void processError(QProcess::ProcessError);
 private:
     QProcess *m_pro;
     bool bDogCheck;

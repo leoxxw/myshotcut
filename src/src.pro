@@ -121,8 +121,7 @@ SOURCES += main.cpp\
     MyWidgets/aboutwidget.cpp \
     videostudiolog.cpp \
     objectthread.cpp \
-    singleapplication.cpp \
-    MyWidgets/dogcheckwidget.cpp
+    singleapplication.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -241,8 +240,7 @@ HEADERS  += mainwindow.h \
     version.h \
     videostudiolog.h \
     objectthread.h \
-    singleapplication.h \
-    MyWidgets/dogcheckwidget.h
+    singleapplication.h
 
 FORMS    += mainwindow.ui \
     openotherdialog.ui \

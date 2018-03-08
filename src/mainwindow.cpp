@@ -128,7 +128,7 @@ MainWindow::MainWindow()
     , m_obj(NULL)
     ,m_pro(NULL)
     ,bDogCheck(false)
-    ,m_isFullScreen(false)
+    ,m_isFullScreen(true)
 {
     //注册自己的变量类型
     qRegisterMetaType<QMap<QString,QString> >("QMap<QString,QString> ");
@@ -194,12 +194,12 @@ MainWindow::~MainWindow()
     }
 
     delete ui;
+    if(m_pro!= NULL)
+    {
+        writeToDogCheck();
+    }
     if(bDogCheck)
     {
-        if(m_pro!= NULL)
-        {
-            m_pro->close();
-        }
         Mlt::Controller::destroy();
     }
 }
@@ -3529,8 +3529,8 @@ void MainWindow::Dogcheck()
 {
     if(m_pro == NULL)
     {
-        m_pro = new QProcess(this);
-        connect(m_pro, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
+        m_pro = new QProcess();
+      //  connect(m_pro, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
         connect(m_pro, SIGNAL(error(QProcess::ProcessError)), this, SLOT(processError(QProcess::ProcessError)));
         connect(m_pro, SIGNAL(readyRead()), this, SLOT(readFromClient()));
     }
@@ -3547,6 +3547,23 @@ void MainWindow::setResourceArg(QString resourceArg)
     m_resourceArg = resourceArg;
 }
 
+void MainWindow::writeToDogCheck()
+{
+    QSettings *configIniRead = NULL;
+    QString path = QCoreApplication::applicationDirPath();
+    path.append("/DogCheck/DogCheckClose.ini");
+    configIniRead = new QSettings(path, QSettings::IniFormat);
+    //将读取到的ini文件保存在QString中，先取值，然后通过toString()函数转换成QString类型
+    if(!configIniRead)
+    {
+        qDebug() <<"read ServerStatus.ini false";
+        return;
+    }
+    QString strClose = QString("%1").arg(1);
+    configIniRead->setValue("/Setting/Close",strClose);
+    delete configIniRead;
+}
+
 void MainWindow::readFromClient()
 {
     qDebug()<<"readFromClient";
@@ -3555,7 +3572,6 @@ void MainWindow::readFromClient()
         return;
     }
     QByteArray output = m_pro->readAllStandardOutput();
-    //  m_pro->close();
     if(output == "true")
     {
         bDogCheck = true;
@@ -3960,4 +3976,10 @@ void MainWindow::readFromClient()
         dialog.exec();
         this->close();
     }
+}
+
+void MainWindow::processError(QProcess::ProcessError)
+{
+    bDogCheck =  false;
+    this->close();
 }
