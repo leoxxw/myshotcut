@@ -284,8 +284,7 @@ FORMS    += mainwindow.ui \
     widgets/timelinepropertieswidget.ui \
     dialogs/unlinkedfilesdialog.ui \
     MyWidgets/loginwidget.ui \
-    MyWidgets/aboutwidget.ui \
-    MyWidgets/dogcheckwidget.ui
+    MyWidgets/aboutwidget.ui
 
 RESOURCES += \
     ../icons/resources.qrc \

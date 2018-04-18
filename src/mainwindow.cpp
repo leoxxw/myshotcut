@@ -527,7 +527,7 @@ void MainWindow::open(Mlt::Producer* producer)
     // Needed on Windows. Upon first file open, window is deactivated, perhaps OpenGL-related.
     activateWindow();
 }
-
+//是否与Gpu模式兼容
 bool MainWindow::isCompatibleWithGpuMode(MltXmlChecker& checker)
 {
     if (checker.needsGPU() && !Settings.playerGPU()) {
