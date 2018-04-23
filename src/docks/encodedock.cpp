@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2012-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -26,6 +26,7 @@
 #include "qmltypes/qmlapplication.h"
 #include "jobs/encodejob.h"
 #include "shotcut_mlt_properties.h"
+#include "util.h"
 
 #include <QDir>
 #include <Logger.h>
@@ -34,11 +35,13 @@
 #include <QtMath>
 #include <QTimer>
 #include <QFileInfo>
+#include <QStorageInfo>
 
 // formulas to map absolute value ranges to percentages as int
 #define TO_ABSOLUTE(min, max, rel) qRound(float(min) + float((max) - (min) + 1) * float(rel) / 100.0f)
 #define TO_RELATIVE(min, max, abs) qRound(100.0f * float((abs) - (min)) / float((max) - (min) + 1))
 static const int kOpenCaptureFileDelayMs = 1500;
+static const qint64 kFreeSpaceThesholdGB = 50LL * 1024 * 1024 * 1024;
 
 static double getBufferSize(Mlt::Properties& preset, const char* property);
 
@@ -791,6 +794,19 @@ MeltJob* EncodeDock::createMeltJob(Mlt::Service* service, const QString& target,
     QDomDocument dom(tmp.fileName());
     dom.setContent(&f1);
     f1.close();
+
+    // Check if the target file is a member of the project.
+    QString caption = tr("Export File");
+    QString xml = dom.toString(0);
+    if (xml.contains(QDir::fromNativeSeparators(target))) {
+        QMessageBox::warning(this, caption,
+                             tr("You cannot write to a file that is in your project.\n"
+                                "Try again with a different folder or file name."));
+        return 0;
+    }
+
+    if (Util::warnIfNotWritable(target, this, caption))
+        return 0;
 
     // add consumer element
     QDomElement consumerNode = dom.createElement("consumer");

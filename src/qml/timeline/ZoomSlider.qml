@@ -41,12 +41,16 @@ Rectangle {
         minimumValue: 0
         maximumValue: 3.0
         value: 1
+        function setScaleFactor() {
+            multitrack.scaleFactor = Math.pow(value, 3) + 0.01
+        }
         onValueChanged: {
-            if (typeof multitrack.scaleFactor != 'undefined')
-                multitrack.scaleFactor = Math.pow(value, 3) + 0.01
+            if (!pressed && typeof multitrack.scaleFactor != 'undefined')
+                setScaleFactor()
         }
         onPressedChanged: {
             if (!pressed) {
+                setScaleFactor()
                 for (var i = 0; i < tracksRepeater.count; i++)
                     tracksRepeater.itemAt(i).redrawWaveforms()
             }

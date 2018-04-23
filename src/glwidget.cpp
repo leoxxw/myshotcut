@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2017 Meltytech, LLC
+ * Copyright (c) 2011-2018 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * GL shader based on BSD licensed code from Peter Bengtsson:
@@ -34,12 +34,6 @@
 #include "mainwindow.h"
 
 #define USE_GL_SYNC // Use glFinish() if not defined.
-
-#ifdef Q_OS_MAC
-static const int FRAMEDISPLAYED_MIN_MS = 80; // max 12.5 fps
-#else
-static const int FRAMEDISPLAYED_MIN_MS = 10; // max 100 fps
-#endif
 
 #ifdef QT_NO_DEBUG
 #define check_error(fn) {}
@@ -603,9 +597,9 @@ int GLWidget::reconfigure(bool isMulti)
     QString serviceName = property("mlt_service").toString();
     if (!m_consumer || !m_consumer->is_valid()) {
         if (serviceName.isEmpty()) {
-            m_consumer = new Mlt::FilteredConsumer(profile(), "sdl_audio");
+            m_consumer = new Mlt::FilteredConsumer(profile(), "sdl2_audio");
             if (m_consumer->is_valid())
-                serviceName = "sdl_audio";
+                serviceName = "sdl2_audio";
             else
                 serviceName = "rtaudio";
             delete m_consumer;
@@ -637,12 +631,6 @@ int GLWidget::reconfigure(bool isMulti)
         if (isMulti) {
             m_consumer->set("terminate_on_pause", 0);
             m_consumer->set("0", serviceName.toLatin1().constData());
-            if (serviceName == "sdl_audio")
-#ifdef Q_OS_WIN
-                m_consumer->set("0.audio_buffer", 2048);
-#else
-                m_consumer->set("0.audio_buffer", 512);
-#endif
             if (!profile().progressive())
                 m_consumer->set("0.progressive", property("progressive").toBool());
             m_consumer->set("0.rescale", property("rescale").toString().toLatin1().constData());
@@ -653,12 +641,6 @@ int GLWidget::reconfigure(bool isMulti)
                 m_consumer->set("0.keyer", property("keyer").toInt());
         }
         else {
-            if (serviceName == "sdl_audio")
-#ifdef Q_OS_WIN
-                m_consumer->set("audio_buffer", 2048);
-#else
-                m_consumer->set("audio_buffer", 512);
-#endif
             if (!profile().progressive())
                 m_consumer->set("progressive", property("progressive").toBool());
             m_consumer->set("rescale", property("rescale").toString().toLatin1().constData());
@@ -767,7 +749,6 @@ void GLWidget::updateTexture(GLuint yName, GLuint uName, GLuint vName)
     m_texture[0] = yName;
     m_texture[1] = uName;
     m_texture[2] = vName;
-    quickWindow()->update();
 }
 
 // MLT consumer-frame-show event handler
@@ -913,7 +894,6 @@ void FrameRenderer::showFrame(Mlt::Frame frame)
 
             // Save this frame for future use and to keep a reference to the GL Texture.
             m_displayFrame = SharedFrame(frame);
-            emit frameDisplayed(m_displayFrame);
         }
         else {
             // Using a threaded OpenGL to upload textures.
@@ -930,20 +910,8 @@ void FrameRenderer::showFrame(Mlt::Frame frame)
             emit textureReady(m_displayTexture[0], m_displayTexture[1], m_displayTexture[2]);
             m_context->doneCurrent();
         }
-
-        // Throttle the frequency of frameDisplayed signals to prevent them from
-        // interfering with timely and smooth video updates.
-        int elapsedMSecs = QDateTime::currentMSecsSinceEpoch() - m_previousMSecs;
-        if (elapsedMSecs >= FRAMEDISPLAYED_MIN_MS) {
-            m_previousMSecs = QDateTime::currentMSecsSinceEpoch();
-            // The frame is now done being modified and can be shared with the rest
-            // of the application.
-            emit frameDisplayed(m_displayFrame);
-        }
-    } else {
-        // Non-threaded rendering
-        emit frameDisplayed(m_displayFrame);
     }
+    emit frameDisplayed(m_displayFrame);
 
     m_semaphore.release();
 }

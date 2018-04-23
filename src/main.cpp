@@ -1,5 +1,5 @@
-﻿/*
- * Copyright (c) 2011-2016 Meltytech, LLC
+/*
+ * Copyright (c) 2011-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -88,7 +88,8 @@ static void mlt_log_handler(void *service, int mlt_level, const char *format, va
         message = QString().vsprintf(format, args);
         message.replace('\n', "");
     }
-    Logger::write(cuteLoggerLevel, __FILE__, __LINE__, "MLT", message);
+    cuteLogger->write(cuteLoggerLevel, __FILE__, __LINE__, "MLT",
+                      cuteLogger->defaultCategory().toLatin1().constData(), message);
 }
 
 class Application : public SingleApplication
@@ -162,13 +163,13 @@ public:
         const QString logFileName = dir.filePath("VideoStudio-log.txt");
         QFile::remove(logFileName);
         FileAppender* fileAppender = new FileAppender(logFileName);
-        fileAppender->setFormat("[%-7l] <%c> %m\n");
-        Logger::registerAppender(fileAppender);
+        fileAppender->setFormat("[%{type:-7}] <%{function}> %{message}\n");
+        cuteLogger->registerAppender(fileAppender);
 #ifndef NDEBUG
         // Only log to console in dev debug builds.
         ConsoleAppender* consoleAppender = new ConsoleAppender();
         consoleAppender->setFormat(fileAppender->format());
-        Logger::registerAppender(consoleAppender);
+        cuteLogger->registerAppender(consoleAppender);
 
         mlt_log_set_level(MLT_LOG_VERBOSE);
 #else

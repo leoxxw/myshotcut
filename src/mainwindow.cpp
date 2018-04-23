@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2011-2017 Meltytech, LLC
+ * Copyright (c) 2011-2018 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -367,6 +367,9 @@ void MainWindow::setupSettingsMenu()
     a = new QAction(QLocale::languageToString(QLocale::English), m_languagesGroup);
     a->setCheckable(true);
     a->setData("en");
+    a = new QAction(QLocale::languageToString(QLocale::Estonian), m_languagesGroup);
+    a->setCheckable(true);
+    a->setData("et");
     a = new QAction(QLocale::languageToString(QLocale::French), m_languagesGroup);
     a->setCheckable(true);
     a->setData("fr");
@@ -388,6 +391,9 @@ void MainWindow::setupSettingsMenu()
     a = new QAction(QLocale::languageToString(QLocale::Japanese), m_languagesGroup);
     a->setCheckable(true);
     a->setData("ja");
+    a = new QAction(QLocale::languageToString(QLocale::Nepali), m_languagesGroup);
+    a->setCheckable(true);
+    a->setData("ne");
     a = new QAction(QLocale::languageToString(QLocale::NorwegianBokmal), m_languagesGroup);
     a->setCheckable(true);
     a->setData("nb");
@@ -469,13 +475,9 @@ void MainWindow::setupSettingsMenu()
             ui->actionDrawingOpenGL->setChecked(true);
             break;
         case Qt::AA_UseOpenGLES:
-            delete ui->actionGPU;
-            ui->actionGPU = 0;
             ui->actionDrawingDirectX->setChecked(true);
             break;
         case Qt::AA_UseSoftwareOpenGL:
-            delete ui->actionGPU;
-            ui->actionGPU = 0;
             ui->actionDrawingSoftware->setChecked(true);
             break;
         default:
@@ -546,7 +548,7 @@ bool MainWindow::isCompatibleWithGpuMode(MltXmlChecker& checker)
         dialog.setEscapeButton(QMessageBox::No);
         int r = dialog.exec();
         if (r == QMessageBox::Yes) {
-            Settings.setPlayerGPU(true);
+            ui->actionGPU->setChecked(true);
             m_exitCode = EXIT_RESTART;
             QApplication::closeAllWindows();
         }
@@ -559,7 +561,7 @@ bool MainWindow::saveRepairedXmlFile(MltXmlChecker& checker, QString& fileName)
 {
     QFileInfo fi(fileName);
     QFile repaired(QString("%1/%2 - %3.%4").arg(fi.path())
-                   .arg(fi.completeBaseName()).arg(tr("Repaired")).arg(fi.suffix()));
+        .arg(fi.completeBaseName()).arg(tr("Repaired")).arg(fi.suffix()));
     repaired.open(QIODevice::WriteOnly);
     LOG_INFO() << "repaired MLT XML file name" << repaired.fileName();
     QFile temp(checker.tempFileName());
@@ -712,8 +714,8 @@ QString MainWindow::getFileHash(const QString& path) const
     QFile file(path);
     if (file.open(QIODevice::ReadOnly)) {
         QByteArray fileData;
-        // 1 MB = 1 second per 450 files (or faster)
-        // 10 MB = 9 seconds per 450 files (or faster)
+         // 1 MB = 1 second per 450 files (or faster)
+         // 10 MB = 9 seconds per 450 files (or faster)
         if (file.size() > 1000000*2) {
             fileData = file.read(1000000);
             if (file.seek(file.size() - 1000000))
@@ -907,6 +909,7 @@ void MainWindow::showStatusMessage(QAction* /*action*/, int /*timeoutSeconds*/)
     //    m_statusBarAction.reset(action);
     //    action->setParent(0);
     //    m_player->setStatusLabel(action->text(), timeoutSeconds, action);
+
 }
 
 void MainWindow::showStatusMessage(const QString& message, int timeoutSeconds)
@@ -1051,6 +1054,7 @@ void MainWindow::writeSettings()
     if (isFullScreen())
         showNormal();
 #endif
+    Settings.setPlayerGPU(ui->actionGPU->isChecked());
     Settings.setWindowGeometry(saveGeometry());
     Settings.setWindowState(saveState());
     Settings.sync();
@@ -1169,15 +1173,15 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
         break;
     case Qt::Key_PageUp:
     case Qt::Key_PageDown:
-    {
-        int directionMultiplier = event->key() == Qt::Key_PageUp ? -1 : 1;
-        int seconds = 1;
-        if (event->modifiers() & Qt::ControlModifier)
-            seconds *= 5;
-        if (event->modifiers() & Qt::ShiftModifier)
-            seconds *= 2;
-        stepLeftBySeconds(seconds * directionMultiplier);
-    }
+        {
+            int directionMultiplier = event->key() == Qt::Key_PageUp ? -1 : 1;
+            int seconds = 1;
+            if (event->modifiers() & Qt::ControlModifier)
+                seconds *= 5;
+            if (event->modifiers() & Qt::ShiftModifier)
+                seconds *= 2;
+            stepLeftBySeconds(seconds * directionMultiplier);
+        }
         break;
     case Qt::Key_Space:
 #ifdef Q_OS_MAC
@@ -1240,8 +1244,8 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
             m_player->rewind();
         break;
     case Qt::Key_K:
-        m_player->pause();
-        m_isKKeyPressed = true;
+            m_player->pause();
+            m_isKKeyPressed = true;
         break;
     case Qt::Key_L:
 #ifdef Q_OS_MAC
@@ -1405,13 +1409,12 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
         }
         break;
     case Qt::Key_0:
-        if (m_playlistDock->isVisible()) {
+        if (m_timelineDock->isVisible()) {
+            m_timelineDock->resetZoom();
+        } else if (m_playlistDock->isVisible()) {
             m_playlistDock->raise();
             emit Signal_raiseLoginwidget();
             m_playlistDock->setIndex(9);
-        }
-        else if (m_timelineDock->isVisible()) {
-            m_timelineDock->resetZoom();
         }
         break;
     case Qt::Key_X: // Avid Extract
@@ -2119,7 +2122,7 @@ void MainWindow::onProducerOpened()
         m_meltedServerDock->disconnect(SIGNAL(positionUpdated(int,double,int,int,int,bool)));
 
     QWidget* w = loadProducerWidget(MLT.producer());
-    if (w && !MLT.producer()->get_int(kMultitrackItemProperty)) {
+    if (w && !MLT.producer()->get(kMultitrackItemProperty)) {
         if (-1 != w->metaObject()->indexOfSignal("producerReopened()"))
             connect(w, SIGNAL(producerReopened()), m_player, SLOT(onProducerOpened()));
     }
@@ -2166,7 +2169,7 @@ void MainWindow::onProducerChanged()
 {
     MLT.refreshConsumer();
     if (playlist() && MLT.producer() && MLT.producer()->is_valid()
-            && MLT.producer()->get_int(kPlaylistIndexProperty))
+        && MLT.producer()->get_int(kPlaylistIndexProperty))
         m_playlistDock->setUpdateButtonEnabled(true);
 }
 
@@ -2175,6 +2178,8 @@ bool MainWindow::on_actionSave_triggered()
     if (m_currentFile.isEmpty()) {
         return on_actionSave_As_triggered();
     } else {
+        if (Util::warnIfNotWritable(m_currentFile, this, tr("Save XML")))
+            return false;
         saveXML(m_currentFile);
         setCurrentFile(m_currentFile);
         setWindowModified(false);
@@ -2218,7 +2223,7 @@ bool MainWindow::on_actionSave_As_triggered()
         m_undoStack->setClean();
         m_recentDock->add(filename);
     }
-    return filename.isEmpty();
+    return !filename.isEmpty();
 }
 
 bool MainWindow::continueModified()
@@ -2325,7 +2330,7 @@ void MainWindow::onCaptureStateChanged(bool started)
     if (started && (MLT.resource().startsWith("x11grab:") ||
                     MLT.resource().startsWith("gdigrab:") ||
                     MLT.resource().startsWith("avfoundation"))
-            && !MLT.producer()->get_int(kBackgroundCaptureProperty))
+                && !MLT.producer()->get_int(kBackgroundCaptureProperty))
         showMinimized();
 }
 
@@ -2582,7 +2587,7 @@ Mlt::Producer *MainWindow::multitrack() const
 bool MainWindow::isMultitrackValid() const
 {
     return m_timelineDock->model()->tractor()
-            && !m_timelineDock->model()->trackList().empty();
+       && !m_timelineDock->model()->trackList().empty();
 }
 
 QWidget *MainWindow::loadProducerWidget(Mlt::Producer* producer)
@@ -2663,7 +2668,7 @@ QWidget *MainWindow::loadProducerWidget(Mlt::Producer* producer)
         if (-1 != w->metaObject()->indexOfSignal("producerChanged(Mlt::Producer*)")) {
             connect(w, SIGNAL(producerChanged(Mlt::Producer*)), SLOT(onProducerChanged()));
             connect(w, SIGNAL(producerChanged(Mlt::Producer*)), m_filterController, SLOT(setProducer(Mlt::Producer*)));
-            if (producer->get_int(kMultitrackItemProperty))
+            if (producer->get(kMultitrackItemProperty))
                 connect(w, SIGNAL(producerChanged(Mlt::Producer*)), m_timelineDock, SLOT(onProducerChanged(Mlt::Producer*)));
         }
         scrollArea->setWidget(w);
@@ -3070,7 +3075,7 @@ void MainWindow::onProfileTriggered(QAction *action)
 void MainWindow::onProfileChanged()
 {
     if (multitrack() && MLT.isMultitrack() &&
-            (m_timelineDock->selection().isEmpty() || m_timelineDock->currentTrack() == -1)) {
+       (m_timelineDock->selection().isEmpty() || m_timelineDock->currentTrack() == -1)) {
         emit m_timelineDock->selected(multitrack());
     }
 }
@@ -3187,7 +3192,7 @@ void MainWindow::on_actionOpenXML_triggered()
     path.append("/*");
 #endif
     QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path,
-                                                          tr("MLT XML (*.mlt);;All Files (*)"));
+        tr("MLT XML (*.mlt);;All Files (*)"));
     if (filenames.length() > 0) {
         QString url = filenames.first();
         MltXmlChecker checker;
@@ -3388,11 +3393,15 @@ void MainWindow::on_actionExportEDL_triggered()
     // Dialog to get export file name.
     QString path = Settings.savePath();
     path.append("/.edl");
-    QString saveFileName = QFileDialog::getSaveFileName(this, tr("Export EDL"), path, tr("EDL (*.edl)"));
+    QString caption = tr("Export EDL");
+    QString saveFileName = QFileDialog::getSaveFileName(this, caption, path, tr("EDL (*.edl)"));
     if (!saveFileName.isEmpty()) {
         QFileInfo fi(saveFileName);
         if (fi.suffix() != "edl")
             saveFileName += ".edl";
+
+        if (Util::warnIfNotWritable(saveFileName, this, caption))
+            return;
 
         // Locate the JavaScript file in the filesystem.
         QDir qmlDir = QmlUtilities::qmlDir();
@@ -3460,11 +3469,14 @@ void MainWindow::onGLWidgetImageReady()
     if (!image.isNull()) {
         QString path = Settings.savePath();
         path.append("/.png");
-        QString saveFileName = QFileDialog::getSaveFileName(this, tr("Export Frame"), path);
+        QString caption = tr("Export Frame");
+        QString saveFileName = QFileDialog::getSaveFileName(this, caption, path);
         if (!saveFileName.isEmpty()) {
             QFileInfo fi(saveFileName);
             if (fi.suffix().isEmpty())
                 saveFileName += ".png";
+            if (Util::warnIfNotWritable(saveFileName, this, caption))
+                return;
             image.save(saveFileName);
             Settings.setSavePath(fi.path());
             m_recentDock->add(saveFileName);

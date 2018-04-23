@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 Meltytech, LLC
+ * Copyright (c) 2013-2018 Meltytech, LLC
  * Author: Brian Matherly <pez4brian@yahoo.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -90,15 +90,6 @@ QString QmlApplication::OS()
 #endif
 }
 
-QString QmlApplication::numericLocale()
-{
-#ifdef Q_OS_WIN
-    return QLocale::system().name();
-#else
-    return QString::fromLatin1(::setlocale(LC_NUMERIC, NULL));
-#endif
-}
-
 QRect QmlApplication::mainWinRect()
 {
     return MAIN.geometry();
@@ -121,5 +112,6 @@ void QmlApplication::pasteFilters()
     QScopedPointer<Mlt::Producer> producer(new Mlt::Producer(MAIN.filterController()->attachedModel()->producer()));
     MLT.pasteFilters(producer.data());
     MLT.refreshConsumer();
+    emit QmlApplication::singleton().filtersPasted(MAIN.filterController()->attachedModel()->producer());
 }
 

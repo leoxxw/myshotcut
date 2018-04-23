@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2017 Meltytech, LLC
+ * Copyright (c) 2013-2018 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -64,7 +64,7 @@ TimelineDock::TimelineDock(QWidget *parent) :
 
     connect(&m_model, SIGNAL(modified()), this, SLOT(clearSelectionIfInvalid()));
 
-    m_quickView.setFocusPolicy(Qt::StrongFocus);
+    m_quickView.setFocusPolicy(Qt::NoFocus);
     setWidget(&m_quickView);
 
     connect(this, SIGNAL(clipMoved(int,int,int,int)), SLOT(onClipMoved(int,int,int,int)), Qt::QueuedConnection);
@@ -408,26 +408,23 @@ void TimelineDock::onProducerChanged(Mlt::Producer* after)
         pulseLockButtonOnTrack(trackIndex);
         return;
     }
-    QString service = after->get("mlt_service");
-    if (service == "avformat" || service == "avformat-novalidate" || service == "timewarp") {
-        int i = m_model.trackList().at(trackIndex).mlt_index;
-        QScopedPointer<Mlt::Producer> track(m_model.tractor()->track(i));
-        if (track) {
-            // Ensure the new XML has same in/out point as selected clip by making
-            // a copy of the changed producer and copying the in/out from timeline.
-            Mlt::Playlist playlist(*track);
-            int clipIndex = selection().first();
-            QScopedPointer<Mlt::ClipInfo> info(playlist.clip_info(clipIndex));
-            if (info) {
-                double oldSpeed = qstrcmp("timewarp", info->producer->get("mlt_service")) ? 1.0 : info->producer->get_double("warp_speed");
-                double newSpeed = qstrcmp("timewarp", after->get("mlt_service")) ? 1.0 : after->get_double("warp_speed");
-                double speedRatio = oldSpeed / newSpeed;
+    int i = m_model.trackList().at(trackIndex).mlt_index;
+    QScopedPointer<Mlt::Producer> track(m_model.tractor()->track(i));
+    if (track) {
+        // Ensure the new XML has same in/out point as selected clip by making
+        // a copy of the changed producer and copying the in/out from timeline.
+        Mlt::Playlist playlist(*track);
+        int clipIndex = selection().first();
+        QScopedPointer<Mlt::ClipInfo> info(playlist.clip_info(clipIndex));
+        if (info) {
+            double oldSpeed = qstrcmp("timewarp", info->producer->get("mlt_service")) ? 1.0 : info->producer->get_double("warp_speed");
+            double newSpeed = qstrcmp("timewarp", after->get("mlt_service")) ? 1.0 : after->get_double("warp_speed");
+            double speedRatio = oldSpeed / newSpeed;
 
-                int length = qRound(info->length * speedRatio);
-                after->set("length", length);
-                after->set_in_and_out(qMin(qRound(info->frame_in * speedRatio), length - 1),
-                                      qMin(qRound(info->frame_out * speedRatio), length - 1));
-            }
+            int length = qRound(info->length * speedRatio);
+            after->set("length", length);
+            after->set_in_and_out(qMin(qRound(info->frame_in * speedRatio), length - 1),
+                                  qMin(qRound(info->frame_out * speedRatio), length - 1));
         }
     }
     QString xmlAfter = MLT.XML(after);
@@ -618,8 +615,8 @@ void TimelineDock::emitSelectedFromSelection()
         info->producer->set(kFilterInProperty, info->frame_in);
         info->producer->set(kFilterOutProperty, info->frame_out);
         if (MLT.isImageProducer(info->producer))
-            info->producer->set("out", info->cut->get_int("out"));
-        info->producer->set(kMultitrackItemProperty, 1);
+            info->producer->set_in_and_out(info->cut->get_in(), info->cut->get_out());
+        info->producer->set(kMultitrackItemProperty, QString("%1:%2").arg(clipIndex).arg(trackIndex).toLatin1().constData());
         m_ignoreNextPositionChange = true;
         emit selected(info->producer);
         delete info;
@@ -628,9 +625,11 @@ void TimelineDock::emitSelectedFromSelection()
 
 void TimelineDock::remakeAudioLevels(int trackIndex, int clipIndex, bool force)
 {
-    QModelIndex modelIndex = m_model.index(clipIndex, 0, m_model.index(trackIndex));
-    QScopedPointer<Mlt::ClipInfo> info(getClipInfo(trackIndex, clipIndex));
-    AudioLevelsTask::start(*info->producer, &m_model, modelIndex, force);
+    if (Settings.timelineShowWaveforms()) {
+        QModelIndex modelIndex = m_model.index(clipIndex, 0, m_model.index(trackIndex));
+        QScopedPointer<Mlt::ClipInfo> info(getClipInfo(trackIndex, clipIndex));
+        AudioLevelsTask::start(*info->producer, &m_model, modelIndex, force);
+    }
 }
 
 void TimelineDock::commitTrimCommand()
@@ -683,8 +682,11 @@ bool TimelineDock::moveClip(int fromTrack, int toTrack, int clipIndex, int posit
             onClipMoved(fromTrack, toTrack, clipIndex, position);
         return true;
     } else if (m_model.addTransitionValid(fromTrack, toTrack, clipIndex, position)) {
-        MAIN.undoStack()->push(
-            new Timeline::AddTransitionCommand(m_model, fromTrack, clipIndex, position));
+        setSelection(); // cleared
+        Timeline::AddTransitionCommand* command = new Timeline::AddTransitionCommand(m_model, fromTrack, clipIndex, position);
+        MAIN.undoStack()->push(command);
+        // Select the transition.
+        setSelection(QList<int>() << command->getTransitionIndex());
         return true;
     } else {
         return false;
@@ -834,7 +836,7 @@ void TimelineDock::splitClip(int trackIndex, int clipIndex)
             Mlt::Playlist playlist(*track);
             if (!m_model.isTransition(playlist, clipIndex)) {
                 QScopedPointer<Mlt::ClipInfo> info(getClipInfo(trackIndex, clipIndex));
-                if (info && m_position >= info->start && m_position < info->start + info->frame_count - 1) {
+                if (info && m_position > info->start && m_position < info->start + info->frame_count) {
                     MAIN.undoStack()->push(
                         new Timeline::SplitCommand(m_model, trackIndex, clipIndex, m_position));
                 }
@@ -967,6 +969,20 @@ bool TimelineDock::event(QEvent *event)
     if (event->type() == QEvent::PaletteChange || event->type() == QEvent::StyleChange)
         load(true);
     return result;
+}
+
+void TimelineDock::keyPressEvent(QKeyEvent* event)
+{
+    QDockWidget::keyPressEvent(event);
+    if (!event->isAccepted())
+        MAIN.keyPressEvent(event);
+}
+
+void TimelineDock::keyReleaseEvent(QKeyEvent* event)
+{
+    QDockWidget::keyReleaseEvent(event);
+    if (!event->isAccepted())
+        MAIN.keyReleaseEvent(event);
 }
 
 void TimelineDock::load(bool force)

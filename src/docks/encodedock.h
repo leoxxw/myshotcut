@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2012-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -24,7 +24,6 @@
 #include <QStandardItemModel>
 #include <QSortFilterProxyModel>
 #include <MltProperties.h>
-
 
 class QTreeWidgetItem;
 class QStringList;
@@ -73,7 +72,6 @@ public slots:
 
 private slots:
     void on_presetsTree_clicked(const QModelIndex &index);
-
     void on_presetsTree_activated(const QModelIndex &index);
 
     void on_encodeButton_clicked();

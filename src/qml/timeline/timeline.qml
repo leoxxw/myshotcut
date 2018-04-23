@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 Meltytech, LLC
+ * Copyright (c) 2013-2018 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -53,15 +53,6 @@ Rectangle {
         setZoom(1.0)
     }
 
-    function zoomByWheel(wheel) {
-        if (wheel.modifiers & Qt.ControlModifier) {
-            adjustZoom(wheel.angleDelta.y / 720)
-        }
-        if (wheel.modifiers & Qt.ShiftModifier) {
-            multitrack.trackHeight = Math.max(30, multitrack.trackHeight + wheel.angleDelta.y / 5)
-        }
-    }
-
     function makeTracksTaller() {
         multitrack.trackHeight += 20
     }
@@ -94,7 +85,7 @@ Rectangle {
         anchors.fill: parent
         acceptedButtons: Qt.RightButton
         onClicked: menu.popup()
-        onWheel: zoomByWheel(wheel)
+        onWheel: Logic.onMouseWheel(wheel)
     }
 
     DropArea {
@@ -142,6 +133,30 @@ Rectangle {
                 border.color: selected? 'red' : 'transparent'
                 border.width: selected? 1 : 0
                 z: 1
+                Label {
+                    text: qsTr('Master')
+                    visible: tracksRepeater.count
+                    color: activePalette.windowText
+                    elide: Qt.ElideRight
+                    x: 8
+                    y: 2
+                    width: parent.width - 8
+                }
+                ToolButton {
+                    visible: multitrack.filtered
+                    anchors.right: parent.right
+                    anchors.rightMargin: 4
+                    anchors.verticalCenter: parent.verticalCenter
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    iconName: 'view-filter'
+                    iconSource: 'qrc:///icons/oxygen/32x32/status/view-filter.png'
+                    tooltip: qsTr('Filters')
+                    onClicked: {
+                        timeline.selectMultitrack()
+                        timeline.filteredClicked()
+                    }
+                }
                 MouseArea {
                     anchors.fill: parent
                     acceptedButtons: Qt.LeftButton
@@ -167,6 +182,7 @@ Rectangle {
                             isComposite: model.composite
                             isLocked: model.locked
                             isVideo: !model.audio
+                            isFiltered: model.filtered
                             width: headerWidth
                             height: Logic.trackHeight(model.audio)
                             selected: false
@@ -244,9 +260,12 @@ Rectangle {
                     width: root.width - headerWidth
                     height: root.height - ruler.height - toolbar.height
         
-                    Item {
+                    MouseArea {
                         width: tracksContainer.width + headerWidth
                         height: trackHeaders.height + 30 // 30 is padding
+                        acceptedButtons: Qt.NoButton
+                        onWheel: Logic.onMouseWheel(wheel)
+
                         Column {
                             // These make the striped background for the tracks.
                             // It is important that these are not part of the track visual hierarchy;
@@ -546,6 +565,7 @@ Rectangle {
     Connections {
         target: multitrack
         onLoaded: toolbar.scaleSlider.value = Math.pow(multitrack.scaleFactor - 0.01, 1.0 / 3.0)
+        onScaleFactorChanged: Logic.scrollIfNeeded()
     }
 
     // This provides continuous scrolling at the left/right edges.
