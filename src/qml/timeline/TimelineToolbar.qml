@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2017 Meltytech, LLC
+ * Copyright (c) 2013-2016 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@ import QtQuick 2.2
 import QtQuick.Controls 1.0
 import QtQuick.Layouts 1.0
 import QtGraphicalEffects 1.0
+import 'Timeline.js' as Logic
 
 ToolBar {
     property alias ripple: rippleButton.checked
@@ -136,6 +137,7 @@ ToolBar {
         }
         ZoomSlider {
             id: scaleSlider
+            onValueChanged: Logic.scrollIfNeeded()
         }
         ToolButton {
             action: zoomInAction

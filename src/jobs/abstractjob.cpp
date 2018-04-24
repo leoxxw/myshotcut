@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2017 Meltytech, LLC
+ * Copyright (c) 2012-2016 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,6 @@
 
 AbstractJob::AbstractJob(const QString& name)
     : QProcess(0)
-    , m_item(0)
     , m_ran(false)
     , m_killed(false)
     , m_label(name)
@@ -36,18 +35,16 @@ AbstractJob::AbstractJob(const QString& name)
 void AbstractJob::start()
 {
     m_ran = true;
-    m_time.start();
-    emit progressUpdated(m_item, 0);
 }
 
-void AbstractJob::setStandardItem(QStandardItem* item)
+void AbstractJob::setModelIndex(const QModelIndex& index)
 {
-    m_item = item;
+    m_index = index;
 }
 
-QStandardItem* AbstractJob::standardItem()
+QModelIndex AbstractJob::modelIndex() const
 {
-    return m_item;
+    return m_index;
 }
 
 bool AbstractJob::ran() const
@@ -75,16 +72,6 @@ void AbstractJob::setLabel(const QString &label)
     m_label = label;
 }
 
-QTime AbstractJob::estimateRemaining(int percent)
-{
-    QTime result;
-    if (percent) {
-        int averageMs = m_time.elapsed() / percent;
-        result = QTime::fromMSecsSinceStartOfDay(averageMs * (100 - percent));
-    }
-    return result;
-}
-
 void AbstractJob::stop()
 {
     closeWriteChannel();
@@ -96,19 +83,11 @@ void AbstractJob::stop()
 void AbstractJob::onFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     m_log.append(readAll());
-    const QTime& time = QTime::fromMSecsSinceStartOfDay(m_time.elapsed());
-    if (exitStatus == QProcess::NormalExit && exitCode == 0 && !m_killed) {
-        LOG_INFO() << "job succeeeded";
-        m_log.append(QString("Completed successfully in %1\n").arg(time.toString()));
-        emit progressUpdated(m_item, 100);
+    if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+        LOG_DEBUG() << "job succeeeded";
         emit finished(this, true);
-    } else if (m_killed) {
-        LOG_INFO() << "job stopped";
-        m_log.append(QString("Stopped by user at %1\n").arg(time.toString()));
-        emit finished(this, false);
     } else {
-        LOG_INFO() << "job failed with" << exitCode;
-        m_log.append(QString("Failed with exit code %1\n").arg(exitCode));
+        LOG_DEBUG() << "job failed with" << exitCode;
         emit finished(this, false);
     }
 }

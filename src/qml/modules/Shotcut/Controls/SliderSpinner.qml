@@ -23,7 +23,6 @@ RowLayout {
 
     Slider {
         id: slider
-        stepSize: spinner.stepSize
 
         Layout.fillWidth: true
         activeFocusOnTab: false

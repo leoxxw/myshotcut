@@ -1,8 +1,9 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(CuteLogger)
 
-FIND_PACKAGE(Qt5Core REQUIRED)
+FIND_PACKAGE(Qt4 COMPONENTS QtCore REQUIRED)
+INCLUDE(${QT_USE_FILE})
 
 ADD_DEFINITIONS(-DCUTELOGGER_LIBRARY)
 
@@ -14,7 +15,6 @@ SET(sources
   src/AbstractStringAppender.cpp
   src/ConsoleAppender.cpp
   src/FileAppender.cpp
-  src/RollingFileAppender.cpp
 )
 
 SET(includes
@@ -24,7 +24,6 @@ SET(includes
   include/ConsoleAppender.h
   include/AbstractStringAppender.h
   include/AbstractAppender.h
-  include/RollingFileAppender.h
  )
 
 
@@ -35,8 +34,8 @@ IF(WIN32)
 ENDIF(WIN32)
 
 
-SET(library_target CuteLogger)
+SET(library_target Logger)
 
 ADD_LIBRARY(${library_target} SHARED ${sources} ${includes})
-TARGET_LINK_LIBRARIES(${library_target} Qt5::Core)
+TARGET_LINK_LIBRARIES(${library_target} ${QT_LIBRARIES})
 INSTALL(TARGETS ${library_target} DESTINATION lib)

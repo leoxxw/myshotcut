@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018 Meltytech, LLC
+ * Copyright (c) 2014 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@ Flickable {
     property string rectProperty: 'geometry'
     property string halignProperty: 'valign'
     property string valignProperty: 'halign'
-    property string useFontSizeProperty: 'shotcut:usePointSize'
+    property var _locale: Qt.locale(application.numericLocale)
 
     width: 400
     height: 200
@@ -41,14 +41,9 @@ Flickable {
         return (filter.get(fillProperty) === '1')? filter.producerAspect : 0.0
     }
 
-    function setSizeFromRect() {
-        if (!parseInt(filter.get(useFontSizeProperty)))
-            filter.set('size', filterRect.height / filter.get('argument').split('\n').length)
-    }
-
     Component.onCompleted: {
         if (filter.isNew) {
-            setSizeFromRect()
+            filter.set('size', filterRect.height)
         }
         rectangle.setHandles(filter.getRect(rectProperty))
     }
@@ -109,12 +104,12 @@ Flickable {
                 filterRect.y = Math.round(rect.y / rectangle.heightScale)
                 filterRect.width = Math.round(rect.width / rectangle.widthScale)
                 filterRect.height = Math.round(rect.height / rectangle.heightScale)
-                filter.set(rectProperty, '%L1%/%L2%:%L3%x%L4%'
-                           .arg(filterRect.x / profile.width * 100)
-                           .arg(filterRect.y / profile.height * 100)
-                           .arg(filterRect.width / profile.width * 100)
-                           .arg(filterRect.height / profile.height * 100))
-                setSizeFromRect()
+                filter.set(rectProperty, '%1%/%2%:%3%x%4%'
+                           .arg((filterRect.x / profile.width * 100).toLocaleString(_locale))
+                           .arg((filterRect.y / profile.height * 100).toLocaleString(_locale))
+                           .arg((filterRect.width / profile.width * 100).toLocaleString(_locale))
+                           .arg((filterRect.height / profile.height * 100).toLocaleString(_locale)))
+                filter.set('size', filterRect.height)
             }
         }
     }
@@ -126,17 +121,17 @@ Flickable {
             if (filterRect !== newRect) {
                 filterRect = newRect
                 rectangle.setHandles(filterRect)
-                setSizeFromRect()
+                filter.set('size', filterRect.height)
             }
             if (rectangle.aspectRatio !== getAspectRatio()) {
                 rectangle.aspectRatio = getAspectRatio()
                 rectangle.setHandles(filterRect)
                 var rect = rectangle.rectangle
-                filter.set(rectProperty, '%L1%/%L2%:%L3%x%L4%'
-                           .arg(Math.round(rect.x / rectangle.widthScale) / profile.width * 100)
-                           .arg(Math.round(rect.y / rectangle.heightScale) / profile.height * 100)
-                           .arg(Math.round(rect.width / rectangle.widthScale) / profile.width * 100)
-                           .arg(Math.round(rect.height / rectangle.heightScale) / profile.height * 100))
+                filter.set(rectProperty, '%1%/%2%:%3%x%4%'
+                           .arg((Math.round(rect.x / rectangle.widthScale) / profile.width * 100).toLocaleString(_locale))
+                           .arg((Math.round(rect.y / rectangle.heightScale) / profile.height * 100).toLocaleString(_locale))
+                           .arg((Math.round(rect.width / rectangle.widthScale) / profile.width * 100).toLocaleString(_locale))
+                           .arg((Math.round(rect.height / rectangle.heightScale) / profile.height * 100).toLocaleString(_locale)))
             }
         }
     }

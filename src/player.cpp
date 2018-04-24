@@ -57,7 +57,6 @@ Player::Player(QWidget *parent)
     // Add tab bar to indicate/select what is playing: clip, playlist, timeline.
     m_tabs = new QTabBar;
     m_tabs->setShape(QTabBar::RoundedSouth);
-    m_tabs->setUsesScrollButtons(false);
     m_tabs->addTab(tr("Source"));
     m_tabs->addTab(tr("Project"));
     m_tabs->setTabEnabled(SourceTabIndex, false);
@@ -71,28 +70,25 @@ Player::Player(QWidget *parent)
     m_statusLabel = new QPushButton;
     m_statusLabel->setFlat(true);
     m_statusLabel->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-    m_statusLabel->hide();
     Util::setColorsToHighlight(m_statusLabel, QPalette::Button);
     tabLayout->addWidget(m_statusLabel);
     tabLayout->addStretch(1);
-    if (Settings.drawMethod() == Qt::AA_UseDesktopOpenGL) {
-        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
-        m_statusLabel->setGraphicsEffect(effect);
-        m_statusFadeIn = new QPropertyAnimation(effect, "opacity", this);
-        m_statusFadeIn->setDuration(STATUS_ANIMATION_MS);
-        m_statusFadeIn->setStartValue(0);
-        m_statusFadeIn->setEndValue(1);
-        m_statusFadeIn->setEasingCurve(QEasingCurve::InBack);
-        m_statusFadeOut = new QPropertyAnimation(effect, "opacity", this);
-        m_statusFadeOut->setDuration(STATUS_ANIMATION_MS);
-        m_statusFadeOut->setStartValue(0);
-        m_statusFadeOut->setEndValue(0);
-        m_statusFadeOut->setEasingCurve(QEasingCurve::OutBack);
-        m_statusTimer.setSingleShot(true);
-        connect(&m_statusTimer, SIGNAL(timeout()), m_statusFadeOut, SLOT(start()));
-        connect(m_statusFadeOut, SIGNAL(finished()), SLOT(onFadeOutFinished()));
-        m_statusFadeOut->start();
-    }
+    QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+    m_statusLabel->setGraphicsEffect(effect);
+    m_statusFadeIn = new QPropertyAnimation(effect, "opacity", this);
+    m_statusFadeIn->setDuration(STATUS_ANIMATION_MS);
+    m_statusFadeIn->setStartValue(0);
+    m_statusFadeIn->setEndValue(1);
+    m_statusFadeIn->setEasingCurve(QEasingCurve::InBack);
+    m_statusFadeOut = new QPropertyAnimation(effect, "opacity", this);
+    m_statusFadeOut->setDuration(STATUS_ANIMATION_MS);
+    m_statusFadeOut->setStartValue(0);
+    m_statusFadeOut->setEndValue(0);
+    m_statusFadeOut->setEasingCurve(QEasingCurve::OutBack);
+    m_statusTimer.setSingleShot(true);
+    connect(&m_statusTimer, SIGNAL(timeout()), m_statusFadeOut, SLOT(start()));
+    connect(m_statusFadeOut, SIGNAL(finished()), SLOT(onFadeOutFinished()));
+    m_statusFadeOut->start();
 
     // Add the layouts for managing video view, scroll bars, and audio controls.
     m_videoLayout = new QHBoxLayout;
@@ -761,44 +757,43 @@ void Player::setStatusLabel(const QString &text, int timeoutSeconds, QAction* ac
                     m_scrubber->width() - m_tabs->width() - 30));
     m_statusLabel->setText(s);
     m_statusLabel->setToolTip(text);
-    if (action)
-        connect(m_statusLabel, SIGNAL(clicked(bool)), action, SIGNAL(triggered(bool)));
-    else
-        disconnect(m_statusLabel, SIGNAL(clicked(bool)));
+    m_statusLabel->show();
+    connect(m_statusLabel, SIGNAL(clicked(bool)), this, SLOT(hideLabel(bool)));
+//    if (action)
+//        connect(m_statusLabel, SIGNAL(clicked(bool)), action, SIGNAL(triggered(bool)));
+//    else
+//        disconnect(m_statusLabel, SIGNAL(clicked(bool)));
 
-    if (Settings.drawMethod() == Qt::AA_UseDesktopOpenGL) {
-        // Cancel the fade out.
-        if (m_statusFadeOut->state() == QAbstractAnimation::Running) {
-            m_statusFadeOut->stop();
-        }
-        if (text.isEmpty()) {
-            // Make it transparent.
-            m_statusTimer.stop();
-            m_statusFadeOut->setStartValue(0);
-            m_statusFadeOut->start();
-        } else {
-            // Reset the fade out animation.
-            m_statusFadeOut->setStartValue(1);
-
-            // Fade in.
-            if (m_statusFadeIn->state() != QAbstractAnimation::Running && !m_statusTimer.isActive()) {
-                m_statusFadeIn->start();
-                m_statusTimer.start(timeoutSeconds * 1000);
-            }
-        }
-    } else { // DirectX or software GL
-        m_statusLabel->show();
-        QTimer::singleShot(timeoutSeconds * 1000, this, SLOT(onFadeOutFinished()));
+    // Cancel the fade out.
+    if (m_statusFadeOut->state() == QAbstractAnimation::Running) {
+        m_statusFadeOut->stop();
     }
+    if (text.isEmpty()) {
+        // Make it transparent.
+        m_statusTimer.stop();
+        m_statusFadeOut->setStartValue(0);
+        m_statusFadeOut->start();
+    } else {
+        // Reset the fade out animation.
+        m_statusFadeOut->setStartValue(1);
+
+        // Fade in.
+        if (m_statusFadeIn->state() != QAbstractAnimation::Running && !m_statusTimer.isActive()) {
+            m_statusFadeIn->start();
+            m_statusTimer.start(timeoutSeconds * 1000);
+        }
+    }
+}
+
+void Player::hideLabel(bool)
+{
+    m_statusLabel->hide();
 }
 
 void Player::onFadeOutFinished()
 {
     m_statusLabel->disconnect(SIGNAL(clicked(bool)));
     m_statusLabel->setToolTip(QString());
-    // DirectX or software GL
-    if (Settings.drawMethod() != Qt::AA_UseDesktopOpenGL)
-        m_statusLabel->hide();
 }
 
 void Player::adjustScrollBars(float horizontal, float vertical)

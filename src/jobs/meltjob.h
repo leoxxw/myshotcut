@@ -40,7 +40,6 @@ private:
     void onReadyRead();
     QTemporaryFile m_xml;
     bool m_isStreaming;
-    int m_previousPercent;
 };
 
 #endif // MELTJOB_H

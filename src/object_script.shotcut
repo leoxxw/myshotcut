@@ -104,7 +104,6 @@ INPUT(
 ./ffprobejob.o
 ./ffmpegjob.o
 ./unlinkedfilesdialog.o
-./transcodedialog.o
 ./qrc_resources.o
 ./qrc_other-resources.o
 ./moc_mainwindow.o
@@ -200,5 +199,4 @@ INPUT(
 ./moc_ffprobejob.o
 ./moc_ffmpegjob.o
 ./moc_unlinkedfilesdialog.o
-./moc_transcodedialog.o
 );

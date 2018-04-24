@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2011-2018 Meltytech, LLC
+ * Copyright (c) 2011-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -132,6 +132,390 @@ MainWindow::MainWindow()
 {
     //注册自己的变量类型
     qRegisterMetaType<QMap<QString,QString> >("QMap<QString,QString> ");
+#if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
+        QLibrary libJack("libjack.so.0");
+        if (!libJack.load()) {
+            //   QMessageBox::critical(this, "VideoStudio",
+            //       tr("Error: This program requires the JACK 1 library.\n\nPlease install it using your package manager. It may be named libjack0, jack-audio-connection-kit, jack, or similar."));
+            QMessageBox dialog(QMessageBox::Critical,
+                               "VideoStudio",
+                               tr("Error: This program requires the JACK 1 library.\n\nPlease install it using your package manager. It may be named libjack0, jack-audio-connection-kit, jack, or similar."),
+                               QMessageBox::Ok,
+                               this);
+            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+            dialog.exec();
+            ::exit(EXIT_FAILURE);
+        } else {
+            libJack.unload();
+        }
+        QLibrary libSDL("libSDL2-2.0.so.0");
+        if (!libSDL.load()) {
+            //    QMessageBox::critical(this, "VideoStudio",
+            //        tr("Error: This program requires the SDL 2 library.\n\nPlease install it using your package manager. It may be named libsdl2-2.0-0, SDL2, or similar."));
+            QMessageBox dialog(QMessageBox::Critical,
+                               "VideoStudio",
+                               tr("Error: This program requires the SDL 2 library.\n\nPlease install it using your package manager. It may be named libsdl2-2.0-0, SDL2, or similar."),
+                               QMessageBox::Ok,
+                               this);
+            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+            dialog.exec();
+            ::exit(EXIT_FAILURE);
+        } else {
+            libSDL.unload();
+        }
+#endif
+
+        if (!qgetenv("OBSERVE_FOCUS").isEmpty()) {
+            connect(qApp, &QApplication::focusChanged,
+                    this, &MainWindow::onFocusChanged);
+            connect(qApp, &QGuiApplication::focusObjectChanged,
+                    this, &MainWindow::onFocusObjectChanged);
+            connect(qApp, &QGuiApplication::focusWindowChanged,
+                    this, &MainWindow::onFocusWindowChanged);
+        }
+
+        if (!qgetenv("EVENT_DEBUG").isEmpty())
+            QInternal::registerCallback(QInternal::EventNotifyCallback, eventDebugCallback);
+
+        LOG_DEBUG() << "begin";
+#ifndef Q_OS_WIN
+        new GLTestWidget(this);
+#endif
+        Database::singleton(this);
+        m_autosaveTimer.setSingleShot(true);
+        m_autosaveTimer.setInterval(AUTOSAVE_TIMEOUT_MS);
+        connect(&m_autosaveTimer, SIGNAL(timeout()), this, SLOT(onAutosaveTimeout()));
+
+        // Initialize all QML types
+        QmlUtilities::registerCommonTypes();
+
+        // Create the UI.
+        ui->setupUi(this);
+#if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
+        if (Settings.theme() == "light" || Settings.theme() == "dark" )
+#endif
+            ui->mainToolBar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+#ifdef Q_OS_MAC
+        // Qt 5 on OS X supports the standard Full Screen window widget.
+        ui->mainToolBar->removeAction(ui->actionFullscreen);
+        // OS X has a standard Full Screen shortcut we should use.
+        ui->actionEnter_Full_Screen->setShortcut(QKeySequence((Qt::CTRL + Qt::META + Qt::Key_F)));
+#endif
+#ifdef Q_OS_WIN
+        // Fullscreen on Windows is not allowing popups and other app windows to appear.
+        //    delete ui->actionFullscreen;
+        //    ui->actionFullscreen = 0;
+        delete ui->actionEnter_Full_Screen;
+        ui->actionEnter_Full_Screen = 0;
+#endif
+        setDockNestingEnabled(true);
+        ui->statusBar->hide();
+
+        // Connect UI signals.
+        connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(openVideo()));
+        connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+        connect(this, SIGNAL(producerOpened()), this, SLOT(onProducerOpened()));
+        if (ui->actionFullscreen)
+            connect(ui->actionFullscreen, SIGNAL(triggered()), this, SLOT(on_actionEnter_Full_Screen_triggered()));
+        connect(ui->mainToolBar, SIGNAL(visibilityChanged(bool)), SLOT(onToolbarVisibilityChanged(bool)));
+
+        // Accept drag-n-drop of files.
+        this->setAcceptDrops(true);
+
+        // Setup the undo stack.
+        m_undoStack = new QUndoStack(this);
+        QAction *undoAction = m_undoStack->createUndoAction(this);
+        QAction *redoAction = m_undoStack->createRedoAction(this);
+        undoAction->setIcon(QIcon::fromTheme("edit-undo", QIcon(":/icons/oxygen/32x32/actions/edit-undo.png")));
+        redoAction->setIcon(QIcon::fromTheme("edit-redo", QIcon(":/icons/oxygen/32x32/actions/edit-redo.png")));
+        undoAction->setShortcut(QApplication::translate("MainWindow", "Ctrl+Z", 0));
+        redoAction->setShortcut(QApplication::translate("MainWindow", "Ctrl+Shift+Z", 0));
+        ui->menuEdit->insertAction(ui->actionCut, undoAction);
+        ui->menuEdit->insertAction(ui->actionCut, redoAction);
+        ui->menuEdit->insertSeparator(ui->actionCut);
+        ui->actionUndo->setIcon(undoAction->icon());
+        ui->actionRedo->setIcon(redoAction->icon());
+        ui->actionUndo->setToolTip(undoAction->toolTip());
+        ui->actionRedo->setToolTip(redoAction->toolTip());
+        connect(m_undoStack, SIGNAL(canUndoChanged(bool)), ui->actionUndo, SLOT(setEnabled(bool)));
+        connect(m_undoStack, SIGNAL(canRedoChanged(bool)), ui->actionRedo, SLOT(setEnabled(bool)));
+
+        // Add the player widget.
+        m_player = new Player;
+        MLT.videoWidget()->installEventFilter(this);
+        ui->centralWidget->layout()->addWidget(m_player);
+        connect(this, SIGNAL(producerOpened()), m_player, SLOT(onProducerOpened()));
+        connect(m_player, SIGNAL(showStatusMessage(QString)), this, SLOT(showStatusMessage(QString)));
+        connect(m_player, SIGNAL(inChanged(int)), this, SLOT(onCutModified()));
+        connect(m_player, SIGNAL(outChanged(int)), this, SLOT(onCutModified()));
+        connect(m_player, SIGNAL(tabIndexChanged(int)), SLOT(onPlayerTabIndexChanged(int)));
+        connect(MLT.videoWidget(), SIGNAL(started()), SLOT(processMultipleFiles()));
+        connect(MLT.videoWidget(), SIGNAL(paused()), m_player, SLOT(showPaused()));
+        connect(MLT.videoWidget(), SIGNAL(playing()), m_player, SLOT(showPlaying()));
+
+        setupSettingsMenu();
+        readPlayerSettings();
+        configureVideoWidget();
+        if (Settings.noUpgrade() || qApp->property("noupgrade").toBool())
+            delete ui->actionUpgrade;
+
+        // Add the docks.
+        m_scopeController = new ScopeController(this, ui->menuView);
+        QDockWidget* audioMeterDock = findChild<QDockWidget*>("AudioPeakMeterDock");
+        if (audioMeterDock) {
+            connect(ui->actionAudioMeter, SIGNAL(triggered()), audioMeterDock->toggleViewAction(), SLOT(trigger()));
+        }
+        //设置属性窗口
+        m_propertiesDock = new QDockWidget(tr("Properties"), this);
+        m_propertiesDock->hide();
+        m_propertiesDock->setObjectName("propertiesDock");
+        m_propertiesDock->setWindowIcon(ui->actionProperties->icon());
+        m_propertiesDock->toggleViewAction()->setIcon(ui->actionProperties->icon());
+        m_propertiesDock->setMinimumWidth(300);
+        QScrollArea* scroll = new QScrollArea;
+        scroll->setWidgetResizable(true);
+        m_propertiesDock->setWidget(scroll);
+        addDockWidget(Qt::LeftDockWidgetArea, m_propertiesDock);
+        ui->menuView->addAction(m_propertiesDock->toggleViewAction());
+        connect(m_propertiesDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onPropertiesDockTriggered(bool)));
+        connect(ui->actionProperties, SIGNAL(triggered()), this, SLOT(onPropertiesDockTriggered()));
+
+        //设置最近使用窗口
+        m_recentDock = new RecentDock(this);
+        m_recentDock->hide();
+        addDockWidget(Qt::RightDockWidgetArea, m_recentDock);
+        ui->menuView->addAction(m_recentDock->toggleViewAction());
+        connect(m_recentDock, SIGNAL(itemActivated(QString)), this, SLOT(open(QString)));
+        connect(m_recentDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onRecentDockTriggered(bool)));
+        connect(ui->actionRecent, SIGNAL(triggered()), this, SLOT(onRecentDockTriggered()));
+        connect(this, SIGNAL(openFailed(QString)), m_recentDock, SLOT(remove(QString)));
+
+        //设置播放列表窗口
+        m_playlistDock = new PlaylistDock(this);
+        m_playlistDock->hide();
+        addDockWidget(Qt::LeftDockWidgetArea, m_playlistDock);
+        ui->menuView->addAction(m_playlistDock->toggleViewAction());
+        connect(m_playlistDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onPlaylistDockTriggered(bool)));
+        connect(ui->actionPlaylist, SIGNAL(triggered()), this, SLOT(onPlaylistDockTriggered()));
+        connect(m_playlistDock, SIGNAL(clipOpened(Mlt::Producer*)), this, SLOT(openCut(Mlt::Producer*)));
+        connect(m_playlistDock, SIGNAL(itemActivated(int)), this, SLOT(seekPlaylist(int)));
+        connect(m_playlistDock, SIGNAL(showStatusMessage(QString)), this, SLOT(showStatusMessage(QString)));
+        connect(m_playlistDock->model(), SIGNAL(created()), this, SLOT(onPlaylistCreated()));
+        connect(m_playlistDock->model(), SIGNAL(cleared()), this, SLOT(onPlaylistCleared()));
+        connect(m_playlistDock->model(), SIGNAL(cleared()), this, SLOT(updateAutoSave()));
+        connect(m_playlistDock->model(), SIGNAL(closed()), this, SLOT(onPlaylistClosed()));
+        connect(m_playlistDock->model(), SIGNAL(modified()), this, SLOT(onPlaylistModified()));
+        connect(m_playlistDock->model(), SIGNAL(modified()), this, SLOT(updateAutoSave()));
+        connect(m_playlistDock->model(), SIGNAL(loaded()), this, SLOT(onPlaylistLoaded()));
+        connect(this, SIGNAL(producerOpened()), m_playlistDock, SLOT(onProducerOpened()));
+        if (!Settings.playerGPU())
+            connect(m_playlistDock->model(), SIGNAL(loaded()), this, SLOT(updateThumbnails()));
+
+        //设置时间线窗口
+        m_timelineDock = new TimelineDock(this);
+        m_timelineDock->hide();
+        addDockWidget(Qt::BottomDockWidgetArea, m_timelineDock);
+        ui->menuView->addAction(m_timelineDock->toggleViewAction());
+        connect(m_timelineDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onTimelineDockTriggered(bool)));
+        connect(ui->actionTimeline, SIGNAL(triggered()), SLOT(onTimelineDockTriggered()));
+        connect(m_player, SIGNAL(seeked(int)), m_timelineDock, SLOT(onSeeked(int)));
+        connect(m_timelineDock, SIGNAL(seeked(int)), SLOT(seekTimeline(int)));
+        connect(m_timelineDock, SIGNAL(clipClicked()), SLOT(onTimelineClipSelected()));
+        connect(m_timelineDock, SIGNAL(showStatusMessage(QString)), this, SLOT(showStatusMessage(QString)));
+        connect(m_timelineDock->model(), SIGNAL(showStatusMessage(QString)), this, SLOT(showStatusMessage(QString)));
+        connect(m_timelineDock->model(), SIGNAL(created()), SLOT(onMultitrackCreated()));
+        connect(m_timelineDock->model(), SIGNAL(closed()), SLOT(onMultitrackClosed()));
+        connect(m_timelineDock->model(), SIGNAL(modified()), SLOT(onMultitrackModified()));
+        connect(m_timelineDock->model(), SIGNAL(modified()), SLOT(updateAutoSave()));
+        connect(m_timelineDock->model(), SIGNAL(durationChanged()), SLOT(onMultitrackDurationChanged()));
+        connect(m_timelineDock, SIGNAL(clipOpened(Mlt::Producer*)), SLOT(openCut(Mlt::Producer*)));
+        connect(m_timelineDock->model(), SIGNAL(seeked(int)), SLOT(seekTimeline(int)));
+        connect(m_timelineDock, SIGNAL(selected(Mlt::Producer*)), SLOT(loadProducerWidget(Mlt::Producer*)));
+        connect(m_timelineDock, SIGNAL(selectionChanged()), SLOT(onTimelineSelectionChanged()));
+        connect(m_timelineDock, SIGNAL(clipCopied()), SLOT(onClipCopied()));
+        connect(m_playlistDock, SIGNAL(addAllTimeline(Mlt::Playlist*)), SLOT(onTimelineDockTriggered()));
+        connect(m_playlistDock, SIGNAL(addAllTimeline(Mlt::Playlist*)), SLOT(onAddAllToTimeline(Mlt::Playlist*)));
+        connect(m_player, SIGNAL(previousSought()), m_timelineDock, SLOT(seekPreviousEdit()));
+        connect(m_player, SIGNAL(nextSought()), m_timelineDock, SLOT(seekNextEdit()));
+
+        //设置滤镜窗口
+        m_filterController = new FilterController(this);
+        m_filtersDock = new FiltersDock(m_filterController->metadataModel(), m_filterController->attachedModel(), this);
+        m_filtersDock->hide();
+        addDockWidget(Qt::LeftDockWidgetArea, m_filtersDock);
+        ui->menuView->addAction(m_filtersDock->toggleViewAction());
+        connect(m_filtersDock, SIGNAL(currentFilterRequested(int)), m_filterController, SLOT(setCurrentFilter(int)), Qt::QueuedConnection);
+        connect(m_filtersDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onFiltersDockTriggered(bool)));
+        connect(ui->actionFilters, SIGNAL(triggered()), this, SLOT(onFiltersDockTriggered()));
+        connect(m_filterController, SIGNAL(currentFilterChanged(QmlFilter*, QmlMetadata*, int)), m_filtersDock, SLOT(setCurrentFilter(QmlFilter*, QmlMetadata*, int)), Qt::QueuedConnection);
+        connect(m_filterController, SIGNAL(currentFilterAboutToChange()), m_filtersDock, SLOT(clearCurrentFilter()));
+        connect(this, SIGNAL(producerOpened()), m_filterController, SLOT(setProducer()));
+        connect(m_filterController->attachedModel(), SIGNAL(changed()), SLOT(onFilterModelChanged()));
+        connect(m_filtersDock, SIGNAL(changed()), SLOT(onFilterModelChanged()));
+        connect(m_filterController, SIGNAL(statusChanged(QString)), this, SLOT(showStatusMessage(QString)));
+        connect(m_timelineDock, SIGNAL(fadeInChanged(int)), m_filtersDock, SLOT(setFadeInDuration(int)));
+        connect(m_timelineDock, SIGNAL(fadeOutChanged(int)), m_filtersDock, SLOT(setFadeOutDuration(int)));
+        connect(m_timelineDock, SIGNAL(selected(Mlt::Producer*)), m_filterController, SLOT(setProducer(Mlt::Producer*)));
+
+        //设置历史记录窗口
+        m_historyDock = new QDockWidget(tr("History"), this);
+        m_historyDock->hide();
+        m_historyDock->setObjectName("historyDock");
+        m_historyDock->setWindowIcon(ui->actionHistory->icon());
+        m_historyDock->toggleViewAction()->setIcon(ui->actionHistory->icon());
+        m_historyDock->setMinimumWidth(150);
+        addDockWidget(Qt::RightDockWidgetArea, m_historyDock);
+        ui->menuView->addAction(m_historyDock->toggleViewAction());
+        connect(m_historyDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onHistoryDockTriggered(bool)));
+        connect(ui->actionHistory, SIGNAL(triggered()), this, SLOT(onHistoryDockTriggered()));
+        QUndoView* undoView = new QUndoView(m_undoStack, m_historyDock);
+        undoView->setObjectName("historyView");
+        undoView->setAlternatingRowColors(true);
+        undoView->setSpacing(2);
+        m_historyDock->setWidget(undoView);
+        ui->actionUndo->setDisabled(true);
+        ui->actionRedo->setDisabled(true);
+
+        //设置输出窗口
+        m_encodeDock = new EncodeDock(this);
+        m_encodeDock->hide();
+        addDockWidget(Qt::LeftDockWidgetArea, m_encodeDock);
+        ui->menuView->addAction(m_encodeDock->toggleViewAction());
+        connect(this, SIGNAL(producerOpened()), m_encodeDock, SLOT(onProducerOpened()));
+        connect(ui->actionEncode, SIGNAL(triggered()), this, SLOT(onEncodeTriggered()));
+        connect(ui->actionExportVideo, SIGNAL(triggered()), this, SLOT(onEncodeTriggered()));
+        connect(m_encodeDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onEncodeTriggered(bool)));
+        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), m_player, SLOT(onCaptureStateChanged(bool)));
+        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), m_propertiesDock, SLOT(setDisabled(bool)));
+        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), m_recentDock, SLOT(setDisabled(bool)));
+        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), m_filtersDock, SLOT(setDisabled(bool)));
+        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), ui->actionOpen, SLOT(setDisabled(bool)));
+        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), ui->actionOpenOther, SLOT(setDisabled(bool)));
+        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), ui->actionExit, SLOT(setDisabled(bool)));
+        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), this, SLOT(onCaptureStateChanged(bool)));
+        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), m_historyDock, SLOT(setDisabled(bool)));
+        connect(this, SIGNAL(profileChanged()), m_encodeDock, SLOT(onProfileChanged()));
+        connect(this, SIGNAL(profileChanged()), SLOT(onProfileChanged()));
+        connect(m_playlistDock->model(), SIGNAL(modified()), m_encodeDock, SLOT(onProducerOpened()));
+        connect(m_timelineDock, SIGNAL(clipCopied()), m_encodeDock, SLOT(onProducerOpened()));
+        //绑定获取输出视频路径信号
+        connect(m_encodeDock, SIGNAL(SendVideoPath(QString)), this, SLOT(slot_GetVideoPath(QString)));
+        connect(m_encodeDock, SIGNAL(FinisheUploadVideo(QString,bool)), this, SLOT(slot_FinisheUploadVideo(QString,bool)));
+        //  connect(m_encodeDock,SIGNAL(visibilityChanged(bool)),this,SLOT(setShowfilepropertycheck(bool)));
+        m_encodeDock->onProfileChanged();
+
+        //设置任务窗口
+        m_jobsDock = new JobsDock(this);
+        m_jobsDock->hide();
+        addDockWidget(Qt::RightDockWidgetArea, m_jobsDock);
+        ui->menuView->addAction(m_jobsDock->toggleViewAction());
+        connect(&JOBS, SIGNAL(jobAdded()), m_jobsDock, SLOT(show()));
+        //修改弹窗
+        // connect(&JOBS, SIGNAL(jobAdded()), m_jobsDock, SLOT(raise()));
+        connect(&JOBS, SIGNAL(jobAdded()), this, SLOT(slot_JboRaise()));
+
+        connect(m_jobsDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onJobsDockTriggered(bool)));
+
+        tabifyDockWidget(m_propertiesDock, m_playlistDock);
+        tabifyDockWidget(m_playlistDock, m_filtersDock);
+        tabifyDockWidget(m_filtersDock, m_encodeDock);
+        QDockWidget* audioWaveformDock = findChild<QDockWidget*>("AudioWaveformDock");
+        splitDockWidget(m_recentDock, audioWaveformDock, Qt::Vertical);
+        splitDockWidget(audioMeterDock, m_recentDock, Qt::Horizontal);
+        tabifyDockWidget(m_recentDock, m_historyDock);
+        tabifyDockWidget(m_historyDock, m_jobsDock);
+        m_recentDock->raise();
+
+        if (Settings.meltedEnabled()) {
+            m_meltedServerDock = new MeltedServerDock(this);
+            m_meltedServerDock->hide();
+            addDockWidget(Qt::BottomDockWidgetArea, m_meltedServerDock);
+            m_meltedServerDock->toggleViewAction()->setIcon(m_meltedServerDock->windowIcon());
+            ui->menuView->addAction(m_meltedServerDock->toggleViewAction());
+
+            m_meltedPlaylistDock = new MeltedPlaylistDock(this);
+            m_meltedPlaylistDock->hide();
+            addDockWidget(Qt::BottomDockWidgetArea, m_meltedPlaylistDock);
+            splitDockWidget(m_meltedServerDock, m_meltedPlaylistDock, Qt::Horizontal);
+            m_meltedPlaylistDock->toggleViewAction()->setIcon(m_meltedPlaylistDock->windowIcon());
+            ui->menuView->addAction(m_meltedPlaylistDock->toggleViewAction());
+            connect(m_meltedServerDock, SIGNAL(connected(QString, quint16)), m_meltedPlaylistDock, SLOT(onConnected(QString,quint16)));
+            connect(m_meltedServerDock, SIGNAL(disconnected()), m_meltedPlaylistDock, SLOT(onDisconnected()));
+            connect(m_meltedServerDock, SIGNAL(unitActivated(quint8)), m_meltedPlaylistDock, SLOT(onUnitChanged(quint8)));
+            connect(m_meltedServerDock, SIGNAL(unitActivated(quint8)), this, SLOT(onMeltedUnitActivated()));
+            connect(m_meltedPlaylistDock, SIGNAL(appendRequested()), m_meltedServerDock, SLOT(onAppendRequested()));
+            connect(m_meltedServerDock, SIGNAL(append(QString,int,int)), m_meltedPlaylistDock, SLOT(onAppend(QString,int,int)));
+            connect(m_meltedPlaylistDock, SIGNAL(insertRequested(int)), m_meltedServerDock, SLOT(onInsertRequested(int)));
+            connect(m_meltedServerDock, SIGNAL(insert(QString,int,int,int)), m_meltedPlaylistDock, SLOT(onInsert(QString,int,int,int)));
+            connect(m_meltedServerDock, SIGNAL(unitOpened(quint8)), this, SLOT(onMeltedUnitOpened()));
+            connect(m_meltedServerDock, SIGNAL(unitOpened(quint8)), m_player, SLOT(onMeltedUnitOpened()));
+            connect(m_meltedServerDock->actionFastForward(), SIGNAL(triggered()), m_meltedPlaylistDock->transportControl(), SLOT(fastForward()));
+            connect(m_meltedServerDock->actionPause(), SIGNAL(triggered()), m_meltedPlaylistDock->transportControl(), SLOT(pause()));
+            connect(m_meltedServerDock->actionPlay(), SIGNAL(triggered()), m_meltedPlaylistDock->transportControl(), SLOT(play()));
+            connect(m_meltedServerDock->actionRewind(), SIGNAL(triggered()), m_meltedPlaylistDock->transportControl(), SLOT(rewind()));
+            connect(m_meltedServerDock->actionStop(), SIGNAL(triggered()), m_meltedPlaylistDock->transportControl(), SLOT(stop()));
+            connect(m_meltedServerDock, SIGNAL(openLocal(QString)), SLOT(open(QString)));
+
+            MeltedUnitsModel* unitsModel = (MeltedUnitsModel*) m_meltedServerDock->unitsModel();
+            MeltedPlaylistModel* playlistModel = (MeltedPlaylistModel*) m_meltedPlaylistDock->model();
+            connect(m_meltedServerDock, SIGNAL(connected(QString,quint16)), unitsModel, SLOT(onConnected(QString,quint16)));
+            connect(unitsModel, SIGNAL(clipIndexChanged(quint8, int)), playlistModel, SLOT(onClipIndexChanged(quint8, int)));
+            connect(unitsModel, SIGNAL(generationChanged(quint8)), playlistModel, SLOT(onGenerationChanged(quint8)));
+        }
+
+        // Configure the View menu.
+        //  ui->menuView->addSeparator();
+        //  ui->menuView->addAction(ui->actionApplicationLog);
+
+        // connect video widget signals
+        Mlt::GLWidget* videoWidget = (Mlt::GLWidget*) &(MLT);
+        connect(videoWidget, SIGNAL(dragStarted()), m_playlistDock, SLOT(onPlayerDragStarted()));
+        connect(videoWidget, SIGNAL(seekTo(int)), m_player, SLOT(seek(int)));
+        connect(videoWidget, SIGNAL(gpuNotSupported()), this, SLOT(onGpuNotSupported()));
+        connect(videoWidget, SIGNAL(frameDisplayed(const SharedFrame&)), m_scopeController, SIGNAL(newFrame(const SharedFrame&)));
+        connect(m_filterController, SIGNAL(currentFilterChanged(QmlFilter*, QmlMetadata*, int)), videoWidget, SLOT(setCurrentFilter(QmlFilter*, QmlMetadata*)), Qt::QueuedConnection);
+        connect(m_filterController, SIGNAL(currentFilterAboutToChange()), videoWidget, SLOT(setBlankScene()));
+
+        readWindowSettings();
+        setCorner(Qt::TopLeftCorner, Qt::LeftDockWidgetArea);
+        setCorner(Qt::TopRightCorner, Qt::RightDockWidgetArea);
+        setCorner(Qt::BottomLeftCorner, Qt::BottomDockWidgetArea);
+        setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
+        setDockNestingEnabled(true);
+
+        setFocus();
+        setCurrentFile("");
+
+        LeapNetworkListener* leap = new LeapNetworkListener(this);
+        connect(leap, SIGNAL(shuttle(float)), SLOT(onShuttle(float)));
+        connect(leap, SIGNAL(jogRightFrame()), SLOT(stepRightOneFrame()));
+        connect(leap, SIGNAL(jogRightSecond()), SLOT(stepRightOneSecond()));
+        connect(leap, SIGNAL(jogLeftFrame()), SLOT(stepLeftOneFrame()));
+        connect(leap, SIGNAL(jogLeftSecond()), SLOT(stepLeftOneSecond()));
+
+        connect(&m_network, SIGNAL(finished(QNetworkReply*)), SLOT(onUpgradeCheckFinished(QNetworkReply*)));
+
+        m_timelineDock->setFocusPolicy(Qt::StrongFocus);
+        //开始资源管理系统系统相关任务
+        //展示登录窗口
+        m_loginwidget = new LoginWidget(this);
+        m_loginwidget->hide();
+        connect(m_loginwidget, &LoginWidget::signal_SaveProject, this,&MainWindow::slot_SaveProject);
+        connect(m_loginwidget, &LoginWidget::signal_SaveVideo, this,&MainWindow::slot_SaveVideo);
+        connect(m_loginwidget, &LoginWidget::signal_OpenProject, this,&MainWindow::slot_OpenProject);
+        connect(m_loginwidget, &LoginWidget::signal_OpenVideo, this,&MainWindow::slot_OpenVideo);
+        connect(m_loginwidget,&LoginWidget::Signal_UploadVideo,this,&MainWindow::slot_UploadVideo);
+        connect(m_loginwidget,&LoginWidget::Signal_CloseProject,this,&MainWindow::slot_CloseProject);
+        connect(m_loginwidget,&LoginWidget::Signal_SysName,this,&MainWindow::slot_SysName);
+        connect(this,&MainWindow::Signal_open_clicked,m_loginwidget,&LoginWidget::open_clicked);
+        connect(this,&MainWindow::Signal_open_clicked_t,m_loginwidget,&LoginWidget::open_clicked_t);
+        connect(this,&MainWindow::Signal_raiseLoginwidget,m_loginwidget,&LoginWidget::slot_raise);
+        connect(this, SIGNAL(openFailed(QString)), m_loginwidget, SLOT(slot_openFailed(QString)));
+        connect(m_loginwidget,&LoginWidget::Signal_GetProjectName,this,&MainWindow::slot_GetProjectName);
+        connect(m_loginwidget,&LoginWidget::Signal_CloseWidget,this,&MainWindow::close);
+
+        LOG_DEBUG() << "end";
+        this->hide();
 }
 
 void MainWindow::onFocusWindowChanged(QWindow *) const
@@ -367,9 +751,6 @@ void MainWindow::setupSettingsMenu()
     a = new QAction(QLocale::languageToString(QLocale::English), m_languagesGroup);
     a->setCheckable(true);
     a->setData("en");
-    a = new QAction(QLocale::languageToString(QLocale::Estonian), m_languagesGroup);
-    a->setCheckable(true);
-    a->setData("et");
     a = new QAction(QLocale::languageToString(QLocale::French), m_languagesGroup);
     a->setCheckable(true);
     a->setData("fr");
@@ -391,9 +772,6 @@ void MainWindow::setupSettingsMenu()
     a = new QAction(QLocale::languageToString(QLocale::Japanese), m_languagesGroup);
     a->setCheckable(true);
     a->setData("ja");
-    a = new QAction(QLocale::languageToString(QLocale::Nepali), m_languagesGroup);
-    a->setCheckable(true);
-    a->setData("ne");
     a = new QAction(QLocale::languageToString(QLocale::NorwegianBokmal), m_languagesGroup);
     a->setCheckable(true);
     a->setData("nb");
@@ -475,9 +853,13 @@ void MainWindow::setupSettingsMenu()
             ui->actionDrawingOpenGL->setChecked(true);
             break;
         case Qt::AA_UseOpenGLES:
+            delete ui->actionGPU;
+            ui->actionGPU = 0;
             ui->actionDrawingDirectX->setChecked(true);
             break;
         case Qt::AA_UseSoftwareOpenGL:
+            delete ui->actionGPU;
+            ui->actionGPU = 0;
             ui->actionDrawingSoftware->setChecked(true);
             break;
         default:
@@ -548,7 +930,7 @@ bool MainWindow::isCompatibleWithGpuMode(MltXmlChecker& checker)
         dialog.setEscapeButton(QMessageBox::No);
         int r = dialog.exec();
         if (r == QMessageBox::Yes) {
-            ui->actionGPU->setChecked(true);
+            Settings.setPlayerGPU(true);
             m_exitCode = EXIT_RESTART;
             QApplication::closeAllWindows();
         }
@@ -561,7 +943,7 @@ bool MainWindow::saveRepairedXmlFile(MltXmlChecker& checker, QString& fileName)
 {
     QFileInfo fi(fileName);
     QFile repaired(QString("%1/%2 - %3.%4").arg(fi.path())
-        .arg(fi.completeBaseName()).arg(tr("Repaired")).arg(fi.suffix()));
+                   .arg(fi.completeBaseName()).arg(tr("Repaired")).arg(fi.suffix()));
     repaired.open(QIODevice::WriteOnly);
     LOG_INFO() << "repaired MLT XML file name" << repaired.fileName();
     QFile temp(checker.tempFileName());
@@ -714,8 +1096,8 @@ QString MainWindow::getFileHash(const QString& path) const
     QFile file(path);
     if (file.open(QIODevice::ReadOnly)) {
         QByteArray fileData;
-         // 1 MB = 1 second per 450 files (or faster)
-         // 10 MB = 9 seconds per 450 files (or faster)
+        // 1 MB = 1 second per 450 files (or faster)
+        // 10 MB = 9 seconds per 450 files (or faster)
         if (file.size() > 1000000*2) {
             fileData = file.read(1000000);
             if (file.seek(file.size() - 1000000))
@@ -909,7 +1291,6 @@ void MainWindow::showStatusMessage(QAction* /*action*/, int /*timeoutSeconds*/)
     //    m_statusBarAction.reset(action);
     //    action->setParent(0);
     //    m_player->setStatusLabel(action->text(), timeoutSeconds, action);
-
 }
 
 void MainWindow::showStatusMessage(const QString& message, int timeoutSeconds)
@@ -1054,7 +1435,6 @@ void MainWindow::writeSettings()
     if (isFullScreen())
         showNormal();
 #endif
-    Settings.setPlayerGPU(ui->actionGPU->isChecked());
     Settings.setWindowGeometry(saveGeometry());
     Settings.setWindowState(saveState());
     Settings.sync();
@@ -1173,15 +1553,15 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
         break;
     case Qt::Key_PageUp:
     case Qt::Key_PageDown:
-        {
-            int directionMultiplier = event->key() == Qt::Key_PageUp ? -1 : 1;
-            int seconds = 1;
-            if (event->modifiers() & Qt::ControlModifier)
-                seconds *= 5;
-            if (event->modifiers() & Qt::ShiftModifier)
-                seconds *= 2;
-            stepLeftBySeconds(seconds * directionMultiplier);
-        }
+    {
+        int directionMultiplier = event->key() == Qt::Key_PageUp ? -1 : 1;
+        int seconds = 1;
+        if (event->modifiers() & Qt::ControlModifier)
+            seconds *= 5;
+        if (event->modifiers() & Qt::ShiftModifier)
+            seconds *= 2;
+        stepLeftBySeconds(seconds * directionMultiplier);
+    }
         break;
     case Qt::Key_Space:
 #ifdef Q_OS_MAC
@@ -1244,8 +1624,8 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
             m_player->rewind();
         break;
     case Qt::Key_K:
-            m_player->pause();
-            m_isKKeyPressed = true;
+        m_player->pause();
+        m_isKKeyPressed = true;
         break;
     case Qt::Key_L:
 #ifdef Q_OS_MAC
@@ -1409,12 +1789,13 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
         }
         break;
     case Qt::Key_0:
-        if (m_timelineDock->isVisible()) {
-            m_timelineDock->resetZoom();
-        } else if (m_playlistDock->isVisible()) {
+        if (m_playlistDock->isVisible()) {
             m_playlistDock->raise();
             emit Signal_raiseLoginwidget();
             m_playlistDock->setIndex(9);
+        }
+        else if (m_timelineDock->isVisible()) {
+            m_timelineDock->resetZoom();
         }
         break;
     case Qt::Key_X: // Avid Extract
@@ -2122,7 +2503,7 @@ void MainWindow::onProducerOpened()
         m_meltedServerDock->disconnect(SIGNAL(positionUpdated(int,double,int,int,int,bool)));
 
     QWidget* w = loadProducerWidget(MLT.producer());
-    if (w && !MLT.producer()->get(kMultitrackItemProperty)) {
+    if (w && !MLT.producer()->get_int(kMultitrackItemProperty)) {
         if (-1 != w->metaObject()->indexOfSignal("producerReopened()"))
             connect(w, SIGNAL(producerReopened()), m_player, SLOT(onProducerOpened()));
     }
@@ -2169,7 +2550,7 @@ void MainWindow::onProducerChanged()
 {
     MLT.refreshConsumer();
     if (playlist() && MLT.producer() && MLT.producer()->is_valid()
-        && MLT.producer()->get_int(kPlaylistIndexProperty))
+            && MLT.producer()->get_int(kPlaylistIndexProperty))
         m_playlistDock->setUpdateButtonEnabled(true);
 }
 
@@ -2178,8 +2559,6 @@ bool MainWindow::on_actionSave_triggered()
     if (m_currentFile.isEmpty()) {
         return on_actionSave_As_triggered();
     } else {
-        if (Util::warnIfNotWritable(m_currentFile, this, tr("Save XML")))
-            return false;
         saveXML(m_currentFile);
         setCurrentFile(m_currentFile);
         setWindowModified(false);
@@ -2223,7 +2602,7 @@ bool MainWindow::on_actionSave_As_triggered()
         m_undoStack->setClean();
         m_recentDock->add(filename);
     }
-    return !filename.isEmpty();
+    return filename.isEmpty();
 }
 
 bool MainWindow::continueModified()
@@ -2330,7 +2709,7 @@ void MainWindow::onCaptureStateChanged(bool started)
     if (started && (MLT.resource().startsWith("x11grab:") ||
                     MLT.resource().startsWith("gdigrab:") ||
                     MLT.resource().startsWith("avfoundation"))
-                && !MLT.producer()->get_int(kBackgroundCaptureProperty))
+            && !MLT.producer()->get_int(kBackgroundCaptureProperty))
         showMinimized();
 }
 
@@ -2587,7 +2966,7 @@ Mlt::Producer *MainWindow::multitrack() const
 bool MainWindow::isMultitrackValid() const
 {
     return m_timelineDock->model()->tractor()
-       && !m_timelineDock->model()->trackList().empty();
+            && !m_timelineDock->model()->trackList().empty();
 }
 
 QWidget *MainWindow::loadProducerWidget(Mlt::Producer* producer)
@@ -2668,7 +3047,7 @@ QWidget *MainWindow::loadProducerWidget(Mlt::Producer* producer)
         if (-1 != w->metaObject()->indexOfSignal("producerChanged(Mlt::Producer*)")) {
             connect(w, SIGNAL(producerChanged(Mlt::Producer*)), SLOT(onProducerChanged()));
             connect(w, SIGNAL(producerChanged(Mlt::Producer*)), m_filterController, SLOT(setProducer(Mlt::Producer*)));
-            if (producer->get(kMultitrackItemProperty))
+            if (producer->get_int(kMultitrackItemProperty))
                 connect(w, SIGNAL(producerChanged(Mlt::Producer*)), m_timelineDock, SLOT(onProducerChanged(Mlt::Producer*)));
         }
         scrollArea->setWidget(w);
@@ -3075,7 +3454,7 @@ void MainWindow::onProfileTriggered(QAction *action)
 void MainWindow::onProfileChanged()
 {
     if (multitrack() && MLT.isMultitrack() &&
-       (m_timelineDock->selection().isEmpty() || m_timelineDock->currentTrack() == -1)) {
+            (m_timelineDock->selection().isEmpty() || m_timelineDock->currentTrack() == -1)) {
         emit m_timelineDock->selected(multitrack());
     }
 }
@@ -3192,7 +3571,7 @@ void MainWindow::on_actionOpenXML_triggered()
     path.append("/*");
 #endif
     QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), path,
-        tr("MLT XML (*.mlt);;All Files (*)"));
+                                                          tr("MLT XML (*.mlt);;All Files (*)"));
     if (filenames.length() > 0) {
         QString url = filenames.first();
         MltXmlChecker checker;
@@ -3393,15 +3772,11 @@ void MainWindow::on_actionExportEDL_triggered()
     // Dialog to get export file name.
     QString path = Settings.savePath();
     path.append("/.edl");
-    QString caption = tr("Export EDL");
-    QString saveFileName = QFileDialog::getSaveFileName(this, caption, path, tr("EDL (*.edl)"));
+    QString saveFileName = QFileDialog::getSaveFileName(this, tr("Export EDL"), path, tr("EDL (*.edl)"));
     if (!saveFileName.isEmpty()) {
         QFileInfo fi(saveFileName);
         if (fi.suffix() != "edl")
             saveFileName += ".edl";
-
-        if (Util::warnIfNotWritable(saveFileName, this, caption))
-            return;
 
         // Locate the JavaScript file in the filesystem.
         QDir qmlDir = QmlUtilities::qmlDir();
@@ -3469,14 +3844,11 @@ void MainWindow::onGLWidgetImageReady()
     if (!image.isNull()) {
         QString path = Settings.savePath();
         path.append("/.png");
-        QString caption = tr("Export Frame");
-        QString saveFileName = QFileDialog::getSaveFileName(this, caption, path);
+        QString saveFileName = QFileDialog::getSaveFileName(this, tr("Export Frame"), path);
         if (!saveFileName.isEmpty()) {
             QFileInfo fi(saveFileName);
             if (fi.suffix().isEmpty())
                 saveFileName += ".png";
-            if (Util::warnIfNotWritable(saveFileName, this, caption))
-                return;
             image.save(saveFileName);
             Settings.setSavePath(fi.path());
             m_recentDock->add(saveFileName);
@@ -3587,390 +3959,6 @@ void MainWindow::readFromClient()
     if(output == "true")
     {
         bDogCheck = true;
-#if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
-        QLibrary libJack("libjack.so.0");
-        if (!libJack.load()) {
-            //   QMessageBox::critical(this, "VideoStudio",
-            //       tr("Error: This program requires the JACK 1 library.\n\nPlease install it using your package manager. It may be named libjack0, jack-audio-connection-kit, jack, or similar."));
-            QMessageBox dialog(QMessageBox::Critical,
-                               "VideoStudio",
-                               tr("Error: This program requires the JACK 1 library.\n\nPlease install it using your package manager. It may be named libjack0, jack-audio-connection-kit, jack, or similar."),
-                               QMessageBox::Ok,
-                               this);
-            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
-            dialog.exec();
-            ::exit(EXIT_FAILURE);
-        } else {
-            libJack.unload();
-        }
-        QLibrary libSDL("libSDL2-2.0.so.0");
-        if (!libSDL.load()) {
-            //    QMessageBox::critical(this, "VideoStudio",
-            //        tr("Error: This program requires the SDL 2 library.\n\nPlease install it using your package manager. It may be named libsdl2-2.0-0, SDL2, or similar."));
-            QMessageBox dialog(QMessageBox::Critical,
-                               "VideoStudio",
-                               tr("Error: This program requires the SDL 2 library.\n\nPlease install it using your package manager. It may be named libsdl2-2.0-0, SDL2, or similar."),
-                               QMessageBox::Ok,
-                               this);
-            dialog.setButtonText (QMessageBox::Ok,QString("确定"));
-            dialog.exec();
-            ::exit(EXIT_FAILURE);
-        } else {
-            libSDL.unload();
-        }
-#endif
-
-        if (!qgetenv("OBSERVE_FOCUS").isEmpty()) {
-            connect(qApp, &QApplication::focusChanged,
-                    this, &MainWindow::onFocusChanged);
-            connect(qApp, &QGuiApplication::focusObjectChanged,
-                    this, &MainWindow::onFocusObjectChanged);
-            connect(qApp, &QGuiApplication::focusWindowChanged,
-                    this, &MainWindow::onFocusWindowChanged);
-        }
-
-        if (!qgetenv("EVENT_DEBUG").isEmpty())
-            QInternal::registerCallback(QInternal::EventNotifyCallback, eventDebugCallback);
-
-        LOG_DEBUG() << "begin";
-#ifndef Q_OS_WIN
-        new GLTestWidget(this);
-#endif
-        Database::singleton(this);
-        m_autosaveTimer.setSingleShot(true);
-        m_autosaveTimer.setInterval(AUTOSAVE_TIMEOUT_MS);
-        connect(&m_autosaveTimer, SIGNAL(timeout()), this, SLOT(onAutosaveTimeout()));
-
-        // Initialize all QML types
-        QmlUtilities::registerCommonTypes();
-
-        // Create the UI.
-        ui->setupUi(this);
-#if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
-        if (Settings.theme() == "light" || Settings.theme() == "dark" )
-#endif
-            ui->mainToolBar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-#ifdef Q_OS_MAC
-        // Qt 5 on OS X supports the standard Full Screen window widget.
-        ui->mainToolBar->removeAction(ui->actionFullscreen);
-        // OS X has a standard Full Screen shortcut we should use.
-        ui->actionEnter_Full_Screen->setShortcut(QKeySequence((Qt::CTRL + Qt::META + Qt::Key_F)));
-#endif
-#ifdef Q_OS_WIN
-        // Fullscreen on Windows is not allowing popups and other app windows to appear.
-        //    delete ui->actionFullscreen;
-        //    ui->actionFullscreen = 0;
-        delete ui->actionEnter_Full_Screen;
-        ui->actionEnter_Full_Screen = 0;
-#endif
-        setDockNestingEnabled(true);
-        ui->statusBar->hide();
-
-        // Connect UI signals.
-        connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(openVideo()));
-        connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
-        connect(this, SIGNAL(producerOpened()), this, SLOT(onProducerOpened()));
-        if (ui->actionFullscreen)
-            connect(ui->actionFullscreen, SIGNAL(triggered()), this, SLOT(on_actionEnter_Full_Screen_triggered()));
-        connect(ui->mainToolBar, SIGNAL(visibilityChanged(bool)), SLOT(onToolbarVisibilityChanged(bool)));
-
-        // Accept drag-n-drop of files.
-        this->setAcceptDrops(true);
-
-        // Setup the undo stack.
-        m_undoStack = new QUndoStack(this);
-        QAction *undoAction = m_undoStack->createUndoAction(this);
-        QAction *redoAction = m_undoStack->createRedoAction(this);
-        undoAction->setIcon(QIcon::fromTheme("edit-undo", QIcon(":/icons/oxygen/32x32/actions/edit-undo.png")));
-        redoAction->setIcon(QIcon::fromTheme("edit-redo", QIcon(":/icons/oxygen/32x32/actions/edit-redo.png")));
-        undoAction->setShortcut(QApplication::translate("MainWindow", "Ctrl+Z", 0));
-        redoAction->setShortcut(QApplication::translate("MainWindow", "Ctrl+Shift+Z", 0));
-        ui->menuEdit->insertAction(ui->actionCut, undoAction);
-        ui->menuEdit->insertAction(ui->actionCut, redoAction);
-        ui->menuEdit->insertSeparator(ui->actionCut);
-        ui->actionUndo->setIcon(undoAction->icon());
-        ui->actionRedo->setIcon(redoAction->icon());
-        ui->actionUndo->setToolTip(undoAction->toolTip());
-        ui->actionRedo->setToolTip(redoAction->toolTip());
-        connect(m_undoStack, SIGNAL(canUndoChanged(bool)), ui->actionUndo, SLOT(setEnabled(bool)));
-        connect(m_undoStack, SIGNAL(canRedoChanged(bool)), ui->actionRedo, SLOT(setEnabled(bool)));
-
-        // Add the player widget.
-        m_player = new Player;
-        MLT.videoWidget()->installEventFilter(this);
-        ui->centralWidget->layout()->addWidget(m_player);
-        connect(this, SIGNAL(producerOpened()), m_player, SLOT(onProducerOpened()));
-        connect(m_player, SIGNAL(showStatusMessage(QString)), this, SLOT(showStatusMessage(QString)));
-        connect(m_player, SIGNAL(inChanged(int)), this, SLOT(onCutModified()));
-        connect(m_player, SIGNAL(outChanged(int)), this, SLOT(onCutModified()));
-        connect(m_player, SIGNAL(tabIndexChanged(int)), SLOT(onPlayerTabIndexChanged(int)));
-        connect(MLT.videoWidget(), SIGNAL(started()), SLOT(processMultipleFiles()));
-        connect(MLT.videoWidget(), SIGNAL(paused()), m_player, SLOT(showPaused()));
-        connect(MLT.videoWidget(), SIGNAL(playing()), m_player, SLOT(showPlaying()));
-
-        setupSettingsMenu();
-        readPlayerSettings();
-        configureVideoWidget();
-        if (Settings.noUpgrade() || qApp->property("noupgrade").toBool())
-            delete ui->actionUpgrade;
-
-        // Add the docks.
-        m_scopeController = new ScopeController(this, ui->menuView);
-        QDockWidget* audioMeterDock = findChild<QDockWidget*>("AudioPeakMeterDock");
-        if (audioMeterDock) {
-            connect(ui->actionAudioMeter, SIGNAL(triggered()), audioMeterDock->toggleViewAction(), SLOT(trigger()));
-        }
-        //设置属性窗口
-        m_propertiesDock = new QDockWidget(tr("Properties"), this);
-        m_propertiesDock->hide();
-        m_propertiesDock->setObjectName("propertiesDock");
-        m_propertiesDock->setWindowIcon(ui->actionProperties->icon());
-        m_propertiesDock->toggleViewAction()->setIcon(ui->actionProperties->icon());
-        m_propertiesDock->setMinimumWidth(300);
-        QScrollArea* scroll = new QScrollArea;
-        scroll->setWidgetResizable(true);
-        m_propertiesDock->setWidget(scroll);
-        addDockWidget(Qt::LeftDockWidgetArea, m_propertiesDock);
-        ui->menuView->addAction(m_propertiesDock->toggleViewAction());
-        connect(m_propertiesDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onPropertiesDockTriggered(bool)));
-        connect(ui->actionProperties, SIGNAL(triggered()), this, SLOT(onPropertiesDockTriggered()));
-
-        //设置最近使用窗口
-        m_recentDock = new RecentDock(this);
-        m_recentDock->hide();
-        addDockWidget(Qt::RightDockWidgetArea, m_recentDock);
-        ui->menuView->addAction(m_recentDock->toggleViewAction());
-        connect(m_recentDock, SIGNAL(itemActivated(QString)), this, SLOT(open(QString)));
-        connect(m_recentDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onRecentDockTriggered(bool)));
-        connect(ui->actionRecent, SIGNAL(triggered()), this, SLOT(onRecentDockTriggered()));
-        connect(this, SIGNAL(openFailed(QString)), m_recentDock, SLOT(remove(QString)));
-
-        //设置播放列表窗口
-        m_playlistDock = new PlaylistDock(this);
-        m_playlistDock->hide();
-        addDockWidget(Qt::LeftDockWidgetArea, m_playlistDock);
-        ui->menuView->addAction(m_playlistDock->toggleViewAction());
-        connect(m_playlistDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onPlaylistDockTriggered(bool)));
-        connect(ui->actionPlaylist, SIGNAL(triggered()), this, SLOT(onPlaylistDockTriggered()));
-        connect(m_playlistDock, SIGNAL(clipOpened(Mlt::Producer*)), this, SLOT(openCut(Mlt::Producer*)));
-        connect(m_playlistDock, SIGNAL(itemActivated(int)), this, SLOT(seekPlaylist(int)));
-        connect(m_playlistDock, SIGNAL(showStatusMessage(QString)), this, SLOT(showStatusMessage(QString)));
-        connect(m_playlistDock->model(), SIGNAL(created()), this, SLOT(onPlaylistCreated()));
-        connect(m_playlistDock->model(), SIGNAL(cleared()), this, SLOT(onPlaylistCleared()));
-        connect(m_playlistDock->model(), SIGNAL(cleared()), this, SLOT(updateAutoSave()));
-        connect(m_playlistDock->model(), SIGNAL(closed()), this, SLOT(onPlaylistClosed()));
-        connect(m_playlistDock->model(), SIGNAL(modified()), this, SLOT(onPlaylistModified()));
-        connect(m_playlistDock->model(), SIGNAL(modified()), this, SLOT(updateAutoSave()));
-        connect(m_playlistDock->model(), SIGNAL(loaded()), this, SLOT(onPlaylistLoaded()));
-        connect(this, SIGNAL(producerOpened()), m_playlistDock, SLOT(onProducerOpened()));
-        if (!Settings.playerGPU())
-            connect(m_playlistDock->model(), SIGNAL(loaded()), this, SLOT(updateThumbnails()));
-
-        //设置时间线窗口
-        m_timelineDock = new TimelineDock(this);
-        m_timelineDock->hide();
-        addDockWidget(Qt::BottomDockWidgetArea, m_timelineDock);
-        ui->menuView->addAction(m_timelineDock->toggleViewAction());
-        connect(m_timelineDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onTimelineDockTriggered(bool)));
-        connect(ui->actionTimeline, SIGNAL(triggered()), SLOT(onTimelineDockTriggered()));
-        connect(m_player, SIGNAL(seeked(int)), m_timelineDock, SLOT(onSeeked(int)));
-        connect(m_timelineDock, SIGNAL(seeked(int)), SLOT(seekTimeline(int)));
-        connect(m_timelineDock, SIGNAL(clipClicked()), SLOT(onTimelineClipSelected()));
-        connect(m_timelineDock, SIGNAL(showStatusMessage(QString)), this, SLOT(showStatusMessage(QString)));
-        connect(m_timelineDock->model(), SIGNAL(showStatusMessage(QString)), this, SLOT(showStatusMessage(QString)));
-        connect(m_timelineDock->model(), SIGNAL(created()), SLOT(onMultitrackCreated()));
-        connect(m_timelineDock->model(), SIGNAL(closed()), SLOT(onMultitrackClosed()));
-        connect(m_timelineDock->model(), SIGNAL(modified()), SLOT(onMultitrackModified()));
-        connect(m_timelineDock->model(), SIGNAL(modified()), SLOT(updateAutoSave()));
-        connect(m_timelineDock->model(), SIGNAL(durationChanged()), SLOT(onMultitrackDurationChanged()));
-        connect(m_timelineDock, SIGNAL(clipOpened(Mlt::Producer*)), SLOT(openCut(Mlt::Producer*)));
-        connect(m_timelineDock->model(), SIGNAL(seeked(int)), SLOT(seekTimeline(int)));
-        connect(m_timelineDock, SIGNAL(selected(Mlt::Producer*)), SLOT(loadProducerWidget(Mlt::Producer*)));
-        connect(m_timelineDock, SIGNAL(selectionChanged()), SLOT(onTimelineSelectionChanged()));
-        connect(m_timelineDock, SIGNAL(clipCopied()), SLOT(onClipCopied()));
-        connect(m_playlistDock, SIGNAL(addAllTimeline(Mlt::Playlist*)), SLOT(onTimelineDockTriggered()));
-        connect(m_playlistDock, SIGNAL(addAllTimeline(Mlt::Playlist*)), SLOT(onAddAllToTimeline(Mlt::Playlist*)));
-        connect(m_player, SIGNAL(previousSought()), m_timelineDock, SLOT(seekPreviousEdit()));
-        connect(m_player, SIGNAL(nextSought()), m_timelineDock, SLOT(seekNextEdit()));
-
-        //设置滤镜窗口
-        m_filterController = new FilterController(this);
-        m_filtersDock = new FiltersDock(m_filterController->metadataModel(), m_filterController->attachedModel(), this);
-        m_filtersDock->hide();
-        addDockWidget(Qt::LeftDockWidgetArea, m_filtersDock);
-        ui->menuView->addAction(m_filtersDock->toggleViewAction());
-        connect(m_filtersDock, SIGNAL(currentFilterRequested(int)), m_filterController, SLOT(setCurrentFilter(int)), Qt::QueuedConnection);
-        connect(m_filtersDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onFiltersDockTriggered(bool)));
-        connect(ui->actionFilters, SIGNAL(triggered()), this, SLOT(onFiltersDockTriggered()));
-        connect(m_filterController, SIGNAL(currentFilterChanged(QmlFilter*, QmlMetadata*, int)), m_filtersDock, SLOT(setCurrentFilter(QmlFilter*, QmlMetadata*, int)), Qt::QueuedConnection);
-        connect(m_filterController, SIGNAL(currentFilterAboutToChange()), m_filtersDock, SLOT(clearCurrentFilter()));
-        connect(this, SIGNAL(producerOpened()), m_filterController, SLOT(setProducer()));
-        connect(m_filterController->attachedModel(), SIGNAL(changed()), SLOT(onFilterModelChanged()));
-        connect(m_filtersDock, SIGNAL(changed()), SLOT(onFilterModelChanged()));
-        connect(m_filterController, SIGNAL(statusChanged(QString)), this, SLOT(showStatusMessage(QString)));
-        connect(m_timelineDock, SIGNAL(fadeInChanged(int)), m_filtersDock, SLOT(setFadeInDuration(int)));
-        connect(m_timelineDock, SIGNAL(fadeOutChanged(int)), m_filtersDock, SLOT(setFadeOutDuration(int)));
-        connect(m_timelineDock, SIGNAL(selected(Mlt::Producer*)), m_filterController, SLOT(setProducer(Mlt::Producer*)));
-
-        //设置历史记录窗口
-        m_historyDock = new QDockWidget(tr("History"), this);
-        m_historyDock->hide();
-        m_historyDock->setObjectName("historyDock");
-        m_historyDock->setWindowIcon(ui->actionHistory->icon());
-        m_historyDock->toggleViewAction()->setIcon(ui->actionHistory->icon());
-        m_historyDock->setMinimumWidth(150);
-        addDockWidget(Qt::RightDockWidgetArea, m_historyDock);
-        ui->menuView->addAction(m_historyDock->toggleViewAction());
-        connect(m_historyDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onHistoryDockTriggered(bool)));
-        connect(ui->actionHistory, SIGNAL(triggered()), this, SLOT(onHistoryDockTriggered()));
-        QUndoView* undoView = new QUndoView(m_undoStack, m_historyDock);
-        undoView->setObjectName("historyView");
-        undoView->setAlternatingRowColors(true);
-        undoView->setSpacing(2);
-        m_historyDock->setWidget(undoView);
-        ui->actionUndo->setDisabled(true);
-        ui->actionRedo->setDisabled(true);
-
-        //设置输出窗口
-        m_encodeDock = new EncodeDock(this);
-        m_encodeDock->hide();
-        addDockWidget(Qt::LeftDockWidgetArea, m_encodeDock);
-        ui->menuView->addAction(m_encodeDock->toggleViewAction());
-        connect(this, SIGNAL(producerOpened()), m_encodeDock, SLOT(onProducerOpened()));
-        connect(ui->actionEncode, SIGNAL(triggered()), this, SLOT(onEncodeTriggered()));
-        connect(ui->actionExportVideo, SIGNAL(triggered()), this, SLOT(onEncodeTriggered()));
-        connect(m_encodeDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onEncodeTriggered(bool)));
-        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), m_player, SLOT(onCaptureStateChanged(bool)));
-        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), m_propertiesDock, SLOT(setDisabled(bool)));
-        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), m_recentDock, SLOT(setDisabled(bool)));
-        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), m_filtersDock, SLOT(setDisabled(bool)));
-        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), ui->actionOpen, SLOT(setDisabled(bool)));
-        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), ui->actionOpenOther, SLOT(setDisabled(bool)));
-        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), ui->actionExit, SLOT(setDisabled(bool)));
-        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), this, SLOT(onCaptureStateChanged(bool)));
-        connect(m_encodeDock, SIGNAL(captureStateChanged(bool)), m_historyDock, SLOT(setDisabled(bool)));
-        connect(this, SIGNAL(profileChanged()), m_encodeDock, SLOT(onProfileChanged()));
-        connect(this, SIGNAL(profileChanged()), SLOT(onProfileChanged()));
-        connect(m_playlistDock->model(), SIGNAL(modified()), m_encodeDock, SLOT(onProducerOpened()));
-        connect(m_timelineDock, SIGNAL(clipCopied()), m_encodeDock, SLOT(onProducerOpened()));
-        //绑定获取输出视频路径信号
-        connect(m_encodeDock, SIGNAL(SendVideoPath(QString)), this, SLOT(slot_GetVideoPath(QString)));
-        connect(m_encodeDock, SIGNAL(FinisheUploadVideo(QString,bool)), this, SLOT(slot_FinisheUploadVideo(QString,bool)));
-        //  connect(m_encodeDock,SIGNAL(visibilityChanged(bool)),this,SLOT(setShowfilepropertycheck(bool)));
-        m_encodeDock->onProfileChanged();
-
-        //设置任务窗口
-        m_jobsDock = new JobsDock(this);
-        m_jobsDock->hide();
-        addDockWidget(Qt::RightDockWidgetArea, m_jobsDock);
-        ui->menuView->addAction(m_jobsDock->toggleViewAction());
-        connect(&JOBS, SIGNAL(jobAdded()), m_jobsDock, SLOT(show()));
-        //修改弹窗
-        // connect(&JOBS, SIGNAL(jobAdded()), m_jobsDock, SLOT(raise()));
-        connect(&JOBS, SIGNAL(jobAdded()), this, SLOT(slot_JboRaise()));
-
-        connect(m_jobsDock->toggleViewAction(), SIGNAL(triggered(bool)), this, SLOT(onJobsDockTriggered(bool)));
-
-        tabifyDockWidget(m_propertiesDock, m_playlistDock);
-        tabifyDockWidget(m_playlistDock, m_filtersDock);
-        tabifyDockWidget(m_filtersDock, m_encodeDock);
-        QDockWidget* audioWaveformDock = findChild<QDockWidget*>("AudioWaveformDock");
-        splitDockWidget(m_recentDock, audioWaveformDock, Qt::Vertical);
-        splitDockWidget(audioMeterDock, m_recentDock, Qt::Horizontal);
-        tabifyDockWidget(m_recentDock, m_historyDock);
-        tabifyDockWidget(m_historyDock, m_jobsDock);
-        m_recentDock->raise();
-
-        if (Settings.meltedEnabled()) {
-            m_meltedServerDock = new MeltedServerDock(this);
-            m_meltedServerDock->hide();
-            addDockWidget(Qt::BottomDockWidgetArea, m_meltedServerDock);
-            m_meltedServerDock->toggleViewAction()->setIcon(m_meltedServerDock->windowIcon());
-            ui->menuView->addAction(m_meltedServerDock->toggleViewAction());
-
-            m_meltedPlaylistDock = new MeltedPlaylistDock(this);
-            m_meltedPlaylistDock->hide();
-            addDockWidget(Qt::BottomDockWidgetArea, m_meltedPlaylistDock);
-            splitDockWidget(m_meltedServerDock, m_meltedPlaylistDock, Qt::Horizontal);
-            m_meltedPlaylistDock->toggleViewAction()->setIcon(m_meltedPlaylistDock->windowIcon());
-            ui->menuView->addAction(m_meltedPlaylistDock->toggleViewAction());
-            connect(m_meltedServerDock, SIGNAL(connected(QString, quint16)), m_meltedPlaylistDock, SLOT(onConnected(QString,quint16)));
-            connect(m_meltedServerDock, SIGNAL(disconnected()), m_meltedPlaylistDock, SLOT(onDisconnected()));
-            connect(m_meltedServerDock, SIGNAL(unitActivated(quint8)), m_meltedPlaylistDock, SLOT(onUnitChanged(quint8)));
-            connect(m_meltedServerDock, SIGNAL(unitActivated(quint8)), this, SLOT(onMeltedUnitActivated()));
-            connect(m_meltedPlaylistDock, SIGNAL(appendRequested()), m_meltedServerDock, SLOT(onAppendRequested()));
-            connect(m_meltedServerDock, SIGNAL(append(QString,int,int)), m_meltedPlaylistDock, SLOT(onAppend(QString,int,int)));
-            connect(m_meltedPlaylistDock, SIGNAL(insertRequested(int)), m_meltedServerDock, SLOT(onInsertRequested(int)));
-            connect(m_meltedServerDock, SIGNAL(insert(QString,int,int,int)), m_meltedPlaylistDock, SLOT(onInsert(QString,int,int,int)));
-            connect(m_meltedServerDock, SIGNAL(unitOpened(quint8)), this, SLOT(onMeltedUnitOpened()));
-            connect(m_meltedServerDock, SIGNAL(unitOpened(quint8)), m_player, SLOT(onMeltedUnitOpened()));
-            connect(m_meltedServerDock->actionFastForward(), SIGNAL(triggered()), m_meltedPlaylistDock->transportControl(), SLOT(fastForward()));
-            connect(m_meltedServerDock->actionPause(), SIGNAL(triggered()), m_meltedPlaylistDock->transportControl(), SLOT(pause()));
-            connect(m_meltedServerDock->actionPlay(), SIGNAL(triggered()), m_meltedPlaylistDock->transportControl(), SLOT(play()));
-            connect(m_meltedServerDock->actionRewind(), SIGNAL(triggered()), m_meltedPlaylistDock->transportControl(), SLOT(rewind()));
-            connect(m_meltedServerDock->actionStop(), SIGNAL(triggered()), m_meltedPlaylistDock->transportControl(), SLOT(stop()));
-            connect(m_meltedServerDock, SIGNAL(openLocal(QString)), SLOT(open(QString)));
-
-            MeltedUnitsModel* unitsModel = (MeltedUnitsModel*) m_meltedServerDock->unitsModel();
-            MeltedPlaylistModel* playlistModel = (MeltedPlaylistModel*) m_meltedPlaylistDock->model();
-            connect(m_meltedServerDock, SIGNAL(connected(QString,quint16)), unitsModel, SLOT(onConnected(QString,quint16)));
-            connect(unitsModel, SIGNAL(clipIndexChanged(quint8, int)), playlistModel, SLOT(onClipIndexChanged(quint8, int)));
-            connect(unitsModel, SIGNAL(generationChanged(quint8)), playlistModel, SLOT(onGenerationChanged(quint8)));
-        }
-
-        // Configure the View menu.
-        //  ui->menuView->addSeparator();
-        //  ui->menuView->addAction(ui->actionApplicationLog);
-
-        // connect video widget signals
-        Mlt::GLWidget* videoWidget = (Mlt::GLWidget*) &(MLT);
-        connect(videoWidget, SIGNAL(dragStarted()), m_playlistDock, SLOT(onPlayerDragStarted()));
-        connect(videoWidget, SIGNAL(seekTo(int)), m_player, SLOT(seek(int)));
-        connect(videoWidget, SIGNAL(gpuNotSupported()), this, SLOT(onGpuNotSupported()));
-        connect(videoWidget, SIGNAL(frameDisplayed(const SharedFrame&)), m_scopeController, SIGNAL(newFrame(const SharedFrame&)));
-        connect(m_filterController, SIGNAL(currentFilterChanged(QmlFilter*, QmlMetadata*, int)), videoWidget, SLOT(setCurrentFilter(QmlFilter*, QmlMetadata*)), Qt::QueuedConnection);
-        connect(m_filterController, SIGNAL(currentFilterAboutToChange()), videoWidget, SLOT(setBlankScene()));
-
-        readWindowSettings();
-        setCorner(Qt::TopLeftCorner, Qt::LeftDockWidgetArea);
-        setCorner(Qt::TopRightCorner, Qt::RightDockWidgetArea);
-        setCorner(Qt::BottomLeftCorner, Qt::BottomDockWidgetArea);
-        setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
-        setDockNestingEnabled(true);
-
-        setFocus();
-        setCurrentFile("");
-
-        LeapNetworkListener* leap = new LeapNetworkListener(this);
-        connect(leap, SIGNAL(shuttle(float)), SLOT(onShuttle(float)));
-        connect(leap, SIGNAL(jogRightFrame()), SLOT(stepRightOneFrame()));
-        connect(leap, SIGNAL(jogRightSecond()), SLOT(stepRightOneSecond()));
-        connect(leap, SIGNAL(jogLeftFrame()), SLOT(stepLeftOneFrame()));
-        connect(leap, SIGNAL(jogLeftSecond()), SLOT(stepLeftOneSecond()));
-
-        connect(&m_network, SIGNAL(finished(QNetworkReply*)), SLOT(onUpgradeCheckFinished(QNetworkReply*)));
-
-        m_timelineDock->setFocusPolicy(Qt::StrongFocus);
-        //开始资源管理系统系统相关任务
-        //展示登录窗口
-        m_loginwidget = new LoginWidget(this);
-        m_loginwidget->hide();
-        connect(m_loginwidget, &LoginWidget::signal_SaveProject, this,&MainWindow::slot_SaveProject);
-        connect(m_loginwidget, &LoginWidget::signal_SaveVideo, this,&MainWindow::slot_SaveVideo);
-        connect(m_loginwidget, &LoginWidget::signal_OpenProject, this,&MainWindow::slot_OpenProject);
-        connect(m_loginwidget, &LoginWidget::signal_OpenVideo, this,&MainWindow::slot_OpenVideo);
-        connect(m_loginwidget,&LoginWidget::Signal_UploadVideo,this,&MainWindow::slot_UploadVideo);
-        connect(m_loginwidget,&LoginWidget::Signal_CloseProject,this,&MainWindow::slot_CloseProject);
-        connect(m_loginwidget,&LoginWidget::Signal_SysName,this,&MainWindow::slot_SysName);
-        connect(this,&MainWindow::Signal_open_clicked,m_loginwidget,&LoginWidget::open_clicked);
-        connect(this,&MainWindow::Signal_open_clicked_t,m_loginwidget,&LoginWidget::open_clicked_t);
-        connect(this,&MainWindow::Signal_raiseLoginwidget,m_loginwidget,&LoginWidget::slot_raise);
-        connect(this, SIGNAL(openFailed(QString)), m_loginwidget, SLOT(slot_openFailed(QString)));
-        connect(m_loginwidget,&LoginWidget::Signal_GetProjectName,this,&MainWindow::slot_GetProjectName);
-        connect(m_loginwidget,&LoginWidget::Signal_CloseWidget,this,&MainWindow::close);
-
-        LOG_DEBUG() << "end";
-
         setFullScreen(m_isFullScreen);
         open(m_resourceArg);
         this->show();

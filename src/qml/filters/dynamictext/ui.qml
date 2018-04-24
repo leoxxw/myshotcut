@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018 Meltytech, LLC
+ * Copyright (c) 2014-2015 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,9 +26,8 @@ Item {
     property string rectProperty: 'geometry'
     property string valignProperty: 'valign'
     property string halignProperty: 'halign'
-    property string useFontSizeProperty: 'shotcut:usePointSize'
-    property string pointSizeProperty: 'shotcut:pointSize'
     property rect filterRect: filter.getRect(rectProperty)
+    property var _locale: Qt.locale(application.numericLocale)
     width: 500
     height: 350
 
@@ -39,9 +38,7 @@ Item {
             filter.set('fgcolour', '#ffffffff')
             filter.set('bgcolour', '#00000000')
             filter.set('olcolour', '#ff000000')
-            filter.set('weight', 10 * Font.Normal)
-            filter.set('style', 'normal')
-            filter.set(useFontSizeProperty, false)
+            filter.set('weight', 500)
 
             filter.set(rectProperty,   '0/50%:50%x50%')
             filter.set(valignProperty, 'bottom')
@@ -90,38 +87,19 @@ Item {
             filterRect.y = y
             filterRect.width = w
             filterRect.height = h
-            filter.set(rectProperty, '%L1%/%L2%:%L3%x%L4%'
-                       .arg(x / profile.width * 100)
-                       .arg(y / profile.height * 100)
-                       .arg(w / profile.width * 100)
-                       .arg(h / profile.height * 100))
+            filter.set(rectProperty, '%1%/%2%:%3%x%4%'
+                       .arg((x / profile.width * 100).toLocaleString(_locale))
+                       .arg((y / profile.height * 100).toLocaleString(_locale))
+                       .arg((w / profile.width * 100).toLocaleString(_locale))
+                       .arg((h / profile.height * 100).toLocaleString(_locale)))
         }
-    }
-
-    function getPointSize() {
-        var pointSize = parseInt(filter.get(pointSizeProperty))
-        if (!pointSize) {
-            var ratio = fontDialog.font.pointSize / fontDialog.font.pixelSize
-            pointSize = filter.get('size') * ratio
-        }
-        return pointSize
-    }
-
-    function refreshFontButton() {
-        var s = filter.get('family')
-        if (filter.getDouble('weight') > 10 * Font.Medium)
-            s += ' ' + qsTr('Bold')
-        if (filter.get('style') === 'italic')
-            s += ' ' + qsTr('Italic')
-        if (parseInt(filter.get(useFontSizeProperty)))
-            s += ' ' + getPointSize()
-        fontButton.text = s
     }
 
     function setControls() {
         textArea.text = filter.get('argument')
         fgColor.value = filter.get('fgcolour')
         fontButton.text = filter.get('family')
+        weightCombo.currentIndex = weightCombo.valueToIndex()
         outlineColor.value = filter.get('olcolour')
         outlineSpinner.value = filter.getDouble('outline')
         bgColor.value = filter.get('bgcolour')
@@ -140,14 +118,6 @@ Item {
             middleRadioButton.checked = true
         else if (align === 'bottom')
             bottomRadioButton.checked = true
-        fontDialog.font = Qt.font({
-            family: filter.get('family'),
-            pointSize: getPointSize(),
-            italic: filter.get('style') === 'italic',
-            weight: filter.getDouble('weight') / 10
-        })
-        fontSizeCheckBox.checked = parseInt(filter.get(useFontSizeProperty))
-        refreshFontButton()
     }
 
     ExclusiveGroup { id: sizeGroup }
@@ -165,8 +135,8 @@ Item {
         }
         Preset {
             id: preset
-            parameters: [rectProperty, halignProperty, valignProperty, 'argument', 'size', 'style',
-            'fgcolour', 'family', 'weight', 'olcolour', 'outline', 'bgcolour', 'pad', useFontSizeProperty]
+            parameters: [rectProperty, halignProperty, valignProperty, 'argument', 'size',
+            'fgcolour', 'family', 'weight', 'olcolour', 'outline', 'bgcolour', 'pad']
             Layout.columnSpan: 4
             onPresetSelected: setControls()
         }
@@ -192,8 +162,6 @@ Item {
                     text = text.substring(0, maxLength)
                     cursorPosition = maxLength
                 }
-                if (!parseInt(filter.get(useFontSizeProperty)))
-                    filter.set('size', filterRect.height / text.split('\n').length)
                 filter.set('argument', text)
             }
         }
@@ -204,10 +172,6 @@ Item {
         }
         RowLayout {
             Layout.columnSpan: 4
-            Button {
-                text: qsTr('# (Hash sign)')
-                onClicked: textArea.insert(textArea.cursorPosition, '\\#')
-            }
             Button {
                 text: qsTr('Timecode')
                 onClicked: textArea.insert(textArea.cursorPosition, '#timecode#')
@@ -241,40 +205,29 @@ Item {
             Button {
                 id: fontButton
                 onClicked: {
-                    fontDialog.font.pointSize = getPointSize()
+                    fontDialog.font = Qt.font({ family: filter.get('family'), pointSize: 24, weight: Font.Normal })
                     fontDialog.open()
                 }
                 FontDialog {
                     id: fontDialog
                     title: "Please choose a font"
-                    property string fontFamily: ''
-                    onFontChanged: {
-                        filter.set('family', font.family)
-                        filter.set('weight', 10 * font.weight )
-                        filter.set('style', font.italic? 'italic' : 'normal' )
-                        if (parseInt(filter.get(useFontSizeProperty))) {
-                            filter.set('size', font.pixelSize)
-                            filter.set(pointSizeProperty, font.pointSize)
-                        }
-                        refreshFontButton()
-                    }
-                    onAccepted: fontFamily = font.family
-                    onRejected: filter.set('family', fontFamily)
+                    onFontChanged: filter.set('family', font.family)
+                    onAccepted: fontButton.text = font.family
+                    onRejected: filter.set('family', fontButton.text)
                 }
             }
-            CheckBox {
-                id: fontSizeCheckBox
-                text: qsTr('Use font size')
-                onCheckedChanged: {
-                    filter.set(useFontSizeProperty, checked)
-                    if (checked) {
-                        filter.set('size', fontDialog.font.pixelSize)
-                        filter.set(pointSizeProperty, fontDialog.font.pointSize)
-                    } else {
-                        filter.set('size', filterRect.height / text.split('\n').length)
-                    }
-                    refreshFontButton()
+            ComboBox {
+                id: weightCombo
+                model: [qsTr('Normal'), qsTr('Bold'), qsTr('Light', 'thin font stroke')]
+                property var values: [Font.Normal, Font.Bold, Font.Light]
+                function valueToIndex() {
+                    var w = filter.getDouble('weight')
+                    for (var i = 0; i < values.length; ++i)
+                        if (values[i] === w) break;
+                    if (i === values.length) i = 0;
+                    return i;
                 }
+                onActivated: filter.set('weight', 10 * values[index])
             }
         }
 

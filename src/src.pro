@@ -121,8 +121,7 @@ SOURCES += main.cpp\
     MyWidgets/aboutwidget.cpp \
     videostudiolog.cpp \
     objectthread.cpp \
-    singleapplication.cpp\
-    dialogs/transcodedialog.cpp
+    singleapplication.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -241,8 +240,7 @@ HEADERS  += mainwindow.h \
     version.h \
     videostudiolog.h \
     objectthread.h \
-    singleapplication.h \
-    dialogs/transcodedialog.h
+    singleapplication.h
 
 FORMS    += mainwindow.ui \
     openotherdialog.ui \
@@ -287,7 +285,7 @@ FORMS    += mainwindow.ui \
     dialogs/unlinkedfilesdialog.ui \
     MyWidgets/loginwidget.ui \
     MyWidgets/aboutwidget.ui \
-    dialogs/transcodedialog.ui
+    MyWidgets/dogcheckwidget.ui
 
 RESOURCES += \
     ../icons/resources.qrc \
@@ -303,8 +301,7 @@ OTHER_FILES += \
     ../icons/dark/index.theme \
     ../icons/light/index.theme \
     ../snap/snapcraft.yaml \
-    ../snap/setup/gui/shotcut.desktop \
-    ../shotcut.appdata.xml
+    ../snap/setup/gui/shotcut.desktop
 
 TRANSLATIONS += \
     ../translations/shotcut_ca.ts \
@@ -314,14 +311,12 @@ TRANSLATIONS += \
     ../translations/shotcut_el.ts \
     ../translations/shotcut_en.ts \
     ../translations/shotcut_es.ts \
-    ../translations/shotcut_et.ts \
     ../translations/shotcut_fr.ts \
     ../translations/shotcut_gd.ts \
     ../translations/shotcut_hu.ts \
     ../translations/shotcut_it.ts \
     ../translations/shotcut_ja.ts \
     ../translations/shotcut_nb.ts \
-    ../translations/shotcut_ne.ts \
     ../translations/shotcut_nl.ts \
     ../translations/shotcut_oc.ts \
     ../translations/shotcut_pl.ts \
@@ -347,7 +342,7 @@ debug_and_release {
 } else {
     LIBS += -L../CuteLogger -L../mvcp
 }
-LIBS += -lCuteLogger -lmvcp -lpthread
+LIBS += -lLogger -lmvcp -lpthread
 
 isEmpty(SHOTCUT_VERSION) {
     !win32:SHOTCUT_VERSION = $$system(date "+%y.%m.%d")
@@ -360,7 +355,6 @@ mac {
     TARGET = Shotcut
     ICON = ../icons/shotcut.icns
     QMAKE_INFO_PLIST = ../Info.plist
-    INCLUDEPATH += $$[QT_INSTALL_HEADERS]
 
     # QMake from Qt 5.1.0 on OSX is messing with the environment in which it runs
     # pkg-config such that the PKG_CONFIG_PATH env var is not set.
@@ -408,8 +402,4 @@ qmlfiles.files = $$PWD/qml
 qmlfiles.path = $$PREFIX/share/shotcut
 INSTALLS += qmlfiles
 
-unix:!mac {
-    metainfo.files = $$PWD/../shotcut.appdata.xml
-    metainfo.path = $$PREFIX/share/metainfo
-    INSTALLS += qmlfiles
-}
+DISTFILES +=

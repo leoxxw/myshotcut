@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2017 Meltytech, LLC
+ * Copyright (c) 2012-2016 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,7 +33,6 @@ MeltJob::MeltJob(const QString& name, const QString& xml)
     : AbstractJob(name)
     , m_xml(QDir::tempPath().append("/shotcut-XXXXXX.mlt"))
     , m_isStreaming(false)
-    , m_previousPercent(0)
 {
     QAction* action = new QAction(tr("View XML"), this);
     action->setToolTip(tr("View the MLT XML for this job"));
@@ -99,11 +98,8 @@ void MeltJob::onReadyRead()
 {
     QString msg = readLine();
     if (msg.contains("percentage:")) {
-        int percent = msg.mid(msg.indexOf("percentage:") + 11).toInt();
-        if (percent != m_previousPercent) {
-            emit progressUpdated(m_item, percent);
-            m_previousPercent = percent;
-        }
+        uint percent = msg.mid(msg.indexOf("percentage:") + 11).toUInt();
+        emit progressUpdated(m_index, percent);
     }
     else {
         appendToLog(msg);

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2016-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *

@@ -29,7 +29,6 @@ Rectangle {
     property bool isComposite
     property bool isLocked
     property bool isVideo
-    property bool isFiltered
     property bool selected: false
     property bool current: false
     signal clicked()
@@ -174,21 +173,6 @@ Rectangle {
                 iconSource: isLocked ? 'qrc:///icons/oxygen/32x32/status/object-locked.png' : 'qrc:///icons/oxygen/32x32/status/object-unlocked.png'
                 onClicked: timeline.setTrackLock(index, !isLocked)
                 tooltip: isLocked? qsTr('Unlock track') : qsTr('Lock track')
-            }
-
-            ToolButton {
-                visible: isFiltered
-                anchors.right: parent.right
-                implicitWidth: 20
-                implicitHeight: 20
-                iconName: 'view-filter'
-                iconSource: 'qrc:///icons/oxygen/32x32/status/view-filter.png'
-                tooltip: qsTr('Filters')
-                onClicked: {
-                    trackHeadRoot.clicked()
-                    nameEdit.visible = false
-                    timeline.filteredClicked()
-                }
             }
         }
     }

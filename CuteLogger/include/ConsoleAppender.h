@@ -16,21 +16,17 @@
 
 #include "CuteLogger_global.h"
 #include <AbstractStringAppender.h>
-
-
+ 
+//! ConsoleAppender is the simple appender that writes the log records to the std::cerr output stream.
 class CUTELOGGERSHARED_EXPORT ConsoleAppender : public AbstractStringAppender
 {
-  public:
-    ConsoleAppender();
-    virtual QString format() const;
-    void ignoreEnvironmentPattern(bool ignore);
-
   protected:
+    //! Writes the log record to the std::cerr stream.
+    /**
+     * \sa AbstractStringAppender::format()
+     */
     virtual void append(const QDateTime& timeStamp, Logger::LogLevel logLevel, const char* file, int line,
-                        const char* function, const QString& category, const QString& message);
-
-  private:
-    bool m_ignoreEnvPattern;
+                        const char* function, const QString& message);
 };
 
 #endif // CONSOLEAPPENDER_H

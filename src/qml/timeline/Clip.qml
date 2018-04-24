@@ -88,7 +88,6 @@ Rectangle {
     }
 
     function generateWaveform() {
-        if (!waveform.visible) return
         // This is needed to make the model have the correct count.
         // Model as a property expression is not working in all cases.
         waveformRepeater.model = Math.ceil(waveform.innerWidth / waveform.maxWidth)
@@ -143,7 +142,7 @@ Rectangle {
 
     Row {
         id: waveform
-        visible: !isBlank && settings.timelineShowWaveforms && !trackHeaderRepeater.itemAt(trackIndex).isMute
+        visible: !isBlank && settings.timelineShowWaveforms
         height: isAudio? parent.height : parent.height / 2
         anchors.left: parent.left
         anchors.bottom: parent.bottom
@@ -287,6 +286,7 @@ Rectangle {
             }
         }
         onDoubleClicked: timeline.position = clipRoot.x / multitrack.scaleFactor
+        onWheel: zoomByWheel(wheel)
 
         MouseArea {
             anchors.fill: parent
@@ -309,15 +309,6 @@ Rectangle {
         anchors.top: parent.top
         anchors.margins: parent.border.width
         opacity: 0.5
-        onWidthChanged: {
-            if (width === 0) {
-                fadeInControl.anchors.horizontalCenter = undefined
-                fadeInControl.anchors.left = fadeInTriangle.left
-            } else if (fadeInControl.anchors.left && !fadeInMouseArea.pressed) {
-                fadeInControl.anchors.left = undefined
-                fadeInControl.anchors.horizontalCenter = fadeInTriangle.right
-            }
-        }
     }
     Rectangle {
         id: fadeInControl
@@ -326,9 +317,9 @@ Rectangle {
         anchors.horizontalCenter: fadeInTriangle.width > radius? fadeInTriangle.right : undefined
         anchors.top: fadeInTriangle.top
         anchors.topMargin: -3
-        width: 20
-        height: 20
-        radius: 10
+        width: 15
+        height: 15
+        radius: 7.5
         color: 'black'
         border.width: 2
         border.color: 'white'
@@ -393,7 +384,7 @@ Rectangle {
     }
 
     TimelineTriangle {
-        id: fadeOutTriangle
+        id: fadeOutCanvas
         visible: !isBlank && !isTransition
         width: parent.fadeOut * timeScale
         height: parent.height - parent.border.width * 2
@@ -401,27 +392,18 @@ Rectangle {
         anchors.top: parent.top
         anchors.margins: parent.border.width
         opacity: 0.5
-        transform: Scale { xScale: -1; origin.x: fadeOutTriangle.width / 2}
-        onWidthChanged: {
-            if (width === 0) {
-                fadeOutControl.anchors.horizontalCenter = undefined
-                fadeOutControl.anchors.right = fadeOutTriangle.right
-            } else if (fadeOutControl.anchors.right && !fadeOutMouseArea.pressed) {
-                fadeOutControl.anchors.right = undefined
-                fadeOutControl.anchors.horizontalCenter = fadeOutTriangle.left
-            }
-        }
+        transform: Scale { xScale: -1; origin.x: fadeOutCanvas.width / 2}
     }
     Rectangle {
         id: fadeOutControl
         enabled: !isBlank && !isTransition
-        anchors.right: fadeOutTriangle.width > radius? undefined : fadeOutTriangle.right
-        anchors.horizontalCenter: fadeOutTriangle.width > radius? fadeOutTriangle.left : undefined
-        anchors.top: fadeOutTriangle.top
+        anchors.right: fadeOutCanvas.width > radius? undefined : fadeOutCanvas.right
+        anchors.horizontalCenter: fadeOutCanvas.width > radius? fadeOutCanvas.left : undefined
+        anchors.top: fadeOutCanvas.top
         anchors.topMargin: -3
-        width: 20
-        height: 20
-        radius: 10
+        width: 15
+        height: 15
+        radius: 7.5
         color: 'black'
         border.width: 2
         border.color: 'white'
@@ -448,10 +430,10 @@ Rectangle {
             }
             onReleased: {
                 root.stopScrolling = false
-                if (fadeOutTriangle.width > parent.radius)
-                    parent.anchors.horizontalCenter = fadeOutTriangle.left
+                if (fadeOutCanvas.width > parent.radius)
+                    parent.anchors.horizontalCenter = fadeOutCanvas.left
                 else
-                    parent.anchors.right = fadeOutTriangle.right
+                    parent.anchors.right = fadeOutCanvas.right
                 bubbleHelp.hide()
             }
             onPositionChanged: {
@@ -630,7 +612,7 @@ Rectangle {
             onTriggered: timeline.mergeClipWithNext(trackIndex, index, false)
         }
         MenuItem {
-            visible: !isBlank && !isTransition && settings.timelineShowWaveforms
+            visible: !isBlank && !isTransition
             text: qsTr('Rebuild Audio Waveform')
             onTriggered: timeline.remakeAudioLevels(trackIndex, index)
         }

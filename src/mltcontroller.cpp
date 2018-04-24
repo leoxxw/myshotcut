@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2011-2018 Meltytech, LLC
+﻿/*
+ * Copyright (c) 2011-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,8 +31,6 @@
 
 namespace Mlt {
 
-static const int kThumbnailOutSeekFactor = 5;
-
 static Controller* instance = 0;
 const QString XmlMimeType("application/mlt+xml");
 
@@ -46,7 +44,6 @@ Controller::Controller()
     , m_consumer(0)
     , m_jackFilter(0)
     , m_volume(1.0)
-    , m_skipJackEvents(0)
 {
     LOG_DEBUG() << "begin";
     m_repo = Mlt::Factory::init();
@@ -125,7 +122,7 @@ int Controller::open(const QString &url)
         }
         if (m_url.isEmpty() && QString(m_producer->get("xml")) == "was here") {
             if (m_producer->get_int("_original_type") != tractor_type ||
-               (m_producer->get_int("_original_type") == tractor_type && m_producer->get("shotcut")))
+               (m_producer->get_int("_original_type") == tractor_type && m_producer->get("Shotcut")))
                 m_url = url;
         }
         setImageDurationFromDefault(m_producer);
@@ -189,12 +186,6 @@ void Controller::closeConsumer()
 
 void Controller::play(double speed)
 {
-    if (m_jackFilter) {
-        if (speed == 1.0)
-            m_jackFilter->fire_event("jack-start");
-        else
-            stopJack();
-    }
     if (m_producer)
         m_producer->set_speed(speed);
     if (m_consumer) {
@@ -211,6 +202,8 @@ void Controller::play(double speed)
         m_consumer->start();
         refreshConsumer(Settings.playerScrubAudio());
     }
+    if (m_jackFilter)
+        m_jackFilter->fire_event("jack-start");
     setVolume(m_volume);
 }
 
@@ -231,12 +224,8 @@ void Controller::pause()
             m_consumer->start();
         }
     }
-    if (m_jackFilter) {
-        stopJack();
-        int position = m_producer->position();
-        ++m_skipJackEvents;
-        mlt_events_fire(m_jackFilter->get_properties(), "jack-seek", &position, NULL);
-    }
+    if (m_jackFilter)
+        m_jackFilter->fire_event("jack-stop");
     setVolume(m_volume);
 }
 
@@ -246,7 +235,8 @@ void Controller::stop()
         m_consumer->stop();
     if (m_producer)
         m_producer->seek(0);
-    stopJack();
+    if (m_jackFilter)
+        m_jackFilter->fire_event("jack-stop");
 }
 
 void Controller::on_jack_started(mlt_properties, void* object, mlt_position *position)
@@ -272,31 +262,19 @@ void Controller::on_jack_stopped(mlt_properties, void* object, mlt_position *pos
 
 void Controller::onJackStopped(int position)
 {
-    if (m_skipJackEvents) {
-        --m_skipJackEvents;
-    } else {
-        if (m_producer) {
-            if (m_producer->get_speed() != 0) {
-                Event *event = m_consumer->setup_wait_for("consumer-sdl-paused");
-                int result = m_producer->set_speed(0);
-                if (result == 0 && m_consumer->is_valid() && !m_consumer->is_stopped())
-                    m_consumer->wait_for(event);
-                delete event;
-            }
-            m_producer->seek(position);
+    if (m_producer) {
+        if (m_producer->get_speed() != 0) {
+            Event *event = m_consumer->setup_wait_for("consumer-sdl-paused");
+            int result = m_producer->set_speed(0);
+            if (result == 0 && m_consumer->is_valid() && !m_consumer->is_stopped())
+                m_consumer->wait_for(event);
+            delete event;
         }
-        if (m_consumer && m_consumer->get_int("real_time") >= -1)
-            m_consumer->purge();
-        refreshConsumer();
+        m_producer->seek(position);
     }
-}
-
-void Controller::stopJack()
-{
-    if (m_jackFilter) {
-        m_skipJackEvents = 2;
-        m_jackFilter->fire_event("jack-stop");
-    }
+    if (m_consumer && m_consumer->get_int("real_time") >= -1)
+        m_consumer->purge();
+    refreshConsumer();
 }
 
 bool Controller::enableJack(bool enable)
@@ -304,12 +282,8 @@ bool Controller::enableJack(bool enable)
 	if (!m_consumer)
 		return true;
 	if (enable && !m_jackFilter) {
-		m_jackFilter = new Mlt::Filter(profile(), "jack", "Shotcut player");
+		m_jackFilter = new Mlt::Filter(profile(), "jackrack");
 		if (m_jackFilter->is_valid()) {
-            m_jackFilter->set("in_1", "-");
-            m_jackFilter->set("in_2", "-");
-            m_jackFilter->set("out_1", "system:playback_1");
-            m_jackFilter->set("out_2", "system:playback_2");
 			m_consumer->attach(*m_jackFilter);
 			m_consumer->set("audio_off", 1);
 			if (isSeekable()) {
@@ -387,11 +361,8 @@ void Controller::seek(int position)
             }
         }
     }
-    if (m_jackFilter) {
-        stopJack();
-        ++m_skipJackEvents;
+    if (m_jackFilter)
         mlt_events_fire(m_jackFilter->get_properties(), "jack-seek", &position, NULL);
-    }
 }
 
 void Controller::refreshConsumer(bool scrubAudio)
@@ -563,24 +534,20 @@ void Controller::rewind()
     // frame before last.
     if (m_producer->position() >= m_producer->get_length() - 1)
         m_producer->seek(m_producer->get_length() - 2);
-    if (m_producer->get_speed() >= 0) {
+    if (m_producer->get_speed() >= 0)
         play(-1.0);
-    } else {
-        stopJack();
+    else
         m_producer->set_speed(m_producer->get_speed() * 2);
-    }
 }
 
 void Controller::fastForward()
 {
     if (!m_producer || !m_producer->is_valid())
         return;
-    if (m_producer->get_speed() <= 0) {
+    if (m_producer->get_speed() <= 0)
         play();
-    } else {
-        stopJack();
+    else
         m_producer->set_speed(m_producer->get_speed() * 2);
-    }
 }
 
 void Controller::previous(int currentPosition)
@@ -648,9 +615,8 @@ void Controller::setOut(int out)
 
 void Controller::restart()
 {
-    if (!m_consumer || !m_consumer->is_valid() || !m_producer || !m_producer->is_valid())
-        return;
-    if (m_producer->get_speed() != 0) {
+    if (!m_consumer) return;
+    if (m_producer && m_producer->is_valid() && m_producer->get_speed() != 0) {
         // Update the real_time property if not paused.
         m_consumer->set("real_time", realTime());
     }
@@ -681,7 +647,7 @@ void Controller::resetURL()
 
 QImage Controller::image(Mlt::Frame* frame, int width, int height)
 {
-    QImage result;
+    QImage result(width, height, QImage::Format_ARGB32);
     if (frame && frame->is_valid()) {
         if (width > 0 && height > 0) {
             frame->set("rescale.interp", "bilinear");
@@ -696,7 +662,6 @@ QImage Controller::image(Mlt::Frame* frame, int width, int height)
             result = temp.rgbSwapped();
         }
     } else {
-        result = QImage(width, height, QImage::Format_ARGB32);
         result.fill(QColor(Qt::red).rgb());
     }
     return result;
@@ -705,18 +670,22 @@ QImage Controller::image(Mlt::Frame* frame, int width, int height)
 QImage Controller::image(Producer& producer, int frameNumber, int width, int height)
 {
     QImage result;
-    if (frameNumber > producer.get_length() - kThumbnailOutSeekFactor) {
-        producer.seek(frameNumber - kThumbnailOutSeekFactor - 1);
-        for (int i = 0; i < kThumbnailOutSeekFactor; ++i) {
-            QScopedPointer<Mlt::Frame> frame(producer.get_frame());
-            QImage temp = image(frame.data(), width, height);
-            if (!temp.isNull())
-                result = temp;
-        }
+    if (frameNumber > producer.get_length() - 3) {
+        producer.seek(frameNumber - 2);
+        Mlt::Frame* frame = producer.get_frame();
+        result = image(frame, width, height);
+        delete frame;
+        frame = producer.get_frame();
+        result = image(frame, width, height);
+        delete frame;
+        frame = producer.get_frame();
+        result = image(frame, width, height);
+        delete frame;
     } else {
         producer.seek(frameNumber);
-        QScopedPointer<Mlt::Frame> frame(producer.get_frame());
-        result = image(frame.data(), width, height);
+        Mlt::Frame* frame = producer.get_frame();
+        result = image(frame, width, height);
+        delete frame;
     }
     return result;
 }
