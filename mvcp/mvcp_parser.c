@@ -1,4 +1,4 @@
-/*
+﻿/*
  * mvcp_parser.c -- MVCP Parser for Melted
  * Copyright (C) 2002-2015 Meltytech, LLC
  * Author: Charles Yates <charles.yates@pandora.be>
@@ -93,7 +93,7 @@ mvcp_response mvcp_parser_run_file( mvcp_parser parser, FILE *file )
 		while ( mvcp_response_get_error_code( response ) == 201 && fgets( command, 1024, file ) )
 		{
 			mvcp_util_trim( mvcp_util_chomp( command ) );
-			if ( strcmp( command, "" ) && command[ 0 ] != '#' )
+            if ( strcmp( command, "" ) && command[ 0 ] != '#' )
 			{
 				mvcp_response temp = NULL;
 				mvcp_response_printf( response, 1024, "%s\n", command );

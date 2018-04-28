@@ -90,7 +90,7 @@ QString AttachedFiltersModel::producerTitle() const
         if (m_producer->get(kTrackNameProperty))
             return tr("Track: %1").arg(QString::fromUtf8(m_producer->get(kTrackNameProperty)));
         if (tractor_type == m_producer->type())
-            return tr("Timeline");
+            return tr("Master");
         if (m_producer->get(kShotcutCaptionProperty))
             return QString::fromUtf8(m_producer->get(kShotcutCaptionProperty));
         if (m_producer->get("resource"))
@@ -312,6 +312,7 @@ void AttachedFiltersModel::add(QmlMetadata* meta)
         m_mltIndexMap.insert(insertIndex, mltIndex);
         m_metaList.insert(insertIndex, meta);
         endInsertRows();
+        emit addedOrRemoved(m_producer.data());
         emit changed();
     }
     else LOG_WARNING() << "Failed to load filter" << meta->mlt_service();
@@ -340,6 +341,7 @@ void AttachedFiltersModel::remove(int row)
     }
     m_metaList.removeAt(row);
     endRemoveRows();
+    emit addedOrRemoved(m_producer.data());
     emit changed();
     delete filter;
 }

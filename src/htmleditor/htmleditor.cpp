@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
@@ -29,6 +29,7 @@
 #include "ui_inserthtmldialog.h"
 #include "qmltypes/qmlutilities.h"
 #include "settings.h"
+#include "util.h"
 
 #include <QtWidgets>
 #include <QtWebKitWidgets>
@@ -220,6 +221,9 @@ bool HtmlEditor::fileSave()
 {
     if (fileName.isEmpty() || fileName.startsWith(QLatin1String(":/")))
         return fileSaveAs();
+
+    if (Util::warnIfNotWritable(fileName, this, tr("Save as...")))
+        return false;
 
     QFile file(fileName);
     bool success = file.open(QIODevice::WriteOnly);

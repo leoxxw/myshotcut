@@ -2,6 +2,7 @@
 #include <QLibrary>
 #include <QMutexLocker>
 #include <QDebug>
+#include <QApplication>
 QMutex CloudDiskInterface::m_MutexCloud;
 CloudDiskInterface* CloudDiskInterface::m_pInstance;
 
@@ -29,7 +30,8 @@ CloudDiskInterface::~CloudDiskInterface()
 bool CloudDiskInterface::LoadDll()
 {
     m_lib = new QLibrary();
-    m_lib->setFileName("LHCloudDiskInterface.dll");
+    QString tempPath =QCoreApplication::applicationDirPath()+"/LHCloudDiskInterface.dll";
+    m_lib->setFileName(tempPath);
     if (!m_lib->load())
     {
         qDebug() << "load failed!";
@@ -273,7 +275,10 @@ CloudDiskInterface* CloudDiskInterface::instance()
         if (m_pInstance==NULL)
         {
             m_pInstance = new CloudDiskInterface();
-            m_pInstance->LoadDll();
+            if(!m_pInstance->LoadDll())
+            {
+                m_pInstance = NULL;
+            }
         }
     }
     return m_pInstance;

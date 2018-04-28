@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2012-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -107,7 +107,6 @@ public slots:
     void enableTab(TabIndex index, bool enabled = true);
     void onTabBarClicked(int index);
     void setStatusLabel(const QString& text, int timeoutSeconds, QAction* action);
-    void hideLabel(bool);
 
 protected:
     void resizeEvent(QResizeEvent* event);

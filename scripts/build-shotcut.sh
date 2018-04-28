@@ -42,11 +42,11 @@ X265_REVISION="origin/stable"
 LIBVPX_HEAD=1
 LIBVPX_REVISION=0
 ENABLE_LAME=1
-LIBOPUS_HEAD=1
-LIBOPUS_REVISION=
+LIBOPUS_HEAD=0
+LIBOPUS_REVISION=v1.2.1
 ENABLE_SWH_PLUGINS=1
 FFMPEG_HEAD=0
-FFMPEG_REVISION="origin/release/3.2"
+FFMPEG_REVISION="origin/release/3.4"
 FFMPEG_SUPPORT_H264=1
 FFMPEG_SUPPORT_H265=1
 FFMPEG_SUPPORT_LIBVPX=1
@@ -73,7 +73,7 @@ QT_LIB_DIR=${QTDIR:+${QTDIR}/lib}
 MLT_DISABLE_SOX=0
 
 ################################################################################
-# Location of config file - if not overriden on command line
+# Location of config file - if not overridden on command line
 CONFIGFILE=build-shotcut.conf
 
 # If defined to 1, outputs trace log lines
@@ -285,7 +285,7 @@ function die {
   else
     echo "ERROR: $@"
   fi
-  feedback_result FAILURE "Some kind of error occured: $@"
+  feedback_result FAILURE "Some kind of error occurred: $@"
   exit -1
 }
 
@@ -419,7 +419,7 @@ function set_globals {
   REPOLOCS[3]="git://repo.or.cz/x264.git"
   REPOLOCS[4]="https://chromium.googlesource.com/webm/libvpx.git"
   REPOLOCS[5]="git://github.com/ddennedy/movit.git"
-  REPOLOCS[6]="https://github.com/rbrito/lame/archive/RELEASE__3_99_5.tar.gz"
+  REPOLOCS[6]="https://ftp.osuosl.org/pub/blfs/conglomeration/lame/lame-3.99.5.tar.gz"
   REPOLOCS[7]="git://github.com/mltframework/shotcut.git"
   REPOLOCS[8]="http://ftp.us.debian.org/debian/pool/main/s/swh-plugins/swh-plugins_0.4.15+1.orig.tar.gz"
   REPOLOCS[9]="git://github.com/mltframework/webvfx.git"
@@ -472,7 +472,7 @@ function set_globals {
   if test 0 = "$MOVIT_HEAD" -a "$MOVIT_REVISION" ; then
     REVISIONS[5]="$MOVIT_REVISION"
   fi
-  REVISIONS[6]="lame-RELEASE__3_99_5"
+  REVISIONS[6]="lame-3.99.5"
   REVISIONS[7]=""
   if test 0 = "$SHOTCUT_HEAD" -a "$SHOTCUT_REVISION" ; then
     REVISIONS[7]="$SHOTCUT_REVISION"
@@ -577,7 +577,7 @@ function set_globals {
 
   #####
   # ffmpeg
-  CONFIG[0]="./configure --prefix=$FINAL_INSTALL_DIR --disable-static --disable-doc --disable-ffserver --enable-gpl --enable-version3 --enable-shared --enable-pthreads --enable-runtime-cpudetect $CONFIGURE_DEBUG_FLAG"
+  CONFIG[0]="./configure --prefix=$FINAL_INSTALL_DIR --disable-static --disable-doc --disable-ffserver --enable-gpl --enable-version3 --enable-shared --enable-runtime-cpudetect $CONFIGURE_DEBUG_FLAG"
   if test 1 = "$FFMPEG_SUPPORT_THEORA" ; then
     CONFIG[0]="${CONFIG[0]} --enable-libtheora --enable-libvorbis"
   fi
@@ -617,7 +617,7 @@ function set_globals {
     CFLAGS_[0]="${CFLAGS_[0]} -I/opt/local/include"
     LDFLAGS_[0]="${LDFLAGS_[0]} -L/opt/local/lib"
   elif test "$TARGET_OS" = "Linux" ; then
-    CONFIG[0]="${CONFIG[0]} --enable-x11grab --enable-libpulse"
+    CONFIG[0]="${CONFIG[0]} --enable-libxcb --enable-libpulse"
   fi
 
   #####
@@ -931,7 +931,7 @@ function prepare_feedback {
 #################################################################
 # check_abort
 # Function that checks if the user wanted to cancel what we are doing.
-# returns "stop" or "cont" as appropiate
+# returns "stop" or "cont" as appropriate
 function check_abort {
   # log "$ARG"
   echo
@@ -1209,7 +1209,7 @@ function get_subproject {
           REPOLOCURL=`svn --non-interactive info | grep URL | awk '{print $2}'`
           # Now, we have to be a bit clever here, because if the user originally checked it out using
           # https, we can not change to http. So, we check for https in the current URL
-          # Note, that beeing clever almost always fails at some point. But, at least we give it a try...
+          # Note, that being clever almost always fails at some point. But, at least we give it a try...
           if test "${REPOLOCURL:0:5}" = "https" ; then
               REPOLOC=${REPOLOC/http/https}
           fi
@@ -1259,10 +1259,10 @@ function get_win32_prebuilt {
   cmd mkdir -p "$FINAL_INSTALL_DIR"
   cd "$FINAL_INSTALL_DIR" || die "Unable to change to directory $FINAL_INSTALL_DIR"
   if [ "$TARGET_OS" = "Win32" ]; then
-    cmd tar -xjf "$HOME/mlt-prebuilt-mingw32.tar.bz2"
+    cmd tar -xJf "$HOME/mlt-prebuilt-mingw32.tar.xz"
     cmd unzip "$HOME/gtk+-bundle_2.24.10-20120208_win32.zip"
   else
-    cmd tar -xjf "$HOME/mlt-prebuilt-mingw32-x64.tar.bz2"
+    cmd tar -xJf "$HOME/mlt-prebuilt-mingw32-x64.tar.xz"
     cmd unzip "$HOME/gtk+-bundle_2.22.1-20101229_win64.zip"
   fi
   cmd popd
@@ -1293,30 +1293,30 @@ to make Shotcuts daily builds. It is the authoritative install reference:
   src/shotcut/scripts/build-shotcut.sh
 
 We cannot cover how to build all of Shotcut's dependencies from scratch here.
-On Linux, we rely upon Debian's packages to provide most of the
-more mundane dependencies. The rest like x264, libvpx, lame, libopus, FFmpeg,
-and frei0r are provided by the script.
+On Linux, we rely upon Ubuntu's packages to provide most of the
+more mundane dependencies. The rest like x264, x265, libvpx, lame, libopus,
+FFmpeg, and frei0r are provided by the script.
 
-For OS X, we rely upon macports to provide the dependencies:
+For macOS, we rely upon macports to provide the dependencies:
   port install ffmpeg libsamplerate libsdl sox glib2 jack
 
 For Windows, see this page on the MLT wiki about getting pre-built
 dependencies from various sources on the Internet:
-  http://www.mltframework.org/bin/view/MLT/WindowsBuild
+  https://www.mltframework.org/docs/windowsbuild/
 Except, now we build FFmpeg instead of using a pre-built copy.
 
 As for Shotcut itself, its really as simple as:
   mkdir build ; cd build ; qmake .. ; make
 There is no make install target at this time. Just copy the executable
-(Shotcut.app on OS X) where needed.
+(Shotcut.app on macOS) where needed.
 
 Then, there is the app bundling so that dependencies can be located and Qt
 plugins included. For that you really need to see the build script; it
-is fairly complicated especially on OS X. On Linux, we just use a
+is fairly complicated especially on macOS. On Linux, we just use a
 common install prefix and the build script generates shell scripts to
 establish a redirected environment. On Windows, everything is relative
 to the directory containing the .exe. DLLs are in the same directory as
-the .exe, and the lib and share folders are sub-directories. On OS X, all
+the .exe, and the lib and share folders are sub-directories. On macOS, all
 dependencies need to be put into the correct locations in Shotcut.app,
 and the build script modifies all dylibs to pull them in and make their
 inter-dependencies relative to the executable. If you are just building for
@@ -1375,8 +1375,8 @@ function mlt_check_configure {
         mlt_format_required xml "Please install libxml2-dev. "
         DODIE=1
       ;;
-      disable-sdl)
-        mlt_format_required sdl "Please install libsdl1.2-dev. "
+      disable-sdl2)
+        mlt_format_required sdl2 "Please install libsdl2-dev. "
         DODIE=1
       ;;
       disable-qt)
@@ -1960,9 +1960,9 @@ function deploy_win32
     cmd rm lib/qml/Qt3D/Input/quick3dinputplugind.dll
   fi
   if [ "$TARGET_OS" = "Win32" ]; then
-    cmd tar -xjf "$HOME/ladspa_plugins-win-0.4.15.tar.bz2"
+    cmd tar -xJf "$HOME/swh-plugins-win32-0.4.15.tar.xz"
   else
-    cmd tar -xjf "$HOME/swh-plugins-win64-0.4.15.tar.bz2"
+    cmd tar -xJf "$HOME/swh-plugins-win64-0.4.15.tar.xz"
   fi
   printf "[Paths]\nPlugins=lib/qt5\nQml2Imports=lib/qml\n" > qt.conf
 
@@ -2084,11 +2084,12 @@ End-of-shotcut-wrapper
 [Desktop Entry]
 Type=Application
 Name=Shotcut
-Name[de]=Shotcut
 GenericName=Video Editor
 GenericName[de]=Video Bearbeitungsprogramm
+GenericName[ru]=Видеоредактор
 Comment=Video Editor
 Comment[de]=Programm zum Bearbeiten und Abspielen von Videodateien.
+Comment[ru]=Видеоредактор
 Terminal=false
 Exec=sh -c "\$(dirname "%k")/Shotcut.app/shotcut "%F""
 Icon=applications-multimedia

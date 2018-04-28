@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2017 Meltytech, LLC
+ * Copyright (c) 2011-2018 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -83,6 +83,7 @@ public:
     QString XML(Service* service = 0, bool withProfile = false);
     int consumerChanged();
     void setProfile(const QString& profile_name);
+    void setAudioChannels(int audioChannels);
     QString resource() const;
     bool isSeekable(Mlt::Producer* p = 0) const;
     bool isClip() const;
@@ -114,6 +115,9 @@ public:
         return m_filtersClipboard->is_valid() && m_filtersClipboard->filter_count() > 0;
     }
 
+    int audioChannels() const {
+        return m_audioChannels;
+    }
     Mlt::Repository* repository() const {
         return m_repo;
     }
@@ -144,17 +148,20 @@ protected:
 
 private:
     Mlt::Profile* m_profile;
+    int m_audioChannels;
     Mlt::Filter* m_jackFilter;
     QString m_url;
     double m_volume;
     TransportControl m_transportControl;
     QScopedPointer<Mlt::Producer> m_savedProducer;
     QScopedPointer<Mlt::Producer> m_filtersClipboard;
+    unsigned m_skipJackEvents;
 
     static void on_jack_started(mlt_properties owner, void* object, mlt_position *position);
     void onJackStarted(int position);
     static void on_jack_stopped(mlt_properties owner, void* object, mlt_position *position);
     void onJackStopped(int position);
+    void stopJack();
 };
 
 } // namespace

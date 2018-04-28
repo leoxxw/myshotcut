@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Meltytech, LLC
+ * Copyright (c) 2015-2017 Meltytech, LLC
  * Author: Brian Matherly <code@brianmatherly.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ class AudioPeakMeterScopeWidget Q_DECL_FINAL : public ScopeWidget
 public:
     explicit AudioPeakMeterScopeWidget();
     ~AudioPeakMeterScopeWidget();
-    QString getTitle();
+    QString getTitle() Q_DECL_OVERRIDE;
     void setOrientation(Qt::Orientation orientation) Q_DECL_OVERRIDE;
 
 private:
@@ -47,6 +47,10 @@ private:
     // Members accessed by GUI thread.
     AudioMeterWidget* m_audioMeter;
     Qt::Orientation m_orientation;
+    int m_channels;
+
+private slots:
+    void reconfigureMeter();
 };
 
 #endif // AUDIOPEAKMETERSCOPEWIDGET_H

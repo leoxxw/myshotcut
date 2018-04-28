@@ -26,6 +26,7 @@
 #include "qmltypes/qmlapplication.h"
 #include "jobs/encodejob.h"
 #include "shotcut_mlt_properties.h"
+#include "util.h"
 
 #include <QDir>
 #include <Logger.h>
@@ -34,11 +35,13 @@
 #include <QtMath>
 #include <QTimer>
 #include <QFileInfo>
+#include <QStorageInfo>
 
 // formulas to map absolute value ranges to percentages as int
 #define TO_ABSOLUTE(min, max, rel) qRound(float(min) + float((max) - (min) + 1) * float(rel) / 100.0f)
 #define TO_RELATIVE(min, max, abs) qRound(100.0f * float((abs) - (min)) / float((max) - (min) + 1))
 static const int kOpenCaptureFileDelayMs = 1500;
+static const qint64 kFreeSpaceThesholdGB = 50LL * 1024 * 1024 * 1024;
 
 static double getBufferSize(Mlt::Properties& preset, const char* property);
 
@@ -50,8 +53,8 @@ EncodeDock::EncodeDock(QWidget *parent) :
     m_profiles(Mlt::Profile::list()),
     m_SaveType(SF_ShotCutSave),
     m_EncodeType(EV_ShotCut),
-    m_bIsWorking(false),
-    m_isDefaultSettings(true)
+    m_isDefaultSettings(true),
+    m_bIsWorking(false)
 {
     LOG_DEBUG() << "begin";
     ui->setupUi(this);
@@ -160,6 +163,8 @@ void EncodeDock::loadPresetFromProperties(Mlt::Properties& preset)
                 if (ui->videoCodecCombo->itemText(i) == preset.get("vcodec"))
                     ui->videoCodecCombo->setCurrentIndex(i);
         }
+        else if (name == "channels")
+            setAudioChannels( preset.get_int("channels") );
         else if (name == "ar")
             ui->sampleRateCombo->lineEdit()->setText(preset.get("ar"));
         else if (name == "ab")
@@ -341,7 +346,10 @@ void EncodeDock::SetSaveType(int nType)
     m_SaveType = nType;
 }
 
-
+void EncodeDock::onAudioChannelsChanged()
+{
+    setAudioChannels(MLT.audioChannels());
+}
 void EncodeDock::onProducerOpened()
 {
     int index = 0;
@@ -428,12 +436,7 @@ void EncodeDock::loadPresets()
                 QStandardItem* item = new QStandardItem(name);
                 item->setData(QString(m_presets->get_name(j)));
                 if (preset.get("meta.preset.note"))
-                {
-                    QString ToolTipName = QString::fromUtf8(preset.get("meta.preset.note"));
-                    QString info = QString("<p>%1</p>").arg(ToolTipName);
-                    qDebug()<<"setToolTip"<<info;
-                    item->setToolTip(info);
-                }
+                    item->setToolTip(QString("<p>%1</p>").arg(QString::fromUtf8(preset.get("meta.preset.note"))));
                 parentItem->appendRow(item);
             }
         }
@@ -500,6 +503,12 @@ Mlt::Properties* EncodeDock::collectProperties(int realtime)
             const QString& acodec = ui->audioCodecCombo->currentText();
             if (ui->audioCodecCombo->currentIndex() > 0)
                 p->set("acodec", ui->audioCodecCombo->currentText().toLatin1().constData());
+            if (ui->audioChannelsCombo->currentIndex() == AudioChannels1)
+                p->set("channels", 1);
+            else if (ui->audioChannelsCombo->currentIndex() == AudioChannels2)
+                p->set("channels", 2);
+            else
+                p->set("channels", 6);
             p->set("ar", ui->sampleRateCombo->currentText().toLatin1().constData());
             if (ui->audioRateControlCombo->currentIndex() == RateControlAverage
                     || ui->audioRateControlCombo->currentIndex() == RateControlConstant) {
@@ -792,6 +801,19 @@ MeltJob* EncodeDock::createMeltJob(Mlt::Service* service, const QString& target,
     dom.setContent(&f1);
     f1.close();
 
+    // Check if the target file is a member of the project.
+    QString caption = tr("Export File");
+    QString xml = dom.toString(0);
+    if (xml.contains(QDir::fromNativeSeparators(target))) {
+        QMessageBox::warning(this, caption,
+                             tr("You cannot write to a file that is in your project.\n"
+                                "Try again with a different folder or file name."));
+        return 0;
+    }
+
+    if (Util::warnIfNotWritable(target, this, caption))
+        return 0;
+
     // add consumer element
     QDomElement consumerNode = dom.createElement("consumer");
     QDomNodeList profiles = dom.elementsByTagName("profile");
@@ -955,6 +977,7 @@ void EncodeDock::resetOptions()
     ui->dualPassCheckbox->setChecked(false);
     ui->disableVideoCheckbox->setChecked(false);
 
+    setAudioChannels(MLT.audioChannels());
     ui->sampleRateCombo->lineEdit()->setText("48000");
     ui->audioBitrateCombo->lineEdit()->setText("384k");
     ui->audioQualitySpinner->setValue(50);
@@ -1094,14 +1117,14 @@ void EncodeDock::on_encodeButton_clicked()
         return;
     }
     if (!m_extension.isEmpty()) {
-        if (!MAIN.fileName().isEmpty()) {
-            directory += QString("/%1.%2").arg(QFileInfo(MAIN.fileName()).baseName())
-                                          .arg(m_extension);
-        } else {
+//        if (!MAIN.fileName().isEmpty()) {
+//            directory += QString("/%1.%2").arg(QFileInfo(MAIN.fileName()).baseName())
+//                                          .arg(m_extension);
+//        } else {
             directory +="/" +fileName ;
             directory += "." + m_extension;
 
-        }
+//        }
     } else {
         if (!MAIN.fileName().isEmpty()) {
 
@@ -1115,62 +1138,88 @@ void EncodeDock::on_encodeButton_clicked()
     }
     if(m_SaveType == SF_ShotCutSave)
     {
-        m_outputFilename = QFileDialog::getSaveFileName(this,
-            seekable? tr("Export File") : tr("Capture File"), directory,
-            QString(), 0, QFileDialog::HideNameFilterDetails);
-        if (!m_outputFilename.isEmpty()) {
-            QFileInfo fi(m_outputFilename);
-            MLT.pause();
-            Settings.setEncodePath(fi.path());
-            if (!m_extension.isEmpty()) {
-                if (fi.suffix().isEmpty()) {
-                    m_outputFilename += '.';
-                    m_outputFilename += m_extension;
-                }
-            }
-            if (seekable) {
-                // Batch encode
-                int threadCount = QThread::idealThreadCount();
-                if (threadCount > 2 && ui->parallelCheckbox->isChecked())
-                    threadCount = qMin(threadCount - 1, 4);
-                else
-                    threadCount = 1;
-                enqueueMelt(m_outputFilename, Settings.playerGPU()? -1 : -threadCount);
-            }
-            else if (MLT.producer()->get_int(kBackgroundCaptureProperty)) {
-                // Capture in background
-                ui->dualPassCheckbox->setChecked(false);
-                m_immediateJob.reset(createMeltJob(fromProducer(), m_outputFilename, -1));
-                if (m_immediateJob) {
-                    // Close the player's producer to prevent resource contention.
-                    MAIN.hideProducer();
-
-                    m_immediateJob->setIsStreaming(true);
-                    connect(m_immediateJob.data(), SIGNAL(finished(AbstractJob*,bool)), this, SLOT(onFinished(AbstractJob*,bool)));
-
-                    if (MLT.resource().startsWith("gdigrab:") || MLT.resource().startsWith("x11grab:")) {
-                        ui->stopCaptureButton->show();
-                    } else {
-                        ui->encodeButton->setText(tr("Stop Capture"));
-                        ui->fromCombo->setDisabled(true);
+        QString caption = seekable? tr("Export File") : tr("Capture File");
+            m_outputFilename = QFileDialog::getSaveFileName(this,
+                caption, directory,
+                QString(), 0, QFileDialog::HideNameFilterDetails);
+            if (!m_outputFilename.isEmpty()) {
+                QFileInfo fi(m_outputFilename);
+                MLT.pause();
+                Settings.setEncodePath(fi.path());
+                if (!m_extension.isEmpty()) {
+                    if (fi.suffix().isEmpty()) {
+                        m_outputFilename += '.';
+                        m_outputFilename += m_extension;
                     }
-                    if (MLT.resource().startsWith("gdigrab:"))
-                        MAIN.showMinimized();
+                }
 
-                    int msec = MLT.producer()->get_int(kBackgroundCaptureProperty) * 1000;
-                    QTimer::singleShot(msec, m_immediateJob.data(), SLOT(start()));
+                // Check if the drive this file will be on is getting low on space.
+                if (Settings.encodeFreeSpaceCheck()) {
+                    QStorageInfo si(fi.path());
+                    LOG_DEBUG() << si.bytesAvailable() << "bytes available on" << si.displayName();
+                    if (si.isValid() && si.bytesAvailable() < kFreeSpaceThesholdGB) {
+                        QMessageBox dialog(QMessageBox::Question, caption,
+                           tr("The drive you chose only has %1 MiB of free space.\n"
+                              "Do you still want to continue?")
+                           .arg(si.bytesAvailable() / 1024 / 1024),
+                           QMessageBox::No | QMessageBox::Yes, this);
+                        dialog.setWindowModality(QmlApplication::dialogModality());
+                        dialog.setDefaultButton(QMessageBox::Yes);
+                        dialog.setEscapeButton(QMessageBox::No);
+                        dialog.setCheckBox(new QCheckBox(tr("Do not show this anymore.", "Export free disk space warning dialog")));
+                        int result = dialog.exec();
+                        if (dialog.checkBox()->isChecked())
+                            Settings.setEncodeFreeSpaceCheck(false);
+                        if (result == QMessageBox::No) {
+                            MAIN.showStatusMessage(tr("Export canceled."));
+                            return;
+                        }
+                    }
+                }
+
+                if (seekable) {
+                    // Batch encode
+                    int threadCount = QThread::idealThreadCount();
+                    if (threadCount > 2 && ui->parallelCheckbox->isChecked())
+                        threadCount = qMin(threadCount - 1, 4);
+                    else
+                        threadCount = 1;
+                    enqueueMelt(m_outputFilename, Settings.playerGPU()? -1 : -threadCount);
+                }
+                else if (MLT.producer()->get_int(kBackgroundCaptureProperty)) {
+                    // Capture in background
+                    ui->dualPassCheckbox->setChecked(false);
+                    m_immediateJob.reset(createMeltJob(fromProducer(), m_outputFilename, -1));
+                    if (m_immediateJob) {
+                        // Close the player's producer to prevent resource contention.
+                        MAIN.hideProducer();
+
+                        m_immediateJob->setIsStreaming(true);
+                        connect(m_immediateJob.data(), SIGNAL(finished(AbstractJob*,bool)), this, SLOT(onFinished(AbstractJob*,bool)));
+
+                        if (MLT.resource().startsWith("gdigrab:") || MLT.resource().startsWith("x11grab:")) {
+                            ui->stopCaptureButton->show();
+                        } else {
+                            ui->encodeButton->setText(tr("Stop Capture"));
+                            ui->fromCombo->setDisabled(true);
+                        }
+                        if (MLT.resource().startsWith("gdigrab:"))
+                            MAIN.showMinimized();
+
+                        int msec = MLT.producer()->get_int(kBackgroundCaptureProperty) * 1000;
+                        QTimer::singleShot(msec, m_immediateJob.data(), SLOT(start()));
+                    }
+                }
+                else {
+                    // Capture to file
+                    // use multi consumer to encode and preview simultaneously
+                    ui->dualPassCheckbox->setChecked(false);
+                    ui->encodeButton->setText(tr("Stop Capture"));
+                    encode(m_outputFilename);
+                    emit captureStateChanged(true);
+                    ui->streamButton->setDisabled(true);
                 }
             }
-            else {
-                // Capture to file
-                // use multi consumer to encode and preview simultaneously
-                ui->dualPassCheckbox->setChecked(false);
-                ui->encodeButton->setText(tr("Stop Capture"));
-                encode(m_outputFilename);
-                emit captureStateChanged(true);
-                ui->streamButton->setDisabled(true);
-            }
-        }
     }
     if(m_SaveType == SF_YUNLI)
     {
@@ -1460,11 +1509,9 @@ void EncodeDock::on_addPresetButton_clicked()
             loadPresets();
             QModelIndex parentIndex = m_presetsModel.index(0, 0);
             int n = m_presetsModel.rowCount(parentIndex);
-            for (int i = 0; i < n; i++)
-            {
+            for (int i = 0; i < n; i++) {
                 QModelIndex index = m_presetsModel.index(i, 0, parentIndex);
-                if (m_presetsModel.data(index).toString() == preset)
-                {
+                if (m_presetsModel.data(index).toString() == preset) {
                     ui->presetsTree->setCurrentIndex(index);
                     break;
                 }
@@ -1639,7 +1686,7 @@ void EncodeDock::on_presetsSearch_textChanged(const QString &search)
 bool PresetsProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
     QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
-    return !source_parent.isValid() || 
+    return !source_parent.isValid() ||
         sourceModel()->data(index).toString().contains(filterRegExp()) ||
         sourceModel()->data(index, Qt::ToolTipRole).toString().contains(filterRegExp());
 }
@@ -1705,4 +1752,14 @@ void EncodeDock::on_videoCodecCombo_currentIndexChanged(int index)
         if (ui->videoCodecCombo->currentText().contains("hevc"))
             ui->bFramesSpinner->setValue(0);
     }
+}
+
+void EncodeDock::setAudioChannels( int channels )
+{
+    if (channels == 1)
+        ui->audioChannelsCombo->setCurrentIndex(AudioChannels1);
+    else if (channels == 2)
+        ui->audioChannelsCombo->setCurrentIndex(AudioChannels2);
+    else
+        ui->audioChannelsCombo->setCurrentIndex(AudioChannels6);
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2013-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -53,7 +53,7 @@ ShotcutSettings::ShotcutSettings(const QString& appDataLocation)
 
 QString ShotcutSettings::language() const
 {
-    return settings.value("language", QLocale::system().name()).toString();
+    return settings.value("language", QLocale().name()).toString();
 }
 
 void ShotcutSettings::setLanguage(const QString& s)
@@ -194,6 +194,26 @@ void ShotcutSettings::setEncodePath(const QString& s)
     settings.setValue("encode/path", s);
 }
 
+bool ShotcutSettings::encodeFreeSpaceCheck() const
+{
+    return settings.value("encode/freeSpaceCheck", true).toBool();
+}
+
+void ShotcutSettings::setEncodeFreeSpaceCheck(bool b)
+{
+    settings.setValue("encode/freeSpaceCheck", b);
+}
+
+bool ShotcutSettings::showConvertClipDialog() const
+{
+    return settings.value("showConvertClipDialog", true).toBool();
+}
+
+void ShotcutSettings::setShowConvertClipDialog(bool b)
+{
+    settings.setValue("showConvertClipDialog", b);
+}
+
 bool ShotcutSettings::meltedEnabled() const
 {
     return settings.value("melted/enabled", false).toBool();
@@ -212,6 +232,17 @@ QStringList ShotcutSettings::meltedServers() const
 void ShotcutSettings::setMeltedServers(const QStringList& ls)
 {
     settings.setValue("melted/servers", ls);
+}
+
+int ShotcutSettings::playerAudioChannels() const
+{
+    return settings.value("player/audioChannels", 2).toInt();
+}
+
+void ShotcutSettings::setPlayerAudioChannels(int i)
+{
+    settings.setValue("player/audioChannels", i);
+    emit playerAudioChannelsChanged(i);
 }
 
 QString ShotcutSettings::playerDeinterlacer() const
@@ -236,7 +267,7 @@ void ShotcutSettings::setPlayerExternal(const QString& s)
 
 QString ShotcutSettings::playerGamma() const
 {
-    return settings.value("player/gamma", "iec61966_2_1").toString();
+    return settings.value("player/gamma", "bt709").toString();
 }
 
 void ShotcutSettings::setPlayerGamma(const QString& s)

@@ -206,7 +206,7 @@ qproperty-alignment: ' AlignCenter';
 font-weight:bold;</string>
               </property>
               <property name="text">
-               <string>VideoStudio 1.0</string>
+               <string>VideoStudio 1.1</string>
               </property>
               <property name="scaledContents">
                <bool>false</bool>
@@ -297,7 +297,7 @@ color: rgb(36, 36, 36);
 qproperty-alignment: ' AlignCenter';</string>
               </property>
               <property name="text">
-               <string>文件版本号 1.0.0.0-beta</string>
+               <string>文件版本号 1.1.0.0-beta</string>
               </property>
              </widget>
             </item>
@@ -343,7 +343,7 @@ color: rgb(36, 36, 36);
 qproperty-alignment: ' AlignCenter';</string>
               </property>
               <property name="text">
-               <string>2017（C）杭州联汇科技股份有限公司。保留所有权利。</string>
+               <string>2018（C）杭州联汇科技股份有限公司。保留所有权利。</string>
               </property>
              </widget>
             </item>

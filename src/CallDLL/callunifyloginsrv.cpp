@@ -2,6 +2,7 @@
 #include <QLibrary>
 #include <QMutexLocker>
 #include <QDebug>
+#include <QApplication>
 QMutex CallUnifyLoginSrv::m_Mutex;
 CallUnifyLoginSrv* CallUnifyLoginSrv::m_pInstance;
 

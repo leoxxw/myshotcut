@@ -81,6 +81,7 @@ public:
     QString getHash(Mlt::Properties& properties) const;
     void setProfile(const QString& profile_name);
     QString fileName() const { return m_currentFile; }
+    bool isSourceClipMyProject(QString resource = MLT.resource());
 
     void keyPressEvent(QKeyEvent*);
     void keyReleaseEvent(QKeyEvent *);
@@ -106,6 +107,7 @@ private slots:
 
 signals:
     void CopeFile(QMap<QString,QString> );
+    void audioChannelsChanged();
     void producerOpened();
     void profileChanged();
     void openFailed(QString);
@@ -133,11 +135,13 @@ private:
     void writeSettings();
     void configureVideoWidget();
     void setCurrentFile(const QString &filename);
+    void changeAudioChannels(bool checked, int channels);
     void changeDeinterlacer(bool checked, const char* method);
     void changeInterpolation(bool checked, const char* method);
     bool checkAutoSave(QString &url);
     void stepLeftBySeconds(int sec);
     bool saveRepairedXmlFile(MltXmlChecker& checker, QString& fileName);
+    void setAudioChannels(int channels);
 
     Ui::MainWindow* ui;
     Player* m_player;
@@ -214,6 +218,7 @@ public slots:
     void onShuttle(float x);
 
 private slots:
+    void showUpgradePrompt();
     void on_actionAbout_Shotcut_triggered();
     void on_actionOpenOther_triggered();
     void onProducerChanged();
@@ -250,6 +255,9 @@ private slots:
     void on_actionEnter_Full_Screen_triggered();
     void on_actionRealtime_triggered(bool checked);
     void on_actionProgressive_triggered(bool checked);
+    void on_actionChannels1_triggered(bool checked);
+    void on_actionChannels2_triggered(bool checked);
+    void on_actionChannels6_triggered(bool checked);
     void on_actionOneField_triggered(bool checked);
     void on_actionLinearBlend_triggered(bool checked);
     void on_actionYadifTemporal_triggered(bool checked);

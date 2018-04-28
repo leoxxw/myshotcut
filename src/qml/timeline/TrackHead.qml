@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2017 Meltytech, LLC
+ * Copyright (c) 2013-2018 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,6 +29,7 @@ Rectangle {
     property bool isComposite
     property bool isLocked
     property bool isVideo
+    property bool isFiltered
     property bool selected: false
     property bool current: false
     signal clicked()
@@ -99,15 +100,15 @@ Rectangle {
             color: 'transparent'
             width: trackHeadRoot.width - trackHeadColumn.anchors.margins * 2
             radius: 2
-            border.color: trackNameMouseArea.containsMouse? activePalette.shadow : 'transparent'
+            border.color: (!timeline.floating && trackNameMouseArea.containsMouse)? activePalette.shadow : 'transparent'
             height: nameEdit.height
             MouseArea {
                 id: trackNameMouseArea
                 height: parent.height
                 width: nameEdit.width
                 hoverEnabled: true
-                onClicked: {
-                    nameEdit.visible = true
+                onClicked: if (!timeline.floating) {
+                    nameEdit.focus = true
                     nameEdit.selectAll()
                 }
             }
@@ -121,14 +122,13 @@ Rectangle {
             }
             TextField {
                 id: nameEdit
-                visible: false
+                visible: focus
                 width: trackHeadRoot.width - trackHeadColumn.anchors.margins * 2
                 text: trackName
                 onAccepted: {
                     timeline.setTrackName(index, text)
-                    visible = false
+                    focus = false
                 }
-                onFocusChanged: visible = focus
             }
         }
         RowLayout {
@@ -173,6 +173,21 @@ Rectangle {
                 iconSource: isLocked ? 'qrc:///icons/oxygen/32x32/status/object-locked.png' : 'qrc:///icons/oxygen/32x32/status/object-unlocked.png'
                 onClicked: timeline.setTrackLock(index, !isLocked)
                 tooltip: isLocked? qsTr('Unlock track') : qsTr('Lock track')
+            }
+
+            ToolButton {
+                visible: isFiltered
+                anchors.right: parent.right
+                implicitWidth: 20
+                implicitHeight: 20
+                iconName: 'view-filter'
+                iconSource: 'qrc:///icons/oxygen/32x32/status/view-filter.png'
+                tooltip: qsTr('Filters')
+                onClicked: {
+                    trackHeadRoot.clicked()
+                    nameEdit.visible = false
+                    timeline.filteredClicked()
+                }
             }
         }
     }

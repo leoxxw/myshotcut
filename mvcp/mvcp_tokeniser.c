@@ -1,4 +1,4 @@
-/*
+﻿/*
  * mvcp_tokeniser.c -- String tokeniser
  * Copyright (C) 2002-2015 Meltytech, LLC
  * Author: Charles Yates <charles.yates@pandora.be>
@@ -124,7 +124,7 @@ int mvcp_tokeniser_parse_new( mvcp_tokeniser tokeniser, char *string, const char
 	}
 
 	/* Special case - malformed string condition */
-	if ( !strcmp( token, "" ) )
+    if ( !strcmp( token, "" ) )
 	{
 		count = 0 - ( count - 1 );
 		mvcp_tokeniser_append( tokeniser, token );

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2012-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -24,7 +24,6 @@
 #include <QStandardItemModel>
 #include <QSortFilterProxyModel>
 #include <MltProperties.h>
-
 
 class QTreeWidgetItem;
 class QStringList;
@@ -68,12 +67,12 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 public slots:
+    void onAudioChannelsChanged();
     void onProducerOpened();
     void onProfileChanged();
 
 private slots:
     void on_presetsTree_clicked(const QModelIndex &index);
-
     void on_presetsTree_activated(const QModelIndex &index);
 
     void on_encodeButton_clicked();
@@ -113,12 +112,19 @@ private slots:
 
     void on_videoCodecCombo_currentIndexChanged(int index);
 
+    void setAudioChannels( int channels );
+
 private:
     enum {
         RateControlAverage = 0,
         RateControlConstant,
         RateControlQuality,
         RateControlConstrained
+    };
+    enum {
+        AudioChannels1 = 0,
+        AudioChannels2,
+        AudioChannels6,
     };
     Ui::EncodeDock *ui;
     Mlt::Properties *m_presets;

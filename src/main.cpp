@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2011-2016 Meltytech, LLC
+ * Copyright (c) 2011-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,9 +27,8 @@
 #include <QProcess>
 #include <QCommandLineParser>
 #include <framework/mlt_log.h>
-#include "singleapplication.h"
 #include <QMessageBox>
-
+#include "qtsingleapplication/qtsingleapplication.h"
 #ifdef Q_OS_WIN
 #ifdef QT_DEBUG
 #   include <exchndl.h>
@@ -41,7 +40,6 @@ extern "C"
     __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
-
 
 static void mlt_log_handler(void *service, int mlt_level, const char *format, va_list args)
 {
@@ -88,10 +86,11 @@ static void mlt_log_handler(void *service, int mlt_level, const char *format, va
         message = QString().vsprintf(format, args);
         message.replace('\n', "");
     }
-    Logger::write(cuteLoggerLevel, __FILE__, __LINE__, "MLT", message);
+    cuteLogger->write(cuteLoggerLevel, __FILE__, __LINE__, "MLT",
+                      cuteLogger->defaultCategory().toLatin1().constData(), message);
 }
 
-class Application : public SingleApplication
+class Application : public QtSingleApplication
 {
 public:
     MainWindow* mainWindow;
@@ -102,8 +101,8 @@ public:
     bool isFullScreen;
     QString appDirArg;
 
-    Application(int &argc, char **argv,const QString uniqueKey)
-        : SingleApplication(argc, argv,uniqueKey)
+    Application(int &argc, char **argv)
+        :QtSingleApplication(argc,argv)
     {
         QDir dir(applicationDirPath());
         dir.cd("lib");
@@ -162,13 +161,13 @@ public:
         const QString logFileName = dir.filePath("VideoStudio-log.txt");
         QFile::remove(logFileName);
         FileAppender* fileAppender = new FileAppender(logFileName);
-        fileAppender->setFormat("[%-7l] <%c> %m\n");
-        Logger::registerAppender(fileAppender);
+        fileAppender->setFormat("[%{type:-7}] <%{function}> %{message}\n");
+        cuteLogger->registerAppender(fileAppender);
 #ifndef NDEBUG
         // Only log to console in dev debug builds.
         ConsoleAppender* consoleAppender = new ConsoleAppender();
         consoleAppender->setFormat(fileAppender->format());
-        Logger::registerAppender(consoleAppender);
+        cuteLogger->registerAppender(consoleAppender);
 
         mlt_log_set_level(MLT_LOG_VERBOSE);
 #else
@@ -248,10 +247,9 @@ protected:
 int main(int argc, char **argv)
 {
     //唯一实例判断
-    Application a(argc, argv, "some unique key string");
+    Application a(argc, argv);
     if (a.isRunning())
     {
-        a.sendMessage("message from other instance.");
         QMessageBox dialog(QMessageBox::Warning,
                                      "提示",
                                      QStringLiteral("\r\n VideoStudio已经在运行了！\r\n"),
@@ -278,16 +276,33 @@ int main(int argc, char **argv)
 #if QT_VERSION >= 0x050600
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
- //   Application a(argc, argv);
-//    QSplashScreen splash(QPixmap(":/icons/shotcut-logo-640.png"));
-//    splash.showMessage(QCoreApplication::translate("main", "Loading plugins..."), Qt::AlignHCenter | Qt::AlignBottom);
-//    splash.show();
+
+#ifdef Q_OS_MAC
+    // Launcher and Spotlight on macOS are not setting this environment
+    // variable needed by setlocale() as used by MLT.
+    if (QProcessEnvironment::systemEnvironment().value("LC_NUMERIC").isEmpty()) {
+        qputenv("LC_NUMERIC", QLocale().name().toUtf8());
+
+        QLocale localeByName(QLocale(QLocale().language(), QLocale().script(), QLocale().country()));
+        if (QLocale().decimalPoint() != localeByName.decimalPoint()) {
+            // If region's numeric format does not match the language's, then we run
+            // into problems because we told MLT and libc to use a different numeric
+            // locale than actually in use by Qt because it is unable to give numeric
+            // locale as a set of ISO-639 codes.
+            QLocale::setDefault(localeByName);
+            qputenv("LANG", QLocale().name().toUtf8());
+        }
+    }
+#endif
+    //   Application a(argc, argv);
+   //    QSplashScreen splash(QPixmap(":/icons/shotcut-logo-640.png"));
+   //    splash.showMessage(QCoreApplication::translate("main", "Loading plugins..."), Qt::AlignHCenter | Qt::AlignBottom);
+   //    splash.show();
 
     a.setProperty("system-style", a.style()->objectName());
     MainWindow::changeTheme(Settings.theme());
 
     a.mainWindow = &MAIN;
-
     if (!a.appDirArg.isEmpty())
         a.mainWindow->hideSetDataDirectory();
     a.mainWindow->hide();
