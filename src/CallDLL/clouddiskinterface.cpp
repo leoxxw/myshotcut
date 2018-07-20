@@ -266,6 +266,15 @@ int CloudDiskInterface::SendTrial(QString lpResourceID, QString lpResourceName, 
     int ret = fpInit(lpResourceID.utf16(),lpResourceName.utf16(),lpResourceExt.utf16(),nResourceType);
     return ret;
 }
+
+int CloudDiskInterface::DoRelease()
+{
+    typedef int (*Function)();
+    Function fpInit = (Function)m_lib->resolve("DoRelease");
+
+    int ret = fpInit();
+    return ret;
+}
 //单利对象
 CloudDiskInterface* CloudDiskInterface::instance()
 {

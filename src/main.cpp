@@ -29,6 +29,8 @@
 #include <framework/mlt_log.h>
 #include <QMessageBox>
 #include "qtsingleapplication/qtsingleapplication.h"
+
+#include "CallDLL/clouddiskinterface.h"
 #ifdef Q_OS_WIN
 #ifdef QT_DEBUG
 #   include <exchndl.h>
@@ -266,7 +268,19 @@ int main(int argc, char **argv)
         a.mainWindow->close();
         return 0;
     }
-
+//关闭奔溃导致运行多个dogckeck程序
+    QSettings *configIniRead = NULL;
+    QString path = QCoreApplication::applicationDirPath();
+    path.append("/DogCheck/DogCheckClose.ini");
+    configIniRead = new QSettings(path, QSettings::IniFormat);
+    //将读取到的ini文件保存在QString中，先取值，然后通过toString()函数转换成QString类型
+    if(!configIniRead)
+    {
+        qDebug() <<"read ServerStatus.ini false";
+    }
+    QString strClose = QString("%1").arg(1);
+    configIniRead->setValue("/Setting/Close",strClose);
+    delete configIniRead;
 #if defined(Q_OS_WIN) && defined(QT_DEBUG)
     ExcHndlInit();
 #endif
@@ -317,6 +331,7 @@ int main(int argc, char **argv)
     a.mainWindow->Dogcheck();
 
     int result = a.exec();
+    CloudDiskInterface::instance()->DoRelease();
 
 //    if (EXIT_RESTART == result) {
 //        LOG_DEBUG() << "restarting app";

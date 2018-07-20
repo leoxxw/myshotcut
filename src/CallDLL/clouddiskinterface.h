@@ -78,6 +78,9 @@ public:
                   QString lpResourceExt,
                   const int nResourceType);
 
+
+    int DoRelease();
+
     static CloudDiskInterface* instance();
 private:
     CloudDiskInterface();

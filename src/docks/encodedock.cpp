@@ -76,46 +76,43 @@ EncodeDock::EncodeDock(QWidget *parent) :
     loadPresets();
 
     // populate the combos
-    populateCombos();
-//    Mlt::Consumer c(MLT.profile(), "avformat");
-//    c.set("f", "list");
-//    c.set("acodec", "list");
-//    c.set("vcodec", "list");
-//    c.start();
-//    c.stop();
+    Mlt::Consumer c(MLT.profile(), "avformat");
+    c.set("f", "list");
+    c.set("acodec", "list");
+    c.set("vcodec", "list");
+    c.start();
+    c.stop();
 
-//    Mlt::Properties* p = new Mlt::Properties(c.get_data("f"));
-//    ui->formatCombo->blockSignals(true);
-//    qDebug()<<"avformat";
-//    for (int i = 0; i < p->count(); i++)
-//    {
-//        if (ui->formatCombo->findText(p->get(i)) == -1)
-//        {
-//            ui->formatCombo->addItem(p->get(i));
-//            qDebug()<<p->get(i);
-//        }
-//    }
-//    delete p;
-//    ui->formatCombo->model()->sort(0);
-//    ui->formatCombo->insertItem(0, tr("Automatic from extension"));
-//    ui->formatCombo->blockSignals(false);
+    Mlt::Properties* p = new Mlt::Properties(c.get_data("f"));
+    ui->formatCombo->blockSignals(true);
+    for (int i = 0; i < p->count(); i++) {
+        if (ui->formatCombo->findText(p->get(i)) == -1)
+            if (qstrcmp("gif", p->get(i)))
+                ui->formatCombo->addItem(p->get(i));
+    }
+    //by leo
+    ui->formatCombo->addItem("ts");
+    delete p;
+    ui->formatCombo->model()->sort(0);
+    ui->formatCombo->insertItem(0, tr("Automatic from extension"));
+    ui->formatCombo->blockSignals(false);
 
-//    p = new Mlt::Properties(c.get_data("acodec"));
-//    for (int i = 0; i < p->count(); i++)
-//        ui->audioCodecCombo->addItem(p->get(i));
-//    delete p;
-//    ui->audioCodecCombo->model()->sort(0);
-//    ui->audioCodecCombo->insertItem(0, tr("Default for format"));
+    p = new Mlt::Properties(c.get_data("acodec"));
+    for (int i = 0; i < p->count(); i++)
+        ui->audioCodecCombo->addItem(p->get(i));
+    delete p;
+    ui->audioCodecCombo->model()->sort(0);
+    ui->audioCodecCombo->insertItem(0, tr("Default for format"));
 
-//    p = new Mlt::Properties(c.get_data("vcodec"));
-//    for (int i = 0; i < p->count(); i++) {
-//        if (qstrcmp("nvenc", p->get(i)))
-//            ui->videoCodecCombo->addItem(p->get(i));
-//    }
-//    delete p;
-//    ui->videoCodecCombo->model()->sort(0);
-//    ui->videoCodecCombo->insertItem(0, tr("Default for format"));
-
+    p = new Mlt::Properties(c.get_data("vcodec"));
+    for (int i = 0; i < p->count(); i++) {
+        if (qstrcmp("nvenc", p->get(i)))
+            if (qstrcmp("gif", p->get(i)))
+                ui->videoCodecCombo->addItem(p->get(i));
+    }
+    delete p;
+    ui->videoCodecCombo->model()->sort(0);
+    ui->videoCodecCombo->insertItem(0, tr("Default for format"));
     on_resetButton_clicked();
 
     LOG_DEBUG() << "end";
@@ -452,8 +449,9 @@ void EncodeDock::loadPresets()
                 Mlt::Properties preset((mlt_properties) m_presets->get_data(name.toLatin1().constData()));
                 if (preset.get_int("meta.preset.hidden"))
                     continue;
-                if (preset.get("meta.preset.name"))
+                if (preset.get("meta.preset.name")){
                     name = QString::fromUtf8(preset.get("meta.preset.name"));
+                }
                 else {
                     // use relative path and filename 使用相对路径和文件名
                     name.remove(0, strprefix.length());
@@ -553,34 +551,34 @@ Mlt::Properties* EncodeDock::collectProperties(int realtime)
                     // x265 does not expect bitrate suffixes and requires Kb/s
                     b.replace('k', "").replace('M', "000");
                     x265params = QString("bitrate=%1:vbv-bufsize=%2:vbv-maxrate=%3:%4")
-                        .arg(b).arg(int(ui->videoBufferSizeSpinner->value() * 8)).arg(b).arg(x265params);
+                            .arg(b).arg(int(ui->videoBufferSizeSpinner->value() * 8)).arg(b).arg(x265params);
                     p->set("vb", b.toLatin1().constData());
                     p->set("vbufsize", int(ui->videoBufferSizeSpinner->value() * 8 * 1024));
                     break;
-                    }
+                }
                 case RateControlQuality: {
                     int vq = ui->videoQualitySpinner->value();
                     x265params = QString("crf=%1:%2").arg(TO_ABSOLUTE(51, 0, vq)).arg(x265params);
                     // Also set crf property so that custom presets can be interpreted properly.
                     p->set("crf", TO_ABSOLUTE(51, 0, vq));
                     break;
-                    }
+                }
                 case RateControlConstrained: {
                     QString b = ui->videoBitrateCombo->currentText();
                     int vq = ui->videoQualitySpinner->value();
                     // x265 does not expect bitrate suffixes and requires Kb/s
                     b.replace('k', "").replace('M', "000");
                     x265params = QString("crf=%1:vbv-bufsize=%2:vbv-maxrate=%3:%4")
-                        .arg(TO_ABSOLUTE(51, 0, vq)).arg(int(ui->videoBufferSizeSpinner->value() * 8)).arg(b).arg(x265params);
+                            .arg(TO_ABSOLUTE(51, 0, vq)).arg(int(ui->videoBufferSizeSpinner->value() * 8)).arg(b).arg(x265params);
                     // Also set properties so that custom presets can be interpreted properly.
                     p->set("crf", TO_ABSOLUTE(51, 0, vq));
                     p->set("vbufsize", int(ui->videoBufferSizeSpinner->value() * 8 * 1024));
                     p->set("vmaxrate", ui->videoBitrateCombo->currentText().toLatin1().constData());
                     break;
-                    }
+                }
                 }
                 x265params = QString("keyint=%1:bframes=%2:%3").arg(ui->gopSpinner->value())
-                            .arg(ui->bFramesSpinner->value()).arg(x265params);
+                        .arg(ui->bFramesSpinner->value()).arg(x265params);
                 if (ui->strictGopCheckBox->isChecked()) {
                     x265params = QString("scenecut=0:%1").arg(x265params);
                     p->set("sc_threshold", 0);
@@ -603,14 +601,14 @@ Mlt::Properties* EncodeDock::collectProperties(int realtime)
                     p->set("vmaxrate", b.toLatin1().constData());
                     p->set("vbufsize", int(ui->videoBufferSizeSpinner->value() * 8 * 1024));
                     break;
-                    }
+                }
                 case RateControlQuality: {
                     int vq = ui->videoQualitySpinner->value();
                     p->set("rc", "constqp");
                     p->set("global_quality", TO_ABSOLUTE(51, 0, vq));
                     p->set("vq", TO_ABSOLUTE(51, 0, vq));
                     break;
-                    }
+                }
                 case RateControlConstrained: {
                     const QString& b = ui->videoBitrateCombo->currentText();
                     int vq = ui->videoQualitySpinner->value();
@@ -619,7 +617,7 @@ Mlt::Properties* EncodeDock::collectProperties(int realtime)
                     p->set("vmaxrate", b.toLatin1().constData());
                     p->set("vbufsize", int(ui->videoBufferSizeSpinner->value() * 8 * 1024));
                     break;
-                    }
+                }
                 }
                 if (ui->dualPassCheckbox->isChecked())
                     p->set("v2pass", 1);
@@ -642,7 +640,7 @@ Mlt::Properties* EncodeDock::collectProperties(int realtime)
                     p->set("vmaxrate", b.toLatin1().constData());
                     p->set("vbufsize", int(ui->videoBufferSizeSpinner->value() * 8 * 1024));
                     break;
-                    }
+                }
                 case RateControlQuality: {
                     int vq = ui->videoQualitySpinner->value();
                     if (vcodec == "libx264") {
@@ -654,7 +652,7 @@ Mlt::Properties* EncodeDock::collectProperties(int realtime)
                         p->set("qscale", TO_ABSOLUTE(31, 1, vq));
                     }
                     break;
-                    }
+                }
                 case RateControlConstrained: {
                     const QString& b = ui->videoBitrateCombo->currentText();
                     int vq = ui->videoQualitySpinner->value();
@@ -668,7 +666,7 @@ Mlt::Properties* EncodeDock::collectProperties(int realtime)
                     p->set("vmaxrate", b.toLatin1().constData());
                     p->set("vbufsize", int(ui->videoBufferSizeSpinner->value() * 8 * 1024));
                     break;
-                    }
+                }
                 }
                 p->set("g", ui->gopSpinner->value());
                 p->set("bf", ui->bFramesSpinner->value());
@@ -739,8 +737,8 @@ Mlt::Properties* EncodeDock::collectProperties(int realtime)
             else
                 p->set("threads", ui->videoCodecThreadsSpinner->value());
             if (ui->videoRateControlCombo->currentIndex() != RateControlQuality &&
-                !vcodec.contains("nvenc") &&
-                ui->dualPassCheckbox->isEnabled() && ui->dualPassCheckbox->isChecked())
+                    !vcodec.contains("nvenc") &&
+                    ui->dualPassCheckbox->isEnabled() && ui->dualPassCheckbox->isChecked())
                 p->set("pass", 1);
         }
     }
@@ -828,7 +826,7 @@ MeltJob* EncodeDock::createMeltJob(Mlt::Service* service, const QString& target,
         if (pass == 1 || pass == 2) {
             QString x265params = consumerNode.attribute("x265-params");
             x265params = QString("pass=%1:stats=%2:%3")
-                .arg(pass).arg(mytarget.replace(":", "\\:") + "_2pass.log").arg(x265params);
+                    .arg(pass).arg(mytarget.replace(":", "\\:") + "_2pass.log").arg(x265params);
             consumerNode.setAttribute("x265-params", x265params);
         }
     } else {
@@ -867,7 +865,7 @@ void EncodeDock::runMelt(const QString& target, int realtime)
             if (!info) return;
             QString xml = MLT.XML(info->producer);
             QScopedPointer<Mlt::Producer> producer(
-                new Mlt::Producer(MLT.profile(), "xml-string", xml.toUtf8().constData()));
+                        new Mlt::Producer(MLT.profile(), "xml-string", xml.toUtf8().constData()));
             producer->set_in_and_out(info->frame_in, info->frame_out);
             m_immediateJob.reset(createMeltJob(producer.data(), target, realtime));
             if (m_immediateJob) {
@@ -905,10 +903,10 @@ void EncodeDock::enqueueMelt(const QString& target, int realtime)
                 if (!info) continue;
                 QString xml = MLT.XML(info->producer);
                 QScopedPointer<Mlt::Producer> producer(
-                    new Mlt::Producer(MLT.profile(), "xml-string", xml.toUtf8().constData()));
+                            new Mlt::Producer(MLT.profile(), "xml-string", xml.toUtf8().constData()));
                 producer->set_in_and_out(info->frame_in, info->frame_out);
                 QString filename = QString("%1/%2-%3.%4").arg(fi.path()).arg(fi.baseName())
-                                                         .arg(i + 1, digits, 10, QChar('0')).arg(fi.completeSuffix());
+                        .arg(i + 1, digits, 10, QChar('0')).arg(fi.completeSuffix());
                 MeltJob* job = createMeltJob(producer.data(), filename, realtime, pass);
                 if (job) {
                     JOBS.add(job);
@@ -1069,6 +1067,12 @@ void EncodeDock::on_presetsTree_activated(const QModelIndex &index)
 
 void EncodeDock::on_encodeButton_clicked()
 {
+    //by leo 20180503
+    if(m_SaveType != SF_ShotCutSave)
+    {
+        myEncodeButtonclicked();
+        return;
+    }
     if (!MLT.producer())
         return;
     if (m_immediateJob) {
@@ -1085,177 +1089,104 @@ void EncodeDock::on_encodeButton_clicked()
         return;
     }
     bool seekable = MLT.isSeekable(fromProducer());
-    QString directory;
-    if(m_SaveType == SF_ShotCutSave)
-    {
-        directory = Settings.encodePath();
-    }
-    //修改输出路径
-    QString fileName = ui->lineEdit->text();
-    ui->lineEdit->setText("");
-    if(fileName == "")
-    {
-        QMessageBox dialog(QMessageBox::Warning,
-                                     "警告",
-                                     tr("输出文件名为空！"),
-                                     QMessageBox::Ok,
-                                     this);
-        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
-        dialog.exec();
-        return;
-    }
-    int pos = fileName.indexOf(QRegExp("[\*\?\\\|\/\>\<\"\:]"));
-    if(pos != -1)
-    {
-        QMessageBox dialog(QMessageBox::Warning,
-                                     "警告",
-                                     tr("文件名不允许出现特殊字符\(\* \? \\ \| \/ \> \< \" \:\)！"),
-                                     QMessageBox::Ok,
-                                     this);
-        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
-        dialog.exec();
-        return;
-    }
+    QString directory = Settings.encodePath();
     if (!m_extension.isEmpty()) {
-//        if (!MAIN.fileName().isEmpty()) {
-//            directory += QString("/%1.%2").arg(QFileInfo(MAIN.fileName()).baseName())
-//                                          .arg(m_extension);
-//        } else {
-            directory +="/" +fileName ;
-            directory += "." + m_extension;
-
-//        }
+        if (!MAIN.fileName().isEmpty()) {
+            directory += QString("/%1.%2").arg(QFileInfo(MAIN.fileName()).baseName())
+                    .arg(m_extension);
+        } else {
+            directory += "/." + m_extension;
+        }
     } else {
         if (!MAIN.fileName().isEmpty()) {
-
-            directory += "/" + fileName + QFileInfo(MAIN.fileName()).baseName();
+            directory += "/" + QFileInfo(MAIN.fileName()).baseName();
         }
 #ifdef Q_OS_MAC
         else {
-            directory += "/"+fileName +".mp4";
+            directory += "/.mp4";
         }
 #endif
     }
-    if(m_SaveType == SF_ShotCutSave)
-    {
-        QString caption = seekable? tr("Export File") : tr("Capture File");
-            m_outputFilename = QFileDialog::getSaveFileName(this,
-                caption, directory,
-                QString(), 0, QFileDialog::HideNameFilterDetails);
-            if (!m_outputFilename.isEmpty()) {
-                QFileInfo fi(m_outputFilename);
-                MLT.pause();
-                Settings.setEncodePath(fi.path());
-                if (!m_extension.isEmpty()) {
-                    if (fi.suffix().isEmpty()) {
-                        m_outputFilename += '.';
-                        m_outputFilename += m_extension;
-                    }
-                }
-
-                // Check if the drive this file will be on is getting low on space.
-                if (Settings.encodeFreeSpaceCheck()) {
-                    QStorageInfo si(fi.path());
-                    LOG_DEBUG() << si.bytesAvailable() << "bytes available on" << si.displayName();
-                    if (si.isValid() && si.bytesAvailable() < kFreeSpaceThesholdGB) {
-                        QMessageBox dialog(QMessageBox::Question, caption,
-                           tr("The drive you chose only has %1 MiB of free space.\n"
-                              "Do you still want to continue?")
-                           .arg(si.bytesAvailable() / 1024 / 1024),
-                           QMessageBox::No | QMessageBox::Yes, this);
-                        dialog.setWindowModality(QmlApplication::dialogModality());
-                        dialog.setDefaultButton(QMessageBox::Yes);
-                        dialog.setEscapeButton(QMessageBox::No);
-                        dialog.setCheckBox(new QCheckBox(tr("Do not show this anymore.", "Export free disk space warning dialog")));
-                        int result = dialog.exec();
-                        if (dialog.checkBox()->isChecked())
-                            Settings.setEncodeFreeSpaceCheck(false);
-                        if (result == QMessageBox::No) {
-                            MAIN.showStatusMessage(tr("Export canceled."));
-                            return;
-                        }
-                    }
-                }
-
-                if (seekable) {
-                    // Batch encode
-                    int threadCount = QThread::idealThreadCount();
-                    if (threadCount > 2 && ui->parallelCheckbox->isChecked())
-                        threadCount = qMin(threadCount - 1, 4);
-                    else
-                        threadCount = 1;
-                    enqueueMelt(m_outputFilename, Settings.playerGPU()? -1 : -threadCount);
-                }
-                else if (MLT.producer()->get_int(kBackgroundCaptureProperty)) {
-                    // Capture in background
-                    ui->dualPassCheckbox->setChecked(false);
-                    m_immediateJob.reset(createMeltJob(fromProducer(), m_outputFilename, -1));
-                    if (m_immediateJob) {
-                        // Close the player's producer to prevent resource contention.
-                        MAIN.hideProducer();
-
-                        m_immediateJob->setIsStreaming(true);
-                        connect(m_immediateJob.data(), SIGNAL(finished(AbstractJob*,bool)), this, SLOT(onFinished(AbstractJob*,bool)));
-
-                        if (MLT.resource().startsWith("gdigrab:") || MLT.resource().startsWith("x11grab:")) {
-                            ui->stopCaptureButton->show();
-                        } else {
-                            ui->encodeButton->setText(tr("Stop Capture"));
-                            ui->fromCombo->setDisabled(true);
-                        }
-                        if (MLT.resource().startsWith("gdigrab:"))
-                            MAIN.showMinimized();
-
-                        int msec = MLT.producer()->get_int(kBackgroundCaptureProperty) * 1000;
-                        QTimer::singleShot(msec, m_immediateJob.data(), SLOT(start()));
-                    }
-                }
-                else {
-                    // Capture to file
-                    // use multi consumer to encode and preview simultaneously
-                    ui->dualPassCheckbox->setChecked(false);
-                    ui->encodeButton->setText(tr("Stop Capture"));
-                    encode(m_outputFilename);
-                    emit captureStateChanged(true);
-                    ui->streamButton->setDisabled(true);
-                }
+    QString caption = seekable? tr("Export File") : tr("Capture File");
+    m_outputFilename = QFileDialog::getSaveFileName(this,
+                                                    caption, directory,
+                                                    QString(), 0, QFileDialog::HideNameFilterDetails);
+    if (!m_outputFilename.isEmpty()) {
+        QFileInfo fi(m_outputFilename);
+        MLT.pause();
+        Settings.setEncodePath(fi.path());
+        if (!m_extension.isEmpty()) {
+            if (fi.suffix().isEmpty()) {
+                m_outputFilename += '.';
+                m_outputFilename += m_extension;
             }
-    }
-    if(m_SaveType == SF_YUNLI)
-    {
-        //修改输出路径
-        QString tempPath =QCoreApplication::applicationDirPath()+"/Temp/";
-        QDir dir(tempPath);
-        if(!dir.exists())
-        {
-           dir.mkpath(tempPath);//创建多级目录
         }
-        m_outputFilename = tempPath +fileName;
-        if (!m_outputFilename.isEmpty())
-        {
-            QFileInfo fi(m_outputFilename);
-            MLT.pause();
-            Settings.setEncodePath("");
-            if (m_extension.isEmpty()) {
-                if (fi.suffix().isEmpty())
-                {
-                    QMessageBox dialog(QMessageBox::Warning,
-                                                 "警告",
-                                                 tr("无法确定输出格式！"),
-                                                 QMessageBox::Ok,
-                                                 this);
-                    dialog.setButtonText (QMessageBox::Ok,QString("确定"));
-                    dialog.exec();
+
+        // Check if the drive this file will be on is getting low on space.
+        if (Settings.encodeFreeSpaceCheck()) {
+            QStorageInfo si(fi.path());
+            LOG_DEBUG() << si.bytesAvailable() << "bytes available on" << si.displayName();
+            if (si.isValid() && si.bytesAvailable() < kFreeSpaceThesholdGB) {
+                QMessageBox dialog(QMessageBox::Question, caption,
+                                   tr("The drive you chose only has %1 MiB of free space.\n"
+                                      "Do you still want to continue?")
+                                   .arg(si.bytesAvailable() / 1024 / 1024),
+                                   QMessageBox::No | QMessageBox::Yes, this);
+                dialog.setWindowModality(QmlApplication::dialogModality());
+                dialog.setDefaultButton(QMessageBox::Yes);
+                dialog.setEscapeButton(QMessageBox::No);
+                dialog.setCheckBox(new QCheckBox(tr("Do not show this anymore.", "Export free disk space warning dialog")));
+                int result = dialog.exec();
+                if (dialog.checkBox()->isChecked())
+                    Settings.setEncodeFreeSpaceCheck(false);
+                if (result == QMessageBox::No) {
+                    MAIN.showStatusMessage(tr("Export canceled."));
                     return;
                 }
             }
-            m_outputFilename += '.';
-            m_outputFilename += m_extension;
-            qDebug()<<"文件后缀名"<<m_extension;
-            emit SendVideoPath(m_outputFilename);
-            m_yunliFilename = m_outputFilename;
-            this->hide();
-            return;
+        }
+
+        if (seekable) {
+            // Batch encode
+            int threadCount = QThread::idealThreadCount();
+            if (threadCount > 2 && ui->parallelCheckbox->isChecked())
+                threadCount = qMin(threadCount - 1, 4);
+            else
+                threadCount = 1;
+            enqueueMelt(m_outputFilename, Settings.playerGPU()? -1 : -threadCount);
+        }
+        else if (MLT.producer()->get_int(kBackgroundCaptureProperty)) {
+            // Capture in background
+            ui->dualPassCheckbox->setChecked(false);
+            m_immediateJob.reset(createMeltJob(fromProducer(), m_outputFilename, -1));
+            if (m_immediateJob) {
+                // Close the player's producer to prevent resource contention.
+                MAIN.hideProducer();
+
+                m_immediateJob->setIsStreaming(true);
+                connect(m_immediateJob.data(), SIGNAL(finished(AbstractJob*,bool)), this, SLOT(onFinished(AbstractJob*,bool)));
+
+                if (MLT.resource().startsWith("gdigrab:") || MLT.resource().startsWith("x11grab:")) {
+                    ui->stopCaptureButton->show();
+                } else {
+                    ui->encodeButton->setText(tr("Stop Capture"));
+                    ui->fromCombo->setDisabled(true);
+                }
+                if (MLT.resource().startsWith("gdigrab:"))
+                    MAIN.showMinimized();
+
+                int msec = MLT.producer()->get_int(kBackgroundCaptureProperty) * 1000;
+                QTimer::singleShot(msec, m_immediateJob.data(), SLOT(start()));
+            }
+        }
+        else {
+            // Capture to file
+            // use multi consumer to encode and preview simultaneously
+            ui->dualPassCheckbox->setChecked(false);
+            ui->encodeButton->setText(tr("Stop Capture"));
+            encode(m_outputFilename);
+            emit captureStateChanged(true);
+            ui->streamButton->setDisabled(true);
         }
     }
 }
@@ -1316,57 +1247,137 @@ bool EncodeDock::IsWorking()
 void EncodeDock::populateCombos()
 {
     //todo
-    Mlt::Consumer c(MLT.profile(), "avformat");
-    c.set("f", "list");
-    c.set("acodec", "list");
-    c.set("vcodec", "list");
-    c.start();
-    c.stop();
+//    Mlt::Consumer c(MLT.profile(), "avformat");
+//    c.set("f", "list");
+//    c.set("acodec", "list");
+//    c.set("vcodec", "list");
+//    c.start();
+//    c.stop();
 
-    if(ui->formatCombo->count()<=0)
-    {
-        Mlt::Properties* p = new Mlt::Properties(c.get_data("f"));
-        ui->formatCombo->blockSignals(true);
-        qDebug()<<"avformat";
-        for (int i = 0; i < p->count(); i++)
-        {
-            if (ui->formatCombo->findText(p->get(i)) == -1)
-            {
-                ui->formatCombo->addItem(p->get(i));
-                qDebug()<<p->get(i);
-            }
-        }
-        delete p;
+//    if(ui->formatCombo->count()<=0)
+//    {
+//        Mlt::Properties* p = new Mlt::Properties(c.get_data("f"));
+//        ui->formatCombo->blockSignals(true);
+//        qDebug()<<"avformat";
+//        for (int i = 0; i < p->count(); i++)
+//        {
+//            if (ui->formatCombo->findText(p->get(i)) == -1)
+//            {
+//                ui->formatCombo->addItem(p->get(i));
+//                qDebug()<<p->get(i);
+//            }
+//        }
+//        delete p;
+//    }
+//    if(m_extension == "mp4")
+//    {
+//        ui->audioCodecCombo->clear();
+//        Mlt::Properties* p = new Mlt::Properties(c.get_data("acodec"));
+//        for (int i = 0; i < p->count(); i++)
+//        {
+//            if(0 == qstrcmp("aac", p->get(i))||0 == qstrcmp("mp2", p->get(i)) ||0 == qstrncmp( p->get(i),"pcm",3))
+//            {
+//                ui->audioCodecCombo->addItem(p->get(i));
+//            }
+//        }
+//        delete p;
+//        ui->audioCodecCombo->model()->sort(0);
+//        ui->audioCodecCombo->insertItem(0, tr("Default for format"));
+
+//        ui->videoCodecCombo->clear();
+//        p = new Mlt::Properties(c.get_data("vcodec"));
+//        for (int i = 0; i < p->count(); i++) {
+//            if (qstrcmp("nvenc", p->get(i)))
+//            {
+//                if(0 == qstrcmp("libx264", p->get(i))||0 == qstrcmp("libx265", p->get(i))||0 ==  qstrcmp("mpeg4", p->get(i)))
+//                {
+//                    ui->videoCodecCombo->addItem(p->get(i));
+//                }
+//            }
+//        }
+//        delete p;
+//        ui->videoCodecCombo->model()->sort(0);
+//        ui->videoCodecCombo->insertItem(0, tr("Default for format"));
+//    }
+
+}
+
+void EncodeDock::myEncodeButtonclicked()
+{
+    if (!MLT.producer())
+        return;
+    if (m_immediateJob) {
+        m_immediateJob->stop();
+        ui->fromCombo->setEnabled(true);
+        QTimer::singleShot(kOpenCaptureFileDelayMs, this, SLOT(openCaptureFile()));
+        return;
     }
-    if(m_extension == "mp4")
+    if (ui->encodeButton->text() == tr("Stop Capture")) {
+        MLT.closeConsumer();
+        emit captureStateChanged(false);
+        ui->streamButton->setDisabled(false);
+        QTimer::singleShot(kOpenCaptureFileDelayMs, this, SLOT(openCaptureFile()));
+        return;
+    }
+    //修改输出路径
+    QString fileName = ui->lineEdit->text();
+    ui->lineEdit->setText("");
+    if(fileName == "")
     {
-        ui->audioCodecCombo->clear();
-        Mlt::Properties* p = new Mlt::Properties(c.get_data("acodec"));
-        for (int i = 0; i < p->count(); i++)
-        {
-            if(0 == qstrcmp("aac", p->get(i))||0 == qstrcmp("mp2", p->get(i)) ||0 == qstrncmp( p->get(i),"pcm",3))
+        QMessageBox dialog(QMessageBox::Warning,
+                           "警告",
+                           tr("输出文件名为空！"),
+                           QMessageBox::Ok,
+                           this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
+        return;
+    }
+    int pos = fileName.indexOf(QRegExp("[\*\?\\\|\/\>\<\"\:]"));
+    if(pos != -1)
+    {
+        QMessageBox dialog(QMessageBox::Warning,
+                           "警告",
+                           tr("文件名不允许出现特殊字符\(\* \? \\ \| \/ \> \< \" \:\)！"),
+                           QMessageBox::Ok,
+                           this);
+        dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+        dialog.exec();
+        return;
+    }
+    //修改输出路径
+    QString tempPath =QCoreApplication::applicationDirPath()+"/Temp/";
+    QDir dir(tempPath);
+    if(!dir.exists())
+    {
+        dir.mkpath(tempPath);//创建多级目录
+    }
+    m_outputFilename = tempPath +fileName;
+    if (!m_outputFilename.isEmpty())
+    {
+        QFileInfo fi(m_outputFilename);
+        MLT.pause();
+        Settings.setEncodePath("");
+        if (m_extension.isEmpty()) {
+            if (fi.suffix().isEmpty())
             {
-                ui->audioCodecCombo->addItem(p->get(i));
+                QMessageBox dialog(QMessageBox::Warning,
+                                   "警告",
+                                   tr("无法确定输出格式！"),
+                                   QMessageBox::Ok,
+                                   this);
+                dialog.setButtonText (QMessageBox::Ok,QString("确定"));
+                dialog.exec();
+                return;
             }
         }
-        delete p;
-        ui->audioCodecCombo->model()->sort(0);
-        ui->audioCodecCombo->insertItem(0, tr("Default for format"));
-
-        ui->videoCodecCombo->clear();
-        p = new Mlt::Properties(c.get_data("vcodec"));
-        for (int i = 0; i < p->count(); i++) {
-            if (qstrcmp("nvenc", p->get(i)))
-            {
-                if(0 == qstrcmp("libx264", p->get(i))||0 == qstrcmp("libx265", p->get(i))||0 ==  qstrcmp("mpeg4", p->get(i)))
-                {
-                    ui->videoCodecCombo->addItem(p->get(i));
-                }
-            }
-        }
-        delete p;
-        ui->videoCodecCombo->model()->sort(0);
-        ui->videoCodecCombo->insertItem(0, tr("Default for format"));
+        m_outputFilename += '.';
+        m_outputFilename += m_extension;
+        qDebug()<<"文件后缀名"<<m_extension;
+        emit SendVideoPath(m_outputFilename);
+        m_yunliFilename = m_outputFilename;
+        this->hide();
+        return;
     }
 }
 
@@ -1687,8 +1698,8 @@ bool PresetsProxyModel::filterAcceptsRow(int source_row, const QModelIndex &sour
 {
     QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
     return !source_parent.isValid() ||
-        sourceModel()->data(index).toString().contains(filterRegExp()) ||
-        sourceModel()->data(index, Qt::ToolTipRole).toString().contains(filterRegExp());
+            sourceModel()->data(index).toString().contains(filterRegExp()) ||
+            sourceModel()->data(index, Qt::ToolTipRole).toString().contains(filterRegExp());
 }
 
 void EncodeDock::on_resetButton_clicked()
@@ -1696,7 +1707,7 @@ void EncodeDock::on_resetButton_clicked()
     m_isDefaultSettings = true;
     resetOptions();
     onProfileChanged();
-    populateCombos();
+    //   populateCombos();
 }
 
 void EncodeDock::openCaptureFile()
@@ -1710,7 +1721,7 @@ void EncodeDock::on_formatCombo_currentIndexChanged(int index)
     m_extension.clear();
     m_extension = ui->formatCombo->itemText(index);
     //限定视频输编码格式与音频编码格式
-    populateCombos();
+    //  populateCombos();
 }
 
 void EncodeDock::on_videoBufferDurationChanged()

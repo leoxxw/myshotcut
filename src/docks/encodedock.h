@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2012-2017 Meltytech, LLC
  * Author: Dan Dennedy <dan@dennedy.org>
  *
@@ -57,6 +57,7 @@ public:
     void encodeVideo();
     bool IsWorking();
     void populateCombos();
+    void myEncodeButtonclicked();//by leo 20180503
 
 signals:
     void captureStateChanged(bool);
